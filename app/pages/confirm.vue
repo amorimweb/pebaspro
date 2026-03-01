@@ -19,10 +19,12 @@ watch(user, async (newUser) => {
       navigateTo('/cadastro/onboarding')
     } else {
       // 2. Redirecionar baseado no tipo de conta se o perfil estiver completo
+      const redirectMap: Record<string, string> = {
         talento: '/',
         empresa: '/painel/empresa',
         prestador: '/painel/prestador',
         cliente: '/',
+      }
       
       const target = redirectMap[profile.tipo_conta as keyof typeof redirectMap] || '/'
       navigateTo(target)

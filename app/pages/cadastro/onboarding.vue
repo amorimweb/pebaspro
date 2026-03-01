@@ -155,10 +155,12 @@ const finishOnboarding = async () => {
     
     if (!error) {
       const profile = authStore.profile
+      const redirectMap: Record<string, string> = {
         talento: '/',
         empresa: '/painel/empresa',
         prestador: '/painel/prestador',
         cliente: '/',
+      }
       const target = redirectMap[profile?.tipo_conta as keyof typeof redirectMap] || '/'
       navigateTo(target)
     } else {
