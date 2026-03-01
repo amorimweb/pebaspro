@@ -55,6 +55,14 @@ const fetchDashboard = async () => {
 
     if (services) recentServices.value = services as Servico[]
 
+    // 4. Total de visualizações da vitrine
+    const { count: viewsCount } = await supabase
+      .from('visualizacoes_vitrine')
+      .select('*', { count: 'exact', head: true })
+      .eq('vitrine_id', userId)
+      
+    stats.value.views = viewsCount || 0
+
   } catch (e) {
     console.error('Erro ao carregar dashboard do prestador:', e)
   } finally {
@@ -142,7 +150,7 @@ watch(() => authStore.profile, (newProfile) => {
           <p class="text-sm font-medium text-gray-500 mb-1">Visualizações da Vitrine</p>
           <div v-if="loading" class="h-8 w-16 bg-gray-200 rounded animate-pulse"/>
           <h3 v-else class="text-3xl font-bold text-gray-900">{{ stats.views }}</h3>
-          <span v-if="!loading" class="text-xs font-bold text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-full mt-2 inline-block">em breve disponível</span>
+          <span v-if="!loading" class="text-xs font-bold text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-full mt-2 inline-block">visitantes únicos diários</span>
         </div>
         <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center">
           <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>

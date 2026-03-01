@@ -39,17 +39,69 @@ const content = computed(() => {
   // VISITANTE (DEFAULT)
   return {
     title: 'Encontre o que você precisa',
-    subtitle: 'Conectamos você com os melhores prestadores de serviços e as melhores vagas de emprego da região.',
-    placeholder: 'O que você procura? (Ex: Eletricista ou Vaga de TI)',
-    button: 'Buscar',
-    to: '/vagas'
+    subtitle: 'Conectamos você com os melhores prestadores de serviços e as melhores empresas da região.'
+  }
+})
+
+const searchQuery = ref('')
+const results = ref<any[]>([])
+const isSearching = ref(false)
+const showDropdown = ref(false)
+const dropdownRef = ref<HTMLElement | null>(null)
+let debounceTimeout: any = null
+
+const onInput = () => {
+  if (debounceTimeout) clearTimeout(debounceTimeout)
+  if (searchQuery.value.trim().length < 2) {
+    results.value = []
+    showDropdown.value = false
+    return
+  }
+
+  showDropdown.value = true
+  isSearching.value = true
+
+  debounceTimeout = setTimeout(async () => {
+    try {
+      const { data } = await useFetch('/api/search-unified', {
+        query: { q: searchQuery.value.trim() }
+      })
+      results.value = (data.value as any[]) || []
+    } catch (e) {
+      console.error(e)
+    } finally {
+      isSearching.value = false
+    }
+  }, 400) // 400ms debounce
+}
+
+const selectResult = (url: string) => {
+  showDropdown.value = false
+  navigateTo(url)
+}
+
+const handleClickOutside = (e: MouseEvent) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(e.target as Node)) {
+    showDropdown.value = false
+  }
+}
+
+onMounted(() => {
+  if (process.client) {
+    window.addEventListener('click', handleClickOutside)
+  }
+})
+
+onUnmounted(() => {
+  if (process.client) {
+    window.removeEventListener('click', handleClickOutside)
   }
 })
 </script>
 
 <template>
   <div
-    class="bg-gradient-to-r from-green-700 to-teal-700 text-white text-center px-4 pt-32 h-[70vh] md:h-[80vh] flex flex-col justify-center items-center relative overflow-hidden"
+    class="bg-gradient-to-r from-green-700 to-teal-700 text-white text-center px-4 pt-32 h-[70vh] md:h-[80vh] flex flex-col justify-center items-center relative overflow-visible"
   >
     <!-- Elementos Decorativos de Fundo -->
     <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
@@ -67,24 +119,64 @@ const content = computed(() => {
         {{ content.subtitle }}
       </p>
 
-      <!-- Busca -->
-      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center w-full group/search">
-        <div class="relative w-full sm:w-96 group">
+      <!-- Busca Ao Vivo -->
+      <div class="flex flex-col items-center w-full group/search relative mb-12 z-50" ref="dropdownRef">
+        <div class="relative w-full max-w-2xl mx-auto group z-50">
           <input
+            v-model="searchQuery"
+            @input="onInput"
+            @focus="() => { if (results.length > 0) showDropdown = true }"
             type="text"
-            :placeholder="content.placeholder"
-            class="w-full px-8 py-5 rounded-2xl text-slate-800 placeholder-slate-400 font-bold focus:outline-none focus:ring-8 focus:ring-green-500/20 transition-all shadow-2xl border-2 border-transparent focus:border-green-400"
+            placeholder="Busque serviços ou empresas..."
+            class="w-full px-8 py-5 rounded-2xl text-slate-800 placeholder-slate-400 font-bold focus:outline-none focus:ring-8 focus:ring-green-500/20 transition-all shadow-2xl border-2 border-transparent focus:border-green-400 text-lg"
           />
-          <svg class="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-300 group-focus-within:text-green-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-if="!isSearching" class="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-300 group-focus-within:text-green-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
+          <div v-else class="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 border-4 border-slate-200 border-t-green-500 rounded-full animate-spin"></div>
         </div>
-        <NuxtLink
-          :to="content.to"
-          class="w-full sm:w-auto px-12 py-5 bg-white text-green-700 text-center font-black rounded-2xl hover:bg-green-50 transition-all shadow-2xl hover:shadow-green-900/20 active:scale-95 text-lg uppercase tracking-wider block"
-        >
-          {{ content.button }}
-        </NuxtLink>
+
+        <!-- Dropdown de Resultados -->
+        <div v-if="showDropdown && (results.length > 0 || searchQuery.length >= 2 && !isSearching)" class="absolute top-[80px] w-full max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-fade-in text-left">
+          
+          <div v-if="results.length > 0" class="max-h-[400px] overflow-y-auto divide-y divide-slate-50">
+            <button
+              v-for="item in results"
+              :key="item.type + item.id"
+              @click="selectResult(item.url)"
+              class="w-full p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors text-left group"
+            >
+              <div class="w-14 h-14 bg-slate-100 rounded-2xl flex-shrink-0 flex items-center justify-center overflow-hidden border border-slate-200">
+                <img v-if="item.image" :src="item.image" class="w-full h-full object-cover" />
+                <span v-else class="text-xl font-bold text-slate-400 uppercase">{{ item.title.charAt(0) }}</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-bold text-slate-900 text-lg truncate group-hover:text-green-600 transition-colors">{{ item.title }}</p>
+                <p class="text-sm font-medium text-slate-500 truncate">{{ item.subtitle }}</p>
+              </div>
+              <div class="flex-shrink-0 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-black uppercase tracking-wider rounded-xl border border-green-100 hidden sm:block">
+                {{ item.type === 'empresa' ? 'Empresa' : (item.type === 'prestador' ? 'Prestador' : 'Serviço') }}
+              </div>
+            </button>
+          </div>
+
+          <!-- Dica Padrão quando nenhum resultado exato -->
+          <div v-else class="p-10 text-center text-slate-500">
+            <span class="text-5xl mb-4 block opacity-50">🔍</span>
+            <p class="font-black text-slate-800 text-xl">Nenhum resultado direto</p>
+            <p class="font-medium text-slate-500 text-sm mt-2 mb-6">Tente outras palavras ou busque no diretório completo.</p>
+            
+            <div class="flex items-center justify-center gap-4 text-sm">
+               <NuxtLink :to="`/servicos?search=${searchQuery}`" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors">
+                  Buscar em Serviços
+               </NuxtLink>
+               <NuxtLink :to="`/empresas?search=${searchQuery}`" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors">
+                  Buscar em Empresas
+               </NuxtLink>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   </div>
@@ -99,5 +191,25 @@ h1, p, .group\/search {
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Custom Scrollbar for Dropdown */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
 }
 </style>

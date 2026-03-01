@@ -4,7 +4,8 @@ definePageMeta({
 })
 const userStore = useAuthStore()
 const supabase = useSupabaseClient()
-const search = ref('')
+const route = useRoute()
+const search = ref((route.query.search as string) || '')
 const selectedType = ref('')
 const isLoggedIn = computed(() => !!userStore.user)
 

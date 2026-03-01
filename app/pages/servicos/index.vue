@@ -3,13 +3,23 @@ definePageMeta({
   noPadding: true
 })
 import { useAuthStore } from '~/stores/auth'
-import type { Database } from '~/types'
+import type { Database } from '~/types/database.types'
 
 const authStore = useAuthStore()
 const supabase = useSupabaseClient<Database>()
 const route = useRoute()
 const search = ref((route.query.search as string) || '')
+const debouncedSearch = ref(search.value)
 const selectedCategory = ref('')
+
+// Debounce para a busca
+let searchTimeout: any = null
+watch(search, (newValue) => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    debouncedSearch.value = newValue
+  }, 500) // 500ms de delay
+})
 
 // Buscar serviços reais com join no prestador
 const { data: services, refresh, pending, error } = await useAsyncData<any[]>('services-list', async () => {
@@ -27,30 +37,32 @@ const { data: services, refresh, pending, error } = await useAsyncData<any[]>('s
     .eq('ativo', true)
     .order('created_at', { ascending: false })
 
-  if (search.value) {
-    query = query.ilike('titulo', `%${search.value}%`)
+  if (debouncedSearch.value) {
+    query = query.ilike('titulo', `%${debouncedSearch.value}%`)
+  }
+
+  if (selectedCategory.value) {
+    query = query.eq('categoria_id', selectedCategory.value)
   }
 
   const { data, error } = await query
   if (error) throw error
   return data || []
+}, {
+  watch: [debouncedSearch, selectedCategory]
 })
 
 const handleSearch = () => {
   refresh()
 }
 
-// Categorias mockadas para filtro (podem ser buscadas da tabela categorias no futuro)
-const categories = [
-  'Eletricista', 
-  'Pintor', 
-  'Diarista', 
-  'Mecânico', 
-  'Pedreiro', 
-  'Encanador', 
-  'Marido de Aluguel', 
-  'Estética'
-]
+// Buscar Categorias Reais
+const { data: categoriesData } = await useAsyncData<any[]>('categorias-list', async () => {
+  const { data, error } = await supabase.from('categorias').select('id, nome, slug, icone').order('nome')
+  if (error) throw error
+  return data || []
+})
+const categories = computed(() => categoriesData.value || [])
 </script>
 
 <template>
@@ -92,12 +104,13 @@ const categories = [
               <div class="flex flex-col gap-2">
                 <button 
                   v-for="cat in categories" 
-                  :key="cat"
-                  class="text-left px-4 py-3 rounded-2xl font-bold text-sm transition-all"
-                  :class="selectedCategory === cat ? 'bg-green-600 text-white shadow-lg shadow-green-600/20' : 'text-slate-600 hover:bg-slate-50'"
-                  @click="selectedCategory = (selectedCategory === cat ? '' : cat); handleSearch()"
+                  :key="cat.id"
+                  class="text-left px-4 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2"
+                  :class="selectedCategory === cat.id ? 'bg-green-600 text-white shadow-lg shadow-green-600/20' : 'text-slate-600 hover:bg-slate-50'"
+                  @click="selectedCategory = (selectedCategory === cat.id ? '' : cat.id)"
                 >
-                  {{ cat }}
+                  <span v-if="cat.icone">{{ cat.icone }}</span>
+                  {{ cat.nome }}
                 </button>
               </div>
             </div>
@@ -143,8 +156,11 @@ const categories = [
               <div class="flex items-center justify-between pt-6 border-t border-slate-50">
                 <div class="flex flex-col">
                   <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">A partir de</span>
-                  <span class="text-lg font-black text-green-600">
-                    {{ Number(service.preco_inicial || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}
+                  <span v-if="service.preco_inicial" class="text-lg font-black text-green-600">
+                    {{ Number(service.preco_inicial).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}
+                  </span>
+                  <span v-else class="text-lg font-black text-slate-700 italic">
+                    A combinar
                   </span>
                 </div>
                 <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-green-600 group-hover:text-white transition-all">

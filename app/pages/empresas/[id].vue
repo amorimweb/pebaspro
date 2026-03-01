@@ -40,6 +40,18 @@ const { pending, data, error: fetchError } = useAsyncData(`profile-${id}`, async
   }
 }, { lazy: true })
 
+// Registrar visualização da vitrine em background
+watch(() => data.value?.profile, (profile) => {
+  if (profile) {
+    if (process.client) {
+      $fetch('/api/vitrine/view', {
+        method: 'POST',
+        body: { vitrineId: profile.id }
+      }).catch(e => console.error('Erro ao registrar view:', e))
+    }
+  }
+}, { immediate: true })
+
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric' })
 
@@ -125,11 +137,16 @@ const formatWhatsApp = (tel: string) => {
                     <h4 class="font-bold text-lg text-gray-900">{{ s.titulo }}</h4>
                     <p v-if="s.descricao" class="text-sm text-gray-500 mt-2 line-clamp-2">{{ s.descricao }}</p>
                   </div>
-                  <div v-if="s.preco_inicial" class="flex-shrink-0 text-right">
-                    <span class="text-teal-700 font-bold text-lg">
-                      R$ {{ s.preco_inicial.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
-                    </span>
-                    <p class="text-xs text-gray-400">a partir de</p>
+                  <div class="flex-shrink-0 text-right">
+                    <template v-if="s.preco_inicial">
+                      <span class="text-teal-700 font-bold text-lg">
+                        R$ {{ s.preco_inicial.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                      </span>
+                      <p class="text-xs text-gray-400">a partir de</p>
+                    </template>
+                    <template v-else>
+                      <span class="text-gray-500 font-bold italic mt-1 block">A combinar</span>
+                    </template>
                   </div>
                 </div>
               </div>

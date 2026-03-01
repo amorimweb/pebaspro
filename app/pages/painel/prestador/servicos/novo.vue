@@ -11,15 +11,23 @@ const supabase = useSupabaseClient<Database>()
 const router = useRouter()
 
 const loading = ref(false)
+const categories = ref<any[]>([])
+
 const form = ref({
     titulo: '',
     descricao: '',
+    categoria_id: '',
     preco_inicial: ''
 })
 
+onMounted(async () => {
+    const { data } = await supabase.from('categorias').select('id, nome').order('nome')
+    categories.value = data || []
+})
+
 const handleSave = async () => {
-    if (!form.value.titulo || !form.value.preco_inicial) {
-        alert('Preencha os campos obrigatórios')
+    if (!form.value.titulo || !form.value.categoria_id) {
+        alert('Preencha os campos obrigatórios (Nome e Categoria)')
         return
     }
 
@@ -37,6 +45,7 @@ const handleSave = async () => {
             .from('servicos')
             .insert({
                 prestador_id: user.value.id,
+                categoria_id: form.value.categoria_id,
                 titulo: form.value.titulo,
                 descricao: form.value.descricao || null,
                 preco_inicial: isNaN(priceNumber) ? null : priceNumber,
@@ -97,21 +106,28 @@ const onPriceInput = (e: Event) => {
             </div>
 
             <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Categoria *</label>
+                <select v-model="form.categoria_id" class="w-full h-12 px-4 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all font-medium" required>
+                    <option value="" disabled>Selecione uma categoria...</option>
+                    <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.nome }}</option>
+                </select>
+            </div>
+
+            <div>
                 <label class="block text-sm font-bold text-gray-700 mb-2">Descrição Detalhada</label>
                 <textarea v-model="form.descricao" rows="4" placeholder="Descreva o que está incluso, garantias, e detalhes importantes..." class="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all text-sm leading-relaxed"></textarea>
             </div>
 
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Preço Inicial (A partir de) *</label>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Preço Inicial (Opcional)</label>
                 <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">R$</span>
                     <input 
                         :value="form.preco_inicial" 
                         @input="onPriceInput"
                         type="text" 
-                        placeholder="0,00" 
+                        placeholder="Deixe em branco para 'A combinar'" 
                         class="w-full h-12 pl-12 pr-4 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all font-bold text-lg text-gray-800"
-                        required 
                     />
                 </div>
                 <p class="text-xs text-gray-400 mt-2">Este valor serve como referência para os clientes.</p>

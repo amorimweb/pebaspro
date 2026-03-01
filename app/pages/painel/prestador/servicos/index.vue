@@ -112,8 +112,11 @@ onMounted(() => {
                     </span>
                 </div>
                 <p class="text-gray-500 text-sm mb-2 line-clamp-2">{{ service.descricao }}</p>
-                <div class="text-sm font-medium text-green-600">
+                <div v-if="service.preco_inicial" class="text-sm font-medium text-green-600">
                     A partir de {{ Number(service.preco_inicial).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}
+                </div>
+                <div v-else class="text-sm font-bold text-gray-500 italic">
+                    Valor a combinar
                 </div>
             </div>
 

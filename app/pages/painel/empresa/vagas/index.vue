@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Database } from '~/types'
+import type { Database } from '~/types/database.types'
 
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
@@ -16,14 +16,15 @@ const jobs = ref<any[]>([])
 
 // Carregar vagas da empresa
 const fetchJobs = async () => {
-  if (!user.value) return
+  const userId = authStore.profile?.id || user.value?.id
+  if (!userId || userId === 'undefined') return
   
   loading.value = true
   try {
     const { data, error } = await supabase
       .from('vagas')
       .select('*')
-      .eq('empresa_id', user.value.id)
+      .eq('empresa_id', userId)
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -36,8 +37,14 @@ const fetchJobs = async () => {
 }
 
 // React to initialization and user changes
-watch([initialized, user], ([isInit, newUser]) => {
-  if (isInit && newUser?.id) {
+onMounted(() => {
+  if (authStore.profile?.id || user.value?.id) {
+    fetchJobs()
+  }
+})
+
+watch(() => authStore.profile, (newProfile) => {
+  if (newProfile?.id) {
     fetchJobs()
   }
 }, { immediate: true })

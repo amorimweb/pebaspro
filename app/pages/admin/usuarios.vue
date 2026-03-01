@@ -10,17 +10,53 @@ const users = ref<any[]>([])
 const loading = ref(true)
 const providers = ref<Record<string, string>>({})
 
+const currentPage = ref(1)
+const totalItems = ref(0)
+const itemsPerPage = 50
+
+const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage) || 1)
+
 const fetchUsers = async () => {
   loading.value = true
   try {
-    let query = (supabase.from('usuarios').select('*').order('created_at', { ascending: false }) as any)
-    if (search.value) query = query.ilike('nome', `%${search.value}%`)
+    let query = supabase.from('usuarios').select('*', { count: 'exact' })
+    if (search.value) {
+      query = query.or(`nome.ilike.%${search.value}%,email.ilike.%${search.value}%`)
+    }
     if (filterTipo.value) query = query.eq('tipo_conta', filterTipo.value)
-    const { data } = await query
+    
+    // Pagination
+    const from = (currentPage.value - 1) * itemsPerPage
+    const to = from + itemsPerPage - 1
+    
+    const { data, count } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to)
+      
     users.value = data || []
+    totalItems.value = count || 0
   } finally {
     loading.value = false
   }
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+    fetchUsers()
+  }
+}
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+    fetchUsers()
+  }
+}
+
+const handleSearch = () => {
+  currentPage.value = 1
+  fetchUsers()
 }
 
 onMounted(async () => {
@@ -94,14 +130,14 @@ const tipoBadge = (tipo: string | null) => {
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-wrap gap-3 items-center">
       <input
         v-model="search"
-        @keyup.enter="fetchUsers"
+        @keyup.enter="handleSearch"
         type="text"
-        placeholder="Buscar por nome..."
+        placeholder="Buscar por nome ou e-mail..."
         class="flex-1 min-w-48 h-10 px-4 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-400"
       />
       <select
         v-model="filterTipo"
-        @change="fetchUsers"
+        @change="handleSearch"
         class="h-10 px-4 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-400 bg-white"
       >
         <option value="">Todos os tipos</option>
@@ -110,7 +146,7 @@ const tipoBadge = (tipo: string | null) => {
         <option value="empresa">Empresa</option>
         <option value="cliente">Cliente</option>
       </select>
-      <button @click="fetchUsers" class="h-10 px-5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition">
+      <button @click="handleSearch" class="h-10 px-5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition">
         Buscar
       </button>
     </div>
@@ -120,7 +156,7 @@ const tipoBadge = (tipo: string | null) => {
       <div class="p-5 border-b border-gray-100 flex items-center justify-between">
         <h2 class="font-bold text-gray-900 flex items-center gap-2">
           <span class="w-2 h-6 bg-indigo-500 rounded-full"></span>
-          {{ users.length }} usuário(s) encontrado(s)
+          {{ totalItems }} usuário(s) encontrado(s)
         </h2>
       </div>
       <div class="overflow-x-auto">
@@ -188,6 +224,28 @@ const tipoBadge = (tipo: string | null) => {
             </tr>
           </tbody>
         </table>
+      </div>
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="p-5 border-t border-gray-100 flex items-center justify-between bg-gray-50/30">
+        <span class="text-sm text-gray-500 font-medium">
+          Página {{ currentPage }} de {{ totalPages }}
+        </span>
+        <div class="flex items-center gap-2">
+          <button 
+            @click="prevPage" 
+            :disabled="currentPage === 1"
+            class="px-4 py-2 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-white hover:text-indigo-600 transition disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-gray-600"
+          >
+            Anterior
+          </button>
+          <button 
+            @click="nextPage" 
+            :disabled="currentPage === totalPages"
+            class="px-4 py-2 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-white hover:text-indigo-600 transition disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-gray-600"
+          >
+            Próxima
+          </button>
+        </div>
       </div>
     </div>
     <!-- Modal Editar Usuário -->

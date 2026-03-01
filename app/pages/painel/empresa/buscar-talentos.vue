@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
-import type { Database } from '~/types'
+import type { Database } from '~/types/database.types'
 
 import { storeToRefs } from 'pinia'
 
@@ -11,9 +11,10 @@ definePageMeta({
 const authStore = useAuthStore()
 const { user, initialized } = storeToRefs(authStore)
 const supabase = useSupabaseClient<Database>()
+const route = useRoute()
 
 // State
-const searchQuery = ref('')
+const searchQuery = ref((route.query.search as string) || '')
 const selectedRole = ref('')
 const selectedCandidate = ref<any>(null)
 const loading = ref(false)
@@ -66,8 +67,15 @@ const fetchCandidates = async () => {
 }
 
 // Watchers for filters
-watch([searchQuery, selectedRole], () => {
-    // Debounce could be added here
+let searchTimeout: any = null
+watch(searchQuery, () => {
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+        fetchCandidates()
+    }, 500)
+})
+
+watch(selectedRole, () => {
     fetchCandidates()
 })
 

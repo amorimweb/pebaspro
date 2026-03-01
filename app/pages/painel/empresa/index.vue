@@ -22,60 +22,75 @@ const recentJobs = ref<any[]>([])
 const loading = ref(true)
 
 const fetchDashboard = async () => {
-    const userId = user.value?.id
-    if (!userId || userId === 'undefined') {
-        console.warn('Dashboard: ID do usuário inválido, abortando busca.')
-        return
-    }
+  const userId = authStore.profile?.id || user.value?.id
+  if (!userId || userId === 'undefined') {
+    console.warn('Dashboard: ID do usuário inválido, abortando busca.')
+    return
+  }
     
-    loading.value = true
-    try {
-        // 1. Fetch active jobs count
-        const { count: jobsCount, error: jobsError } = await supabase
-            .from('vagas')
-            .select('*', { count: 'exact', head: true })
-            .eq('empresa_id', userId)
-            .is('encerramento', null)
+  loading.value = true
+  try {
+    // 1. Fetch active jobs count
+    const { count: jobsCount, error: jobsError } = await supabase
+      .from('vagas')
+      .select('*', { count: 'exact', head: true })
+      .eq('empresa_id', userId)
+      .is('encerramento', null)
         
-        if (!jobsError) stats.value.activeJobs = jobsCount || 0
+    if (!jobsError) stats.value.activeJobs = jobsCount || 0
 
-        // 2. Fetch total candidates (applications for my jobs)
-        const { data: myJobs } = await supabase
-            .from('vagas')
-            .select('id')
-            .eq('empresa_id', userId)
+    // 2. Fetch total candidates (applications for my jobs)
+    const { data: myJobs } = await supabase
+      .from('vagas')
+      .select('id')
+      .eq('empresa_id', userId)
         
-        if (myJobs && myJobs.length > 0) {
-             const jobIds = (myJobs as any[]).map(j => j.id)
-             const { count: candCount } = await supabase
-                .from('candidaturas')
-                .select('*', { count: 'exact', head: true })
-                .in('vaga_id', jobIds)
-             stats.value.totalCandidates = candCount || 0
-        }
-
-        // 3. Fetch recent jobs
-        const { data: jobs } = await supabase
-            .from('vagas')
-            .select('*')
-            .eq('empresa_id', userId)
-            .order('data_publicacao', { ascending: false })
-            .limit(5)
-        
-        if (jobs) recentJobs.value = jobs
-
-    } catch (e) {
-        console.error('Error loading dashboard:', e)
-    } finally {
-        loading.value = false
+    if (myJobs && myJobs.length > 0) {
+      const jobIds = (myJobs as any[]).map(j => j.id)
+      const { count: candCount } = await supabase
+        .from('candidaturas')
+        .select('*', { count: 'exact', head: true })
+        .in('vaga_id', jobIds)
+      stats.value.totalCandidates = candCount || 0
     }
+
+    // 3. Fetch recent jobs
+    const { data: jobs } = await supabase
+      .from('vagas')
+      .select('*')
+      .eq('empresa_id', userId)
+      .order('data_publicacao', { ascending: false })
+      .limit(5)
+        
+    if (jobs) recentJobs.value = jobs
+
+    // 4. Fetch total views (if applicable for companies)
+    // For now, keeping it at 0 or implementing a simple count if visualizacoes_vitrine exists
+    const { count: viewsCount } = await supabase
+      .from('visualizacoes_vitrine')
+      .select('*', { count: 'exact', head: true })
+      .eq('vitrine_id', userId)
+    
+    stats.value.views = viewsCount || 0
+
+  } catch (e) {
+    console.error('Error loading dashboard:', e)
+  } finally {
+    loading.value = false
+  }
 }
 
 // React to initialization and user changes
-watch([initialized, user], ([isInit, newUser]) => {
-    if (isInit && newUser?.id) {
-        fetchDashboard()
-    }
+onMounted(() => {
+  if (authStore.profile?.id || user.value?.id) {
+    fetchDashboard()
+  }
+})
+
+watch(() => authStore.profile, (newProfile) => {
+  if (newProfile?.id) {
+    fetchDashboard()
+  }
 }, { immediate: true })
 </script>
 
