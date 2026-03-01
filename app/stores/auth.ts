@@ -11,7 +11,7 @@ export const useAuthStore = defineStore('auth', () => {
     const profileLoading = computed(() => profileStore.loading)
     const error = computed(() => profileStore.error)
 
-    const initialized = ref(true)
+    const initialized = ref(false)
 
     async function fetchProfile() {
         await profileStore.fetchProfile()
@@ -24,6 +24,7 @@ export const useAuthStore = defineStore('auth', () => {
                 await signOut()
             }
         }
+        initialized.value = true
     }
 
     async function updateProfile(data: Partial<Usuario>) {
@@ -34,8 +35,11 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             const { error: err } = await supabase
                 .from('usuarios')
-                .update(data)
-                .eq('id', userId)
+                .upsert({
+                    id: userId,
+                    ...data,
+                    updated_at: new Date().toISOString()
+                })
 
             if (err) throw err
 

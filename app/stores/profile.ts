@@ -23,10 +23,34 @@ export const useProfileStore = defineStore('profile', {
             try {
                 const data = await $fetch<Usuario>('/api/me')
                 this.profile = data
+                return { data, error: null }
             } catch (err: any) {
                 console.error('Erro ao buscar perfil:', err)
                 this.error = err.statusMessage || 'Erro ao carregar perfil'
                 this.profile = null
+                return { data: null, error: err }
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async createProfile(data: Partial<Usuario>) {
+            const supabase = useSupabaseClient()
+            this.loading = true
+            try {
+                const { error: err } = await supabase
+                    .from('usuarios')
+                    .upsert({
+                        ...data,
+                        updated_at: new Date().toISOString()
+                    })
+
+                if (err) throw err
+                await this.fetchProfile()
+                return { error: null }
+            } catch (e: any) {
+                console.error('Erro ao criar perfil:', e)
+                return { error: e }
             } finally {
                 this.loading = false
             }
