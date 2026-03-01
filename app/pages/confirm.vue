@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
-import type { Database } from '~/types'
+import type { Database } from '~/types/database.types'
 
 const authStore = useAuthStore()
 const user = useSupabaseUser()
