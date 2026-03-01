@@ -209,6 +209,10 @@ watch(isMobileMenuOpen, (isOpen) => {
               </div>
               
               <div class="space-y-0.5">
+                <NuxtLink v-if="profile?.role === 'admin'" to="/admin" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-all">
+                  <svg class="w-5 h-5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+                  Administração
+                </NuxtLink>
                 <NuxtLink to="/perfil" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-green-50 hover:text-green-700 rounded-xl transition-all">
                   <svg class="w-5 h-5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                   Meu Perfil
@@ -324,6 +328,7 @@ watch(isMobileMenuOpen, (isOpen) => {
                </div>
             </template>
             <template v-else>
+               <NuxtLink v-if="profile?.role === 'admin'" to="/admin" class="flex items-center px-6 py-4 text-lg font-black text-amber-600 hover:bg-amber-50 rounded-2xl uppercase tracking-tight">Administração</NuxtLink>
                <NuxtLink :to="profile?.tipo_conta === 'empresa' ? '/painel/empresa/configuracoes' : '/perfil'" class="flex items-center px-6 py-4 text-lg font-black text-slate-700 hover:bg-slate-50 rounded-2xl uppercase tracking-tight">Configurações</NuxtLink>
                <button @click="handleLogout" class="flex items-center w-full px-6 py-4 text-lg font-black text-red-500 hover:bg-red-50 rounded-2xl uppercase tracking-tight">Encerrar Sessão</button>
             </template>

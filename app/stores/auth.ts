@@ -14,7 +14,16 @@ export const useAuthStore = defineStore('auth', () => {
     const initialized = ref(true)
 
     async function fetchProfile() {
-        return await profileStore.fetchProfile()
+        await profileStore.fetchProfile()
+        if (profile.value?.status === 'suspenso') {
+            if (process.client) {
+                alert('Sua conta foi suspensa por violar os termos de uso. Entre em contato com o suporte.')
+                await signOut()
+                navigateTo('/')
+            } else {
+                await signOut()
+            }
+        }
     }
 
     async function updateProfile(data: Partial<Usuario>) {
