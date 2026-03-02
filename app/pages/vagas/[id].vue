@@ -3,7 +3,7 @@ definePageMeta({
   noPadding: true
 })
 import { useAuthStore } from '~/stores/auth'
-import type { Database } from '~/types'
+import type { Database } from '~/types/database.types'
 
 const route = useRoute()
 const id = route.params.id
@@ -78,26 +78,78 @@ const openWhatsApp = async () => {
     return
   }
 
-  if (!isResumeComplete.value) {
+  // Só valida currículo se for TALENTO
+  if (authStore.profile?.tipo_conta === 'talento' && !isResumeComplete.value) {
     alert('Seu currículo está incompleto! Complete seu perfil com objetivo e habilidades para se candidatar.')
     navigateTo('/painel/talento/curriculo')
     return
   }
 
-  // Registrar candidatura no banco para métricas da empresa
-  try {
-     await supabase.from('candidaturas').insert({
-        vaga_id: job.value.id,
-        talento_id: authStore.user.id
-     })
-  } catch (e) {
-      console.error('Erro ao registrar candidatura:', e)
+  const whatsappVaga = job.value?.whatsapp
+  const whatsappEmpresa = (job.value?.empresa as any)?.telefone
+  const phoneRaw = whatsappVaga || whatsappEmpresa
+
+  if (!phoneRaw) {
+    alert('Esta empresa não disponibilizou contato via WhatsApp para esta vaga.')
+    return
   }
 
-  if (!job.value?.whatsapp) return
-  const phone = job.value.whatsapp.replace(/\D/g, '')
-  const message = encodeURIComponent(`Olá, vi a vaga de "${job.value.titulo}" no PebasPro e gostaria de mais informações.`)
-  window.open(`https://wa.me/55${phone}?text=${message}`, '_blank')
+  // Limpa o número: remove parênteses, traços, espaços e o + se houver
+  let phone = phoneRaw.replace(/\D/g, '')
+  
+  // Se o número não começar com 55 e tiver 10 ou 11 dígitos, acrescenta o 55
+  if (!phone.startsWith('55') && (phone.length === 10 || phone.length === 11)) {
+    phone = '55' + phone
+  }
+
+  const message = encodeURIComponent(`Olá! Vi a vaga de "${job.value.titulo}" no PebasPro e gostaria de me candidatar.`)
+  const url = `https://wa.me/${phone}?text=${message}`
+
+  // Registrar candidatura de forma assíncrona sem travar o redirecionamento
+  supabase.from('candidaturas' as any).insert({
+      vaga_id: job.value.id,
+      talento_id: authStore.profile.id
+  }).then(({ error }) => {
+      if (error) console.error('Erro ao registrar métrica:', error)
+  })
+
+  // Redireciona imediatamente para evitar pop-up blocker
+  window.open(url, '_blank')
+}
+
+const openEmail = async () => {
+  if (!isVagaAtiva.value) {
+    alert('Esta vaga já foi encerrada.')
+    return
+  }
+
+  if (!authStore.profile) {
+    alert('Você precisa estar logado para se candidatar.')
+    navigateTo('/login')
+    return
+  }
+
+  if (authStore.profile?.tipo_conta === 'talento' && !isResumeComplete.value) {
+    alert('Seu currículo está incompleto! Complete seu perfil com objetivo e habilidades para se candidatar.')
+    navigateTo('/painel/talento/curriculo')
+    return
+  }
+
+  const emailRaw = job.value?.email || (job.value?.empresa as any)?.email
+  if (!emailRaw) {
+    alert('Esta empresa não disponibilizou contato via e-mail para esta vaga.')
+    return
+  }
+
+  // Registrar candidatura de forma assíncrona
+  supabase.from('candidaturas' as any).insert({
+      vaga_id: job.value.id,
+      talento_id: authStore.profile.id
+  })
+
+  const subject = encodeURIComponent(`Candidatura: ${job.value.titulo} - PebasPro`)
+  const body = encodeURIComponent(`Olá! Vi a vaga de "${job.value.titulo}" no PebasPro e gostaria de me candidatar. Em anexo envio meu interesse.`)
+  window.location.href = `mailto:${emailRaw}?subject=${subject}&body=${body}`
 }
 </script>
 
@@ -199,7 +251,7 @@ const openWhatsApp = async () => {
                             <p class="text-blue-900 font-black text-lg leading-tight">98% de Match</p>
                         </div>
                       </div>
-                      <div class="text-blue-600 font-black text-xs uppercase tracking-tighter">Muito Reco.</div>
+                      <div class="text-blue-600 font-black text-xs uppercase tracking-tighter">Recomendado</div>
                     </div>
 
                     <div v-if="!isVagaAtiva" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-center shadow-sm">
@@ -207,14 +259,25 @@ const openWhatsApp = async () => {
                         <p class="text-red-700 text-sm font-medium">Esta oportunidade não aceita mais candidaturas.</p>
                     </div>
 
-                    <button 
-                        v-else
-                        @click="openWhatsApp" 
-                        class="btn-primary w-full flex items-center justify-center gap-3 transition-transform active:scale-95"
-                    >
-                        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                        Candidatar via WhatsApp
-                    </button>
+                    <div v-if="isVagaAtiva" class="space-y-3">
+                        <button 
+                            v-if="!job.tipo_contato || job.tipo_contato === 'whatsapp' || job.tipo_contato === 'ambos'"
+                            @click="openWhatsApp" 
+                            class="btn-primary w-full flex items-center justify-center gap-3 transition-transform active:scale-95"
+                        >
+                            <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                            Candidatar via WhatsApp
+                        </button>
+
+                        <button 
+                            v-if="job.tipo_contato === 'email' || job.tipo_contato === 'ambos'"
+                            @click="openEmail" 
+                            class="w-full h-[60px] flex items-center justify-center gap-3 bg-slate-900 hover:bg-black text-white rounded-16 border-none font-black text-lg transition-transform active:scale-95 shadow-lg shadow-slate-900/10"
+                        >
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            Candidatar via E-mail
+                        </button>
+                    </div>
                  </div>
             </div>
             
@@ -237,7 +300,7 @@ const openWhatsApp = async () => {
                 <p class="light">{{ (job.empresa as any)?.regiao || 'Na região' }}</p>
               </div>
             </div>
-            <p class="company-bio">{{ (job.empresa as any)?.biografia || 'Esta empresa ainda não preencheu sua descrição completa.' }}</p>
+            <p class="company-bio">{{ (job.empresa as any)?.biografia || (job.empresa as any)?.sobre_mim || 'Esta empresa ainda não preencheu sua descrição completa.' }}</p>
             <NuxtLink v-if="job.empresa_id" :to="`/empresas/${job.empresa_id}`" class="view-company">Ver todos os detalhes</NuxtLink>
           </div>
         </aside>
@@ -258,7 +321,7 @@ const openWhatsApp = async () => {
 </template>
 
 <style scoped>
-.container { max-width: 1200px; margin: 0 auto; padding: 0 20px 60px 20px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 40px 20px 60px 20px; }
 .job-layout { display: grid; grid-template-columns: 1fr 380px; gap: 40px; }
 @media (max-width: 1024px) { .job-layout { grid-template-columns: 1fr; } }
 
@@ -293,6 +356,7 @@ const openWhatsApp = async () => {
 .detail-item .val { color: #1e293b; font-weight: 700; }
 
 .full-width { width: 100%; }
+.rounded-16 { border-radius: 16px; }
 .btn-primary { height: 60px; background: linear-gradient(to right, #25D366, #128C7E); color: white; border: none; border-radius: 16px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2); }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3); }
 

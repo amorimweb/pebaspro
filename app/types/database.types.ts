@@ -217,8 +217,8 @@ export interface Database {
         Row: {
           id: string
           servico_id: string
+          autor_id: string
           prestador_id: string
-          cliente_id: string
           nota: number
           comentario: string | null
           created_at: string
@@ -226,8 +226,8 @@ export interface Database {
         Insert: {
           id?: string
           servico_id: string
+          autor_id: string
           prestador_id: string
-          cliente_id: string
           nota: number
           comentario?: string | null
           created_at?: string
@@ -235,16 +235,16 @@ export interface Database {
         Update: {
           id?: string
           servico_id?: string
+          autor_id?: string
           prestador_id?: string
-          cliente_id?: string
           nota?: number
           comentario?: string | null
           created_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "avaliacoes_cliente_id_fkey"
-            columns: ["cliente_id"]
+            foreignKeyName: "avaliacoes_autor_id_fkey"
+            columns: ["autor_id"]
             isOneToOne: false
             referencedRelation: "usuarios"
             referencedColumns: ["id"]
@@ -261,6 +261,56 @@ export interface Database {
             columns: ["servico_id"]
             isOneToOne: false
             referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      curriculos: {
+        Row: {
+          id: string
+          user_id: string
+          objetivo_profissional: string | null
+          biografia: string | null
+          habilidades: string[] | null
+          experiencia_profissional: Json | null
+          formacao_academica: Json | null
+          latitude: number | null
+          longitude: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          objetivo_profissional?: string | null
+          biografia?: string | null
+          habilidades?: string[] | null
+          experiencia_profissional?: Json | null
+          formacao_academica?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          objetivo_profissional?: string | null
+          biografia?: string | null
+          habilidades?: string[] | null
+          experiencia_profissional?: Json | null
+          formacao_academica?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "curriculos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
             referencedColumns: ["id"]
           }
         ]
@@ -401,6 +451,8 @@ export interface Database {
           latitude: number | null
           longitude: number | null
           nivel_experiencia: string | null
+          email: string | null
+          tipo_contato: string | null
         }
         Insert: {
           id?: string
@@ -569,3 +621,4 @@ export type Avaliacao = Tables<"avaliacoes">
 export type Favorito = Tables<"favoritos">
 export type Usuario = Tables<"usuarios">
 export type Vaga = Tables<"vagas">
+export type Curriculo = Tables<"curriculos">

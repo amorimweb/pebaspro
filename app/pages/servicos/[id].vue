@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  noPadding: true
+  noPadding: false
 })
 import { useAuthStore } from '~/stores/auth'
 import type { Database } from '~/types'
@@ -155,8 +155,3 @@ const openWhatsApp = async () => {
   </div>
 </template>
 
-<style scoped>
-.service-detail-page {
-  padding-top: calc(theme('spacing.24') + 2rem);
-}
-</style>

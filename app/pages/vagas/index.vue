@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  noPadding: true
+  noPadding: false
 })
 const userStore = useAuthStore()
 const supabase = useSupabaseClient()

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Database } from '~/types'
+import type { Database } from '~/types/database.types'
 
 type UserRow = Database['public']['Tables']['usuarios']['Row']
 type ServicoRow = Database['public']['Tables']['servicos']['Row']
@@ -25,9 +25,13 @@ const { pending, data, error: fetchError } = useAsyncData(`profile-${id}`, async
       .order('created_at', { ascending: false })
     servs = (servRes.data || []) as ServicoRow[]
   } else {
+    const agora = new Date()
+    const hojeStr = agora.toISOString().split('T')[0]
+
     const vagasRes = await client
       .from('vagas').select('*')
-      .eq('empresa_id', id).is('encerramento', null)
+      .eq('empresa_id', id)
+      .or(`encerramento.is.null,encerramento.gte.${hojeStr}`)
       .order('data_publicacao', { ascending: false })
     vags = (vagasRes.data || []) as VagaRow[]
   }
@@ -67,7 +71,7 @@ const formatWhatsApp = (tel: string) => {
     <main v-if="data?.profile">
       <!-- Hero Banner -->
       <div
-        class="text-white pt-20 pb-24 relative overflow-hidden"
+        class="text-white pt-8 pb-24 relative overflow-hidden"
         :class="data.isPrestador
           ? 'bg-gradient-to-r from-teal-900 to-teal-700'
           : 'bg-gradient-to-r from-gray-900 to-gray-800'"

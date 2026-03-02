@@ -25,6 +25,8 @@ const form = ref({
     local: 'Parauapebas - PA',
     modalidade: 'presencial',
     whatsapp: '',
+    email: '',
+    tipo_contato: 'whatsapp',
     encerramento: '',
     categoria_id: null as string | null,
     habilidades_exigidas: [] as string[],
@@ -44,6 +46,14 @@ const addSkill = () => {
 const removeSkill = (skill: string) => {
     form.value.habilidades_exigidas = form.value.habilidades_exigidas.filter(s => s !== skill)
 }
+
+// Auto-preencher dados da empresa
+watch(() => authStore.profile, (newProfile) => {
+    if (newProfile) {
+        if (!form.value.whatsapp) form.value.whatsapp = newProfile.telefone || ''
+        if (!form.value.email) form.value.email = newProfile.email || ''
+    }
+}, { immediate: true })
 
 const handleSubmit = async () => {
     const userId = authStore.profile?.id || user.value?.id
@@ -69,6 +79,8 @@ const handleSubmit = async () => {
             local: form.value.local,
             modalidade: form.value.modalidade,
             whatsapp: form.value.whatsapp || null,
+            email: form.value.email || null,
+            tipo_contato: form.value.tipo_contato,
             encerramento: form.value.encerramento || null,
             categoria_id: form.value.categoria_id,
             habilidades_exigidas: form.value.habilidades_exigidas.length > 0 ? form.value.habilidades_exigidas : null,
@@ -176,16 +188,41 @@ const handleSubmit = async () => {
                 </div>
             </div>
 
-            <!-- Grid: WhatsApp, Encerramento -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-black text-slate-900 uppercase tracking-widest mb-2">WhatsApp para Contato</label>
-                    <input v-model="form.whatsapp" type="tel" placeholder="(94) 99999-9999" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-medium" />
+            <!-- Seção de Contato -->
+            <div class="space-y-6 bg-slate-50 p-8 rounded-[24px] border-2 border-slate-100">
+                <h3 class="text-lg font-black text-slate-900 uppercase tracking-widest flex items-center gap-3">
+                    <span class="p-2 bg-green-600 text-white rounded-lg">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                    </span>
+                    Canais de Contato
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-black text-slate-900 uppercase tracking-widest mb-2">Tipo de Contato</label>
+                        <select v-model="form.tipo_contato" class="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-bold cursor-pointer">
+                            <option value="whatsapp">Apenas WhatsApp</option>
+                            <option value="email">Apenas E-mail</option>
+                            <option value="ambos">Ambos (WhatsApp + E-mail)</option>
+                        </select>
+                    </div>
+
+                    <div v-if="form.tipo_contato === 'whatsapp' || form.tipo_contato === 'ambos'">
+                        <label class="block text-sm font-black text-slate-900 uppercase tracking-widest mb-2">WhatsApp</label>
+                        <input v-model="form.whatsapp" type="tel" placeholder="(94) 99999-9999" class="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-medium" />
+                    </div>
+
+                    <div v-if="form.tipo_contato === 'email' || form.tipo_contato === 'ambos'">
+                        <label class="block text-sm font-black text-slate-900 uppercase tracking-widest mb-2">E-mail para Vaga</label>
+                        <input v-model="form.email" type="email" placeholder="empresa@exemplo.com" class="w-full px-6 py-4 bg-white border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-medium" />
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-black text-slate-900 uppercase tracking-widest mb-2">Data de Encerramento</label>
-                    <input v-model="form.encerramento" type="date" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-bold" />
-                </div>
+            </div>
+
+            <!-- Encerramento -->
+            <div>
+                <label class="block text-sm font-black text-slate-900 uppercase tracking-widest mb-2">Data de Encerramento</label>
+                <input v-model="form.encerramento" type="date" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-bold" />
             </div>
 
             <!-- Habilidades Exigidas -->

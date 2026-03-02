@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  noPadding: true
+  noPadding: false
 })
 import { useAuthStore } from '~/stores/auth'
 import type { Database } from '~/types/database.types'
@@ -175,9 +175,3 @@ const categories = computed(() => categoriesData.value || [])
   </div>
 </template>
 
-<style scoped>
-.services-page {
-  /* Respiro extra para o header fixo */
-  padding-top: calc(theme('spacing.24') + 2rem);
-}
-</style>
