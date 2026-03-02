@@ -15,6 +15,7 @@ const menuItems = computed(() => {
   if (profile.tipo_conta === 'prestador' || profile.tipo_conta === 'talento') {
     menu.push(
       { name: 'Dashboard', path: '/painel/talento', icon: '📊' },
+      { name: 'Favoritos', path: '/painel/favoritos', icon: '⭐' },
       { name: 'Mensagens', path: '/painel/mensagens', icon: '💬' },
     )
   }
@@ -24,6 +25,7 @@ const menuItems = computed(() => {
       { name: 'Dashboard', path: '/painel/empresa', icon: '📊' },
       { name: 'Minhas Vagas', path: '/painel/empresa/vagas', icon: '🏢' },
       { name: 'Buscar Talentos', path: '/painel/empresa/buscar-talentos', icon: '🔍' },
+      { name: 'Favoritos', path: '/painel/favoritos', icon: '⭐' },
       { name: 'Mensagens', path: '/painel/mensagens', icon: '💬' },
     )
   }

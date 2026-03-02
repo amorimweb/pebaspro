@@ -63,6 +63,38 @@ const { data: categoriesData } = await useAsyncData<any[]>('categorias-list', as
   return data || []
 })
 const categories = computed(() => categoriesData.value || [])
+
+// Favorites Logic
+const { toggleServiceFavorite, getMyFavoritedServiceIds } = useFavorites()
+const favoritedServiceIds = ref<string[]>([])
+
+const fetchServiceFavorites = async () => {
+  if (authStore.profile?.id) {
+    favoritedServiceIds.value = await getMyFavoritedServiceIds()
+  }
+}
+
+const handleToggleFavorite = async (e: Event, serviceId: string) => {
+  e.preventDefault() // Evita navegar para a página do serviço ao clicar na estrela
+  e.stopPropagation()
+  
+  if (!authStore.profile) {
+    return navigateTo('/login')
+  }
+
+  const result = await toggleServiceFavorite(serviceId)
+  if (!result.error) {
+    if (result.action === 'added') {
+      favoritedServiceIds.value.push(serviceId)
+    } else {
+      favoritedServiceIds.value = favoritedServiceIds.value.filter(id => id !== serviceId)
+    }
+  }
+}
+
+onMounted(() => {
+  fetchServiceFavorites()
+})
 </script>
 
 <template>
@@ -147,6 +179,18 @@ const categories = computed(() => categoriesData.value || [])
                   </h3>
                   <p class="text-sm font-bold text-slate-400 truncate">{{ service.prestador?.nome }}</p>
                 </div>
+                
+                <!-- Favorite Toggle -->
+                <button 
+                  @click="handleToggleFavorite($event, service.id)"
+                  class="p-2.5 rounded-xl transition-all active:scale-90 z-20"
+                  :class="favoritedServiceIds.includes(service.id) ? 'bg-yellow-50 text-yellow-500 shadow-sm border border-yellow-100' : 'bg-slate-50 text-slate-300 hover:bg-slate-100 hover:text-slate-400'"
+                  :title="favoritedServiceIds.includes(service.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'"
+                >
+                  <svg class="w-5 h-5" :fill="favoritedServiceIds.includes(service.id) ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.382-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                  </svg>
+                </button>
               </div>
 
               <p class="text-slate-500 text-sm line-clamp-3 mb-6 font-medium leading-relaxed">

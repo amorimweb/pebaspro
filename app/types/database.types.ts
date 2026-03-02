@@ -319,19 +319,22 @@ export interface Database {
         Row: {
           id: string
           usuario_id: string
-          servico_id: string
+          servico_id: string | null
+          favorito_usuario_id: string | null
           created_at: string
         }
         Insert: {
           id?: string
           usuario_id: string
-          servico_id: string
+          servico_id?: string | null
+          favorito_usuario_id?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           usuario_id?: string
-          servico_id?: string
+          servico_id?: string | null
+          favorito_usuario_id?: string | null
           created_at?: string
         }
         Relationships: [
@@ -345,6 +348,13 @@ export interface Database {
           {
             foreignKeyName: "favoritos_usuario_id_fkey"
             columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favoritos_favorito_usuario_id_fkey"
+            columns: ["favorito_usuario_id"]
             isOneToOne: false
             referencedRelation: "usuarios"
             referencedColumns: ["id"]
@@ -517,7 +527,30 @@ export interface Database {
       }
     }
     Views: {
-      [_ in never]: never
+      talento_curriculos: {
+        Row: {
+          id: string
+          nome: string | null
+          email: string | null
+          foto: string | null
+          telefone: string | null
+          endereco: string | null
+          profissao: string | null
+          regiao: string | null
+          cadastro_completo: boolean | null
+          status: string | null
+          created_at: string
+          updated_at: string
+          objetivo_profissional: string | null
+          biografia: string | null
+          habilidades: string[] | null
+          experiencia_profissional: Json | null
+          formacao_academica: Json | null
+          latitude: number | null
+          longitude: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
