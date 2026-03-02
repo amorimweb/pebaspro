@@ -117,11 +117,6 @@ const validateDoc = () => {
 const typeCookie = useCookie('pebas_pending_type')
 const chosenType = computed(() => typeCookie.value || 'talento')
 
-const backToSelection = () => {
-  typeCookie.value = null
-  navigateTo('/cadastro')
-}
-
 definePageMeta({
   layout: false,
   noPadding: true
@@ -218,12 +213,12 @@ const loginWithGoogle = async () => {
   <div class="auth-page">
     <div class="auth-card">
       <div class="auth-header">
-        <button @click="backToSelection" class="back-link">
+        <NuxtLink to="/cadastro" class="back-link">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 icon-small" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
           Mudar perfil
-        </button>
+        </NuxtLink>
         <h1>Dados do seu perfil</h1>
         <p>Complete o cadastro como <strong>{{ chosenType === 'talento' ? 'Talento' : chosenType === 'prestador' ? 'Prestador' : 'Empresa' }}</strong></p>
       </div>

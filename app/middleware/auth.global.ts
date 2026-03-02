@@ -4,13 +4,11 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     const user = useSupabaseUser()
     const authStore = useAuthStore()
 
-    const publicRoutes = ['/', '/login', '/cadastro', '/confirm', '/esqueci-senha', '/redefinir-senha', '/vagas', '/servicos', '/termos', '/privacidade']
-    const path = to.path.replace(/\/$/, '') || '/'
-    const isPublicRoute = publicRoutes.includes(path) || path.startsWith('/cadastro/')
+    const publicRoutes = ['/', '/login', '/cadastro', '/confirm', '/esqueci-senha', '/redefinir-senha']
+    const isPublicRoute = publicRoutes.some(path => to.path === path || to.path.startsWith('/cadastro/'))
 
     if (!user.value) {
         if (!isPublicRoute) {
-            console.log('Middleware Blocando Acesso:', to.path)
             return navigateTo('/login')
         }
         return
