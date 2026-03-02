@@ -6,17 +6,20 @@ export default defineNuxtPlugin(() => {
     watch(user, async (newUser, oldUser) => {
         // 1. Usuário logou ou mudou
         if (newUser) {
-            if (newUser.id !== oldUser?.id) {
+            if (newUser.id !== oldUser?.id || !authStore.profile) {
                 await authStore.fetchProfile()
+            } else {
+                // Já temos perfil e o usuário é o mesmo (hidratação)
+                authStore.initialized = true
             }
         }
         // 2. Usuário deslogou (tinha um oldUser mas sumiu)
         else if (oldUser) {
-            authStore.signOut()
+            await authStore.signOut()
             authStore.initialized = true
         }
         // 3. Estado inicial deslogado (convidado)
-        else if (!authStore.initialized) {
+        else {
             authStore.initialized = true
         }
     }, { immediate: true })

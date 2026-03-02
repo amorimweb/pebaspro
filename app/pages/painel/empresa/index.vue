@@ -31,11 +31,12 @@ const fetchDashboard = async () => {
   loading.value = true
   try {
     // 1. Fetch active jobs count
+    const agoraStr = new Date().toISOString().split('T')[0]
     const { count: jobsCount, error: jobsError } = await supabase
       .from('vagas')
       .select('*', { count: 'exact', head: true })
       .eq('empresa_id', userId)
-      .is('encerramento', null)
+      .or(`encerramento.is.null,encerramento.gte.${agoraStr}`)
         
     if (!jobsError) stats.value.activeJobs = jobsCount || 0
 
@@ -47,9 +48,9 @@ const fetchDashboard = async () => {
         
     if (myJobs && myJobs.length > 0) {
       const jobIds = (myJobs as any[]).map(j => j.id)
-      const { count: candCount } = await supabase
-        .from('candidaturas')
-        .select('*', { count: 'exact', head: true })
+      const { count: candCount } = await (supabase
+        .from('candidaturas' as any)
+        .select('*', { count: 'exact', head: true }) as any)
         .in('vaga_id', jobIds)
       stats.value.totalCandidates = candCount || 0
     }
@@ -65,10 +66,9 @@ const fetchDashboard = async () => {
     if (jobs) recentJobs.value = jobs
 
     // 4. Fetch total views (if applicable for companies)
-    // For now, keeping it at 0 or implementing a simple count if visualizacoes_vitrine exists
-    const { count: viewsCount } = await supabase
-      .from('visualizacoes_vitrine')
-      .select('*', { count: 'exact', head: true })
+    const { count: viewsCount } = await (supabase
+      .from('visualizacoes_vitrine' as any)
+      .select('*', { count: 'exact', head: true }) as any)
       .eq('vitrine_id', userId)
     
     stats.value.views = viewsCount || 0
@@ -78,6 +78,17 @@ const fetchDashboard = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const isVagaAtiva = (encerramento: string | null) => {
+  if (!encerramento) return true
+  const agora = new Date()
+  const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate())
+  const parts = encerramento.split('-')
+  if (parts.length !== 3) return true
+  const [year, month, day] = parts.map(Number)
+  const dataEnc = new Date(year, month - 1, day)
+  return dataEnc >= hoje
 }
 
 // React to initialization and user changes
@@ -102,7 +113,7 @@ watch(() => authStore.profile, (newProfile) => {
         <div class="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full mb-2 border border-indigo-100">
           🏢 Painel da Empresa
         </div>
-        <h1 class="text-2xl font-bold text-gray-900">Olá, {{ authStore.profile?.nome?.split(' ')[0] || 'Empresa' }}!</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Olá, {{ authStore.profile?.nome || 'Empresa' }}!</h1>
         <p class="text-gray-500">Gerencie suas vagas e acompanhe candidaturas.</p>
       </div>
       <div>
@@ -186,7 +197,7 @@ watch(() => authStore.profile, (newProfile) => {
                     <tr v-else v-for="job in recentJobs" :key="job.id" class="hover:bg-gray-50 transition-colors group">
                         <td class="px-6 py-4 font-medium text-gray-900">{{ job.titulo }}</td>
                         <td class="px-6 py-4">
-                            <span v-if="!job.encerramento" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                            <span v-if="isVagaAtiva(job.encerramento)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
                                 Ativa
                             </span>
                             <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">

@@ -13,10 +13,17 @@ export const useAuthStore = defineStore('auth', () => {
 
     const initialized = useState('auth_initialized', () => false)
 
-    // Sincroniza o estado inicial se já houver perfil persistido
-    if (process.client && profileStore.profile) {
+    // Sincroniza o estado inicial se já houver perfil (SSR ou Persistência)
+    if (profileStore.profile) {
         initialized.value = true
     }
+
+    // Watcher para garantir que initialized mude para true assim que o perfil carregar
+    watch(() => profileStore.profile, (val) => {
+        if (val && !initialized.value) {
+            initialized.value = true
+        }
+    })
 
     async function fetchProfile() {
         try {
@@ -51,11 +58,12 @@ export const useAuthStore = defineStore('auth', () => {
 
             if (err) throw err
 
-            await fetchProfile()
-            return { error: null }
+            // Forçar a re-busca do perfil para atualizar todos os componentes
+            await profileStore.fetchProfile()
+            return { data: profileStore.profile, error: null }
         } catch (e: any) {
-            console.error('Erro ao atualizar perfil:', e)
-            return { error: e }
+            console.error('Erro ao atualizar perfil no store:', e)
+            return { data: null, error: e }
         } finally {
             profileStore.loading = false
         }

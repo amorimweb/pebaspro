@@ -11,6 +11,9 @@ const isLoggedIn = computed(() => !!userStore.user)
 
 // Integramos com a tabela real 'vagas' e fazemos join com 'usuarios' para pegar o nome da empresa
 const { data: jobs, refresh, pending, error } = await useAsyncData<any[]>('vagas-list', async () => {
+  const agora = new Date()
+  const hojeISO = agora.toISOString().split('T')[0] // 'YYYY-MM-DD'
+
   let query = supabase
     .from('vagas')
     .select(`
@@ -27,8 +30,8 @@ const { data: jobs, refresh, pending, error } = await useAsyncData<any[]>('vagas
     query = query.eq('tipo', selectedType.value)
   }
 
-  // Apenas vagas abertas (sem data de encerramento)
-  query = query.is('encerramento', null)
+  // Apenas vagas abertas (sem data de encerramento OU com data de encerramento >= hoje)
+  query = query.or(`encerramento.is.null,encerramento.gte.${hojeISO}`)
 
   const { data, error } = await query
   if (error) throw error

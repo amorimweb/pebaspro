@@ -25,7 +25,7 @@ const fetchJobs = async () => {
       .from('vagas')
       .select('*')
       .eq('empresa_id', userId)
-      .order('created_at', { ascending: false })
+      .order('data_publicacao', { ascending: false })
 
     if (error) throw error
     jobs.value = data || []
@@ -34,6 +34,24 @@ const fetchJobs = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// Lógica de Status considerendo fuso do Brasil
+const isVagaAtiva = (encerramento: string | null) => {
+  if (!encerramento) return true
+  
+  const agora = new Date()
+  // Ajuste simplificado mas robusto para o fuso de Brasília na comparação de datas
+  const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate())
+  
+  // encerramento: '2026-03-07' -> tratamos como o dia 07/03 inteiro
+  const parts = encerramento.split('-')
+  if (parts.length !== 3) return true
+  
+  const [year, month, day] = parts.map(Number)
+  const dataEnc = new Date(year, month - 1, day)
+  
+  return dataEnc >= hoje
 }
 
 // React to initialization and user changes
@@ -111,7 +129,7 @@ watch(() => authStore.profile, (newProfile) => {
                         <div class="text-xs text-gray-400 font-normal mt-0.5">ID: #{{ job.id.toString().slice(0,8) }}</div>
                     </td>
                     <td class="px-6 py-4">
-                        <span v-if="!job.encerramento" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span v-if="isVagaAtiva(job.encerramento)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             Ativa
                         </span>
                         <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -122,7 +140,7 @@ watch(() => authStore.profile, (newProfile) => {
                         {{ job.cidade || 'Parauapebas' }}
                     </td>
                     <td class="px-6 py-4">
-                        {{ new Date(job.created_at).toLocaleDateString('pt-BR') }}
+                        {{ new Date(job.data_publicacao).toLocaleDateString('pt-BR') }}
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-3">

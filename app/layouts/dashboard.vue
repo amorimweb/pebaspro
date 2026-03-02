@@ -95,7 +95,7 @@ const handleLogout = async () => {
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <main class="flex-1 flex flex-col min-w-0">
       <!-- Mobile Topbar -->
       <header class="lg:hidden h-24 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-30">
         <div class="flex items-center gap-3">

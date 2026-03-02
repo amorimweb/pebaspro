@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Database } from '~/types'
+import type { Database } from '~/types/database.types'
 
 definePageMeta({ layout: 'admin', middleware: ['admin'] as any })
 
@@ -32,6 +32,17 @@ const deleteVaga = async (id: string) => {
 }
 
 const formatDate = (d: string) => new Date(d).toLocaleDateString('pt-BR')
+
+const isVagaAtiva = (encerramento: string | null) => {
+  if (!encerramento) return true
+  const agora = new Date()
+  const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate())
+  const parts = encerramento.split('-')
+  if (parts.length !== 3) return true
+  const [year, month, day] = parts.map(Number)
+  const dataEnc = new Date(year, month - 1, day)
+  return dataEnc >= hoje
+}
 </script>
 
 <template>
@@ -86,8 +97,8 @@ const formatDate = (d: string) => new Date(d).toLocaleDateString('pt-BR')
                 <p class="text-xs text-gray-400">{{ (v.empresa as any)?.email }}</p>
               </td>
               <td class="px-6 py-4">
-                <span :class="`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${v.encerramento ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700'}`">
-                  {{ v.encerramento ? 'Encerrada' : 'Ativa' }}
+                <span :class="`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${isVagaAtiva(v.encerramento) ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`">
+                  {{ isVagaAtiva(v.encerramento) ? 'Ativa' : 'Encerrada' }}
                 </span>
               </td>
               <td class="px-6 py-4 text-gray-400">{{ formatDate(v.data_publicacao) }}</td>

@@ -127,7 +127,7 @@ const finishOnboarding = async () => {
     // Se selecionou um arquivo, faz o upload primeiro
     if (selectedFile.value && user.value) {
       const fileName = `${user.value.id}-${Date.now()}.jpg`
-      const { publicUrl, error: uploadError } = await uploadFile(selectedFile.value, `perfil/${fileName}`, 'bucket1')
+      const { publicUrl, error: uploadError } = await uploadFile(selectedFile.value, `${fileName}`, 'avatars')
       if (uploadError) throw new Error(uploadError)
       fotoUrl = publicUrl || ''
     }

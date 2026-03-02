@@ -149,8 +149,8 @@ const finishMigration = async () => {
     let fotoUrl = ''
     if (selectedFile.value) {
       const fileName = `${userId}-${Date.now()}.jpg`
-      // Corrigido para bucket1 (minúsculo) conforme o painel do Supabase
-      const { publicUrl, error: uploadError } = await uploadFile(selectedFile.value, `perfil/${fileName}`, 'bucket1')
+      // Corrigido para bucket 'avatars' solicitado
+      const { publicUrl, error: uploadError } = await uploadFile(selectedFile.value, `${fileName}`, 'avatars')
       if (uploadError) throw new Error(uploadError)
       fotoUrl = publicUrl || ''
     }

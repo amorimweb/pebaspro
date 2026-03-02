@@ -50,7 +50,27 @@ const isResumeComplete = computed(() => {
     )
 })
 
+const isVagaAtiva = computed(() => {
+    if (!job.value) return true
+    if (!job.value.encerramento) return true
+    
+    const agora = new Date()
+    const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate())
+    const parts = job.value.encerramento.split('-')
+    if (parts.length !== 3) return true
+    
+    const [year, month, day] = parts.map(Number)
+    const dataEnc = new Date(year, month - 1, day)
+    
+    return dataEnc >= hoje
+})
+
 const openWhatsApp = async () => {
+  if (!isVagaAtiva.value) {
+    alert('Esta vaga já foi encerrada.')
+    return
+  }
+
   // Verificar se o usuário está logado
   if (!authStore.profile) {
     alert('Você precisa estar logado para se candidatar.')
@@ -182,7 +202,13 @@ const openWhatsApp = async () => {
                       <div class="text-blue-600 font-black text-xs uppercase tracking-tighter">Muito Reco.</div>
                     </div>
 
+                    <div v-if="!isVagaAtiva" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-center shadow-sm">
+                        <p class="text-red-800 font-black text-lg mb-2">Vaga Encerrada</p>
+                        <p class="text-red-700 text-sm font-medium">Esta oportunidade não aceita mais candidaturas.</p>
+                    </div>
+
                     <button 
+                        v-else
                         @click="openWhatsApp" 
                         class="btn-primary w-full flex items-center justify-center gap-3 transition-transform active:scale-95"
                     >

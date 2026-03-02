@@ -84,7 +84,7 @@ const menus: Record<string, MenuItem[]> = {
     { label: 'Minhas Vagas', to: '/painel/empresa/vagas' },
     { label: 'Buscar Talentos', to: '/painel/empresa/buscar-talentos' },
     { label: 'Perfil', to: '/perfil' },
-    { label: 'Anunciar Vaga', to: '/painel/empresa/vagas/nova', isCTA: true },
+    { label: 'Anunciar Vaga', to: '/divulgar-vaga', isCTA: true },
   ],
   cliente: [
     { label: 'Início', to: '/' },

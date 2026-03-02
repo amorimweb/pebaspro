@@ -2,7 +2,7 @@ export const useFileUpload = () => {
     const supabase = useSupabaseClient()
     const loading = ref(false)
 
-    const uploadFile = async (file: File, path: string, bucket: string = 'bucket1') => {
+    const uploadFile = async (file: File, path: string, bucket: string = 'avatars') => {
         loading.value = true
         try {
             const { data, error } = await supabase.storage.from(bucket).upload(path, file, {

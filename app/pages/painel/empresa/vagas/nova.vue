@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import type { Database } from '~/types'
+import type { Database } from '~/types/database.types'
+
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
   layout: 'dashboard'
 })
 
+const authStore = useAuthStore()
 const supabase = useSupabaseClient<Database>()
 const user = useSupabaseUser()
 const router = useRouter()
@@ -43,7 +46,8 @@ const removeSkill = (skill: string) => {
 }
 
 const handleSubmit = async () => {
-    if (!user.value?.id) {
+    const userId = authStore.profile?.id || user.value?.id
+    if (!userId) {
         alert('Usuário não autenticado')
         return
     }
@@ -54,7 +58,7 @@ const handleSubmit = async () => {
     }
 
     try {
-        await criarVaga({
+        const result = await criarVaga({
             titulo: form.value.titulo,
             descricao: form.value.descricao,
             requisitos: form.value.requisitos || null,
@@ -71,12 +75,14 @@ const handleSubmit = async () => {
             nivel_experiencia: form.value.nivel_experiencia
         })
         
+        if (result?.error) throw result.error
+
         alert('Vaga criada com sucesso!')
         await router.push('/painel/empresa/vagas')
         
-    } catch (error: any) {
-        console.error('Erro ao criar vaga:', error)
-        alert(`Erro ao criar vaga: ${error.message || 'Tente novamente.'}`)
+    } catch (e: any) {
+        console.error('Erro ao criar vaga:', e)
+        alert(`Erro ao criar vaga: ${e.message || 'Tente novamente.'}`)
     }
 }
 </script>

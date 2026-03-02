@@ -45,9 +45,9 @@ watch(() => authStore.profile, (p) => {
         form.value.endereco = p.endereco || ''
         form.value.telefone = p.telefone || ''
         
-        // Cópia simples para evitar complexidade profunda de tipos no Proxy
-        form.value.experiencia_profissional = Array.isArray(p.experiencia_profissional) ? [...(p.experiencia_profissional as any[])] : []
-        form.value.formacao_academica = Array.isArray(p.formacao_academica) ? [...(p.formacao_academica as any[])] : []
+        // Uso de JSON.parse(JSON.stringify()) para quebra de reatividade profunda e evitar erro de inferência infinita (lint)
+        form.value.experiencia_profissional = Array.isArray(p.experiencia_profissional) ? JSON.parse(JSON.stringify(p.experiencia_profissional)) : []
+        form.value.formacao_academica = Array.isArray(p.formacao_academica) ? JSON.parse(JSON.stringify(p.formacao_academica)) : []
         
         const hab = p.habilidades
         form.value.habilidades = Array.isArray(hab) ? [...hab] : []
@@ -88,23 +88,50 @@ const onFileChange = async (e: Event) => {
     const target = e.target as HTMLInputElement
     if (target.files && target.files[0]) {
         const file = target.files[0]
-        selectedFile.value = file
         
-        // Upload imediato ao selecionar (opcional, ou pode esperar o Salvar)
-        // O usuário disse que "não conseguiu alterar", então vamos fazer o upload automático pra ser mais direto
-        const userId = user.value?.id
-        if (!userId) return
-
-        const fileName = `${userId}-${Date.now()}.jpg`
-        const { publicUrl, error } = await uploadFile(file, `perfil/${fileName}`)
-        
-        if (error) {
-            alert('Erro ao carregar foto: ' + error)
+        // Validação básica de tamanho (ex: 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('A imagem é muito grande. Escolha uma foto de até 5MB.')
             return
         }
 
-        if (publicUrl) {
-            await authStore.updateProfile({ foto: publicUrl })
+        selectedFile.value = file
+        
+        // Priorizar o ID do perfil do store, que já está garantido se a página carregou
+        const userId = authStore.profile?.id || user.value?.id
+        if (!userId) {
+            alert('Usuário não identificado. Tente fazer login novamente.')
+            return
+        }
+
+        const fileName = `${userId}-${Date.now()}.jpg`
+        
+        try {
+            console.log('Iniciando upload da foto no bucket avatars:', fileName)
+            // Alterado para o bucket 'avatars' solicitado pelo usuário
+            const { publicUrl, error } = await uploadFile(file, `${fileName}`, 'avatars')
+            
+            if (error) {
+                console.error('Erro retornado pelo uploadFile:', error)
+                alert('Erro ao carregar foto: ' + error)
+                return
+            }
+
+            if (publicUrl) {
+                console.log('Upload concluído com sucesso. Salvando URL no perfil:', publicUrl)
+                const { error: updateError } = await authStore.updateProfile({ foto: publicUrl })
+                
+                if (updateError) {
+                    throw updateError
+                }
+                
+                alert('Foto atualizada com sucesso!')
+            } else {
+                throw new Error('URL pública não gerada após o upload.')
+            }
+        } catch (err: any) {
+            console.error('Exceção no onFileChange:', err)
+            alert('Ocorreu um erro inesperado ao atualizar sua foto. Verifique sua conexão ou tente novamente mais tarde.')
         }
     }
 }
@@ -160,7 +187,7 @@ definePageMeta({
   <div class="flex flex-col">
     <!-- Removido AppHeader pois o layout dashboard ja prove a navegacao -->
 
-    <main class="flex-grow py-8 md:py-16">
+    <div class="py-8 md:py-16">
       <div class="container mx-auto px-4">
         <div class="flex flex-col lg:flex-row gap-8">
           
@@ -175,11 +202,12 @@ definePageMeta({
                       <span v-else :key="'letter'" class="text-5xl font-black text-green-600 uppercase flex items-center justify-center w-full h-full bg-green-50">{{ authStore.profile?.nome?.charAt(0) || '?' }}</span>
                     </Transition>
                   </div>
-                  <button v-if="isEditing" @click="fileInput?.click()" class="absolute bottom-2 right-2 w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-green-400 transition-colors border-2 border-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <button v-if="isEditing" @click="fileInput?.click()" class="absolute bottom-2 right-2 w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-green-400 transition-colors border-2 border-white z-10" :disabled="uploading">
+                    <svg v-if="!uploading" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
+                    <div v-else class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   </button>
                   <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="onFileChange" />
                 </div>
@@ -222,7 +250,7 @@ definePageMeta({
             
             <!-- VIEW DE EMPRESA -->
             <template v-if="authStore.profile?.tipo_conta === 'empresa'">
-                 <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12 overflow-hidden relative">
+                 <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12 relative">
                     <div v-if="!isEditing" @click="isEditing = true" class="absolute top-8 right-8 cursor-pointer text-slate-300 hover:text-green-500 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -244,6 +272,17 @@ definePageMeta({
                                     <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">CNPJ / Documento</label>
                                     <div v-if="!isEditing" class="text-xl font-bold text-slate-800">{{ authStore.profile?.documento || 'Não informado' }}</div>
                                     <input v-else v-model="form.documento" class="w-full bg-slate-50 border-none p-4 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-green-400" placeholder="00.000.000/0001-00" />
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">WhatsApp / Telefone</label>
+                                    <div v-if="!isEditing" class="flex items-center gap-3">
+                                        <div class="text-xl font-bold text-slate-800">{{ authStore.profile?.telefone || 'Não informado' }}</div>
+                                        <a v-if="authStore.profile?.telefone" :href="`https://wa.me/55${authStore.profile?.telefone.replace(/\D/g, '')}`" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors text-xs font-bold">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                            WhatsApp
+                                        </a>
+                                    </div>
+                                    <input v-else v-model="form.telefone" class="w-full bg-slate-50 border-none p-4 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-green-400" placeholder="(00) 00000-0000" />
                                 </div>
                             </div>
                         </section>
@@ -304,7 +343,7 @@ definePageMeta({
 
             <!-- VIEW DE PRESTADOR -->
             <template v-else-if="authStore.profile?.tipo_conta === 'prestador'">
-                <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12 overflow-hidden relative">
+                <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12 relative">
                     <div v-if="!isEditing" @click="isEditing = true" class="absolute top-8 right-8 cursor-pointer text-slate-300 hover:text-green-500 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -392,7 +431,7 @@ definePageMeta({
             <!-- VIEW DE TALENTO (Original CV) -->
             <template v-else-if="authStore.profile?.tipo_conta === 'talento'">
                 <!-- Resumo e Objetivos -->
-                <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12 overflow-hidden relative">
+                <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12 relative">
                 <div v-if="!isEditing" @click="isEditing = true" class="absolute top-8 right-8 cursor-pointer text-slate-300 hover:text-green-500 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -423,7 +462,7 @@ definePageMeta({
                 </div>
 
                 <!-- Experiências -->
-                <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12 overflow-hidden">
+                <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12">
                 <div class="flex items-center justify-between mb-10">
                     <h3 class="text-xs font-black uppercase tracking-[0.2em] text-green-600 flex items-center gap-2">
                     <span class="w-8 h-px bg-green-200"></span> Experiência Profissional
@@ -463,7 +502,7 @@ definePageMeta({
                 </div>
 
                 <!-- Formação -->
-                <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12 overflow-hidden">
+                <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12">
                 <div class="flex items-center justify-between mb-10">
                     <h3 class="text-xs font-black uppercase tracking-[0.2em] text-green-600 flex items-center gap-2">
                     <span class="w-8 h-px bg-green-200"></span> Formação Acadêmica
@@ -530,16 +569,15 @@ definePageMeta({
             <div v-if="isEditing" class="hidden lg:flex justify-end gap-4 mt-4">
                 <button @click="isEditing = false" class="px-10 py-5 bg-white border border-slate-200 text-slate-500 rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all">Cancelar</button>
                 <button @click="handleSave" :disabled="loading" class="px-12 py-5 bg-green-600 text-white rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-green-500 transition-all shadow-xl shadow-green-600/20">
-                    {{ loading ? 'Salvando Alterações...' : authStore.profile?.tipo_conta === 'empresa' ? 'Salvar Dados Emrpesa' : 'Salvar Currículo' }}
+                    {{ loading ? 'Salvando Alterações...' : authStore.profile?.tipo_conta === 'empresa' ? 'Salvar Dados Empresa' : 'Salvar Currículo' }}
                 </button>
             </div>
 
-          </div>
         </div>
       </div>
-    </main>
-
+    </div>
   </div>
+</div>
 </template>
 
 <style scoped>
