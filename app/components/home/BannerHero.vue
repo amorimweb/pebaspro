@@ -86,12 +86,6 @@ const handleClickOutside = (e: MouseEvent) => {
   }
 }
 
-const startCadastro = (type: 'talento' | 'empresa') => {
-  const typeCookie = useCookie('pebas_pending_type', { maxAge: 3600 })
-  typeCookie.value = type
-  navigateTo('/cadastro')
-}
-
 onMounted(() => {
   if (process.client) {
     window.addEventListener('click', handleClickOutside)
@@ -183,30 +177,6 @@ onUnmounted(() => {
           </div>
 
         </div>
-      </div>
-
-      <!-- CTAs para Visitantes -->
-      <div v-if="!authStore.user" class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in delay-300">
-        <button 
-          @click="startCadastro('talento')"
-          class="group px-8 py-4 bg-white text-green-700 font-black rounded-2xl shadow-xl hover:shadow-green-400/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 w-full sm:w-auto overflow-hidden relative"
-        >
-          <div class="absolute inset-0 bg-green-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <span class="relative z-10">Sou Talento</span>
-          <svg class="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </button>
-
-        <button 
-          @click="startCadastro('empresa')"
-          class="group px-8 py-4 bg-green-900/40 backdrop-blur-md text-white border-2 border-white/20 font-black rounded-2xl shadow-xl hover:bg-green-900/60 hover:border-white/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 w-full sm:w-auto"
-        >
-          <span>Sou Empresa</span>
-          <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </button>
       </div>
 
       <div v-if="authStore.user" class="mt-6 animate-fade-in delay-500">
