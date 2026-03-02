@@ -16,12 +16,15 @@ const radius = ref(50) // km
 const coords = ref<{lat: number, lon: number} | null>(null)
 
 onMounted(() => {
-    // Try to get location from profile first if saved
-    if (authStore.profile?.latitude && authStore.profile?.longitude) {
-        coords.value = {
-            lat: authStore.profile.latitude,
-            lon: authStore.profile.longitude
-        }
+    const profile = authStore.profile
+    const curr = profile?.curriculo
+    
+    // Try to get location from new table first, then legacy profile
+    const lat = curr?.latitude || profile?.latitude
+    const lon = curr?.longitude || profile?.longitude
+
+    if (lat && lon) {
+        coords.value = { lat, lon }
         locationAllowed.value = true
         fetchJobs()
     } else {
@@ -72,11 +75,15 @@ const fetchJobs = async () => {
     
     loading.value = true
     try {
+        const profile = authStore.profile
+        const curr = profile?.curriculo
+        const skills = (curr?.habilidades && curr.habilidades.length > 0) ? curr.habilidades : (profile?.habilidades || [])
+
         const { data, error } = await supabase.rpc('search_vagas', {
             user_lat: coords.value.lat,
             user_lon: coords.value.lon,
             radius_km: radius.value,
-            user_skills: authStore.profile.habilidades || []
+            user_skills: skills
         } as any)
 
         if (error) {

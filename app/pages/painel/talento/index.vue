@@ -18,16 +18,19 @@ const stats = ref({
 const recentApplications = ref<any[]>([])
 const loadingStats = ref(true)
 
-// Calculation for Curriculum Progress (same logic as curriculo.vue)
+// Calculation for Curriculum Progress (updated for new table structure)
 const completeness = computed(() => {
     const profile = authStore.profile
+    const curr = profile?.curriculo
     if (!profile) return 0
+    
     let score = 0
-    if (profile.objetivo_profissional) score += 20
-    if (profile.habilidades && profile.habilidades.length > 0) score += 20
-    if (profile.experiencia_profissional && Array.isArray(profile.experiencia_profissional) && profile.experiencia_profissional.length > 0) score += 20
-    if (profile.formacao_academica && Array.isArray(profile.formacao_academica) && profile.formacao_academica.length > 0) score += 20
-    if (profile.latitude) score += 20
+    // Check either legacy or new table fields
+    if (curr?.objetivo_profissional || profile.objetivo_profissional) score += 20
+    if ((curr?.habilidades && curr.habilidades.length > 0) || (profile.habilidades && profile.habilidades.length > 0)) score += 20
+    if ((curr?.experiencia_profissional && Array.isArray(curr.experiencia_profissional) && curr.experiencia_profissional.length > 0) || (profile.experiencia_profissional && Array.isArray(profile.experiencia_profissional) && profile.experiencia_profissional.length > 0)) score += 20
+    if ((curr?.formacao_academica && Array.isArray(curr.formacao_academica) && curr.formacao_academica.length > 0) || (profile.formacao_academica && Array.isArray(profile.formacao_academica) && profile.formacao_academica.length > 0)) score += 20
+    if (curr?.latitude || profile.latitude) score += 20
     return score
 })
 
