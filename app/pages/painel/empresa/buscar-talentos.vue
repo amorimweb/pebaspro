@@ -31,32 +31,25 @@ const fetchCandidates = async () => {
     errorMsg.value = ''
     try {
         let query = supabase
-            .from('usuarios')
+            .from('talento_curriculos')
             .select('*')
-            .eq('tipo_conta', 'talento')
-            // Removido filtro temporariamente para garantir retorno
-            // .eq('cadastro_completo', true) 
         
         if (searchQuery.value) {
-            query = query.ilike('nome', `%${searchQuery.value}%`)
+            // Busca aprimorada: nome ou profissão ou biografia ou objetivo
+            const term = `%${searchQuery.value}%`
+            query = query.or(`nome.ilike.${term},profissao.ilike.${term},objetivo_profissional.ilike.${term},biografia.ilike.${term}`)
         }
 
-        if (selectedRole.value) {
-            // Simple filter, ideally should be fuzzy or array based if roles were structured
-            // For now assuming role is part of 'profissao' column
-             if (selectedRole.value) {
-                query = query.ilike('profissao', `%${selectedRole.value}%`)
-             }
-        }
-
-        const { data, error } = await query.limit(50) // Limit for performance
+        const { data, error } = await query
+            .order('updated_at', { ascending: false })
+            .limit(50)
 
         if (error) throw error
         
         candidates.value = data || []
         
-        // Auto-select first if desktop and none selected
-        if (!selectedCandidate.value && candidates.value.length > 0 && window.innerWidth >= 1024) {
+        // Auto-selecionar o primeiro se for desktop e nada estiver selecionado
+        if (!selectedCandidate.value && candidates.value.length > 0 && typeof window !== 'undefined' && window.innerWidth >= 1024) {
             selectedCandidate.value = candidates.value[0]
         }
     } catch (e) {
@@ -129,24 +122,9 @@ const activeTab = ref('curriculo') // curriculo, pebaspro, avaliacoes
                     <input 
                         v-model="searchQuery"
                         type="text" 
-                        placeholder="Nome ou palavra-chave" 
-                        class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none text-sm transition-all"
+                        placeholder="Buscar por nome ou profissão..." 
+                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none text-base transition-all font-medium"
                     />
-                </div>
-                
-                <div class="grid grid-cols-2 gap-2">
-                     <select 
-                        v-model="selectedRole"
-                        class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none text-sm appearance-none"
-                    >
-                        <option value="">Todos os Cargos</option>
-                        <option v-for="role in roles" :key="role" :value="role">{{ role }}</option>
-                    </select>
-                     <!-- Placeholder for Location Filter if needed -->
-                    <div class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-400 text-sm flex items-center justify-between cursor-not-allowed opacity-60">
-                        <span>Região</span>
-                        <span>📍</span>
-                    </div>
                 </div>
             </div>
         </div>

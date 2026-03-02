@@ -8,24 +8,27 @@ const menuItems = computed(() => {
   const profile = authStore.profile
   if (!profile) return []
 
-  if (profile.tipo_conta === 'prestador') {
-    return [
-      { name: 'Dashboard', path: '/painel/prestador', icon: '📊' },
-      { name: 'Meus Serviços', path: '/painel/prestador/servicos', icon: '🛠️' },
+  const menu = [
+    { name: 'Início', path: '/', icon: '🏠' }
+  ]
+
+  if (profile.tipo_conta === 'prestador' || profile.tipo_conta === 'talento') {
+    menu.push(
+      { name: 'Dashboard', path: '/painel/talento', icon: '📊' },
       { name: 'Mensagens', path: '/painel/mensagens', icon: '💬' },
-    ]
+    )
   }
 
   if (profile.tipo_conta === 'empresa') {
-    return [
+    menu.push(
       { name: 'Dashboard', path: '/painel/empresa', icon: '📊' },
       { name: 'Minhas Vagas', path: '/painel/empresa/vagas', icon: '🏢' },
       { name: 'Buscar Talentos', path: '/painel/empresa/buscar-talentos', icon: '🔍' },
       { name: 'Mensagens', path: '/painel/mensagens', icon: '💬' },
-    ]
+    )
   }
 
-  return []
+  return menu
 })
 
 const handleLogout = async () => {
