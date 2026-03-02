@@ -18,6 +18,13 @@ const selectType = (type: AccountType) => {
   navigateTo('/cadastro/dados')
 }
 
+onMounted(() => {
+  if (typeCookie.value) {
+    console.log('Redirecionando automaticamente para cadastro de:', typeCookie.value)
+    navigateTo('/cadastro/dados')
+  }
+})
+
 const loginWithGoogle = () => {
   showTypeSelection.value = true
 }
