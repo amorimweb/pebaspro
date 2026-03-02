@@ -11,20 +11,28 @@ export const useAuthStore = defineStore('auth', () => {
     const profileLoading = computed(() => profileStore.loading)
     const error = computed(() => profileStore.error)
 
-    const initialized = ref(false)
+    const initialized = useState('auth_initialized', () => false)
+
+    // Sincroniza o estado inicial se já houver perfil persistido
+    if (process.client && profileStore.profile) {
+        initialized.value = true
+    }
 
     async function fetchProfile() {
-        await profileStore.fetchProfile()
-        if (profile.value?.status === 'suspenso') {
-            if (process.client) {
-                alert('Sua conta foi suspensa por violar os termos de uso. Entre em contato com o suporte.')
-                await signOut()
-                navigateTo('/')
-            } else {
-                await signOut()
+        try {
+            await profileStore.fetchProfile()
+            if (profile.value?.status === 'suspenso') {
+                if (process.client) {
+                    alert('Sua conta foi suspensa por violar os termos de uso. Entre em contato com o suporte.')
+                    await signOut()
+                    navigateTo('/')
+                } else {
+                    await signOut()
+                }
             }
+        } finally {
+            initialized.value = true
         }
-        initialized.value = true
     }
 
     async function updateProfile(data: Partial<Usuario>) {

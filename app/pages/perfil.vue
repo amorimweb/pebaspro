@@ -7,7 +7,9 @@ const user = useSupabaseUser()
 const supabase = useSupabaseClient<Database>()
 
 // Usamos o loading global do store
-const loading = computed(() => authStore.profileLoading || false)
+const { uploadFile, loading: uploading } = useFileUpload()
+const { coords, getLocation, loading: locationLoading } = useLocation()
+const loading = computed(() => authStore.profileLoading || uploading.value || locationLoading.value)
 
 onMounted(async () => {
     // O plugin já busca o perfil, mas podemos forçar um refresh se necessário
@@ -26,8 +28,14 @@ const form = ref({
     experiencia_profissional: [] as any[],
     formacao_academica: [] as any[],
     habilidades: [] as string[],
-    newSkill: ''
+    newSkill: '',
+    documento: '',
+    latitude: null as number | null,
+    longitude: null as number | null
 })
+
+const fileInput = ref<HTMLInputElement | null>(null)
+const selectedFile = ref<File | null>(null)
 
 watch(() => authStore.profile, (p) => {
     if (p) {
@@ -38,14 +46,14 @@ watch(() => authStore.profile, (p) => {
         form.value.telefone = p.telefone || ''
         
         // Cópia simples para evitar complexidade profunda de tipos no Proxy
-        const exp = p.experiencia_profissional
-        form.value.experiencia_profissional = Array.isArray(exp) ? JSON.parse(JSON.stringify(exp)) : []
-        
-        const edu = p.formacao_academica
-        form.value.formacao_academica = Array.isArray(edu) ? JSON.parse(JSON.stringify(edu)) : []
+        form.value.experiencia_profissional = Array.isArray(p.experiencia_profissional) ? [...(p.experiencia_profissional as any[])] : []
+        form.value.formacao_academica = Array.isArray(p.formacao_academica) ? [...(p.formacao_academica as any[])] : []
         
         const hab = p.habilidades
         form.value.habilidades = Array.isArray(hab) ? [...hab] : []
+        form.value.documento = p.documento || ''
+        form.value.latitude = p.latitude || null
+        form.value.longitude = p.longitude || null
     }
 }, { immediate: true })
 
@@ -76,6 +84,43 @@ const removeSkill = (skill: string) => {
     form.value.habilidades = form.value.habilidades.filter(s => s !== skill)
 }
 
+const onFileChange = async (e: Event) => {
+    const target = e.target as HTMLInputElement
+    if (target.files && target.files[0]) {
+        const file = target.files[0]
+        selectedFile.value = file
+        
+        // Upload imediato ao selecionar (opcional, ou pode esperar o Salvar)
+        // O usuário disse que "não conseguiu alterar", então vamos fazer o upload automático pra ser mais direto
+        const userId = user.value?.id
+        if (!userId) return
+
+        const fileName = `${userId}-${Date.now()}.jpg`
+        const { publicUrl, error } = await uploadFile(file, `perfil/${fileName}`)
+        
+        if (error) {
+            alert('Erro ao carregar foto: ' + error)
+            return
+        }
+
+        if (publicUrl) {
+            await authStore.updateProfile({ foto: publicUrl })
+        }
+    }
+}
+
+const handleGetLocation = () => {
+    getLocation()
+}
+
+watch(coords, (newCoords) => {
+    if (newCoords.latitude && newCoords.longitude) {
+        form.value.latitude = newCoords.latitude
+        form.value.longitude = newCoords.longitude
+        // Podemos tentar buscar o endereço reverso aqui se houver uma API, mas vamos manter simples por enquanto
+    }
+})
+
 const handleSave = async () => {
     // Garantir que os dados enviados não sejam Proxies do Vue, que o Supabase/PostgREST pode rejeitar
     const updatePayload = {
@@ -86,7 +131,10 @@ const handleSave = async () => {
         telefone: form.value.telefone,
         experiencia_profissional: JSON.parse(JSON.stringify(form.value.experiencia_profissional || [])),
         formacao_academica: JSON.parse(JSON.stringify(form.value.formacao_academica || [])),
-        habilidades: Array.from(toRaw(form.value.habilidades || []))
+        habilidades: Array.from(toRaw(form.value.habilidades || [])),
+        documento: form.value.documento,
+        latitude: form.value.latitude,
+        longitude: form.value.longitude
     }
 
     const { error } = await authStore.updateProfile(updatePayload)
@@ -121,16 +169,19 @@ definePageMeta({
             <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 sticky top-24">
               <div class="flex flex-col items-center text-center">
                 <div class="relative mb-6">
-                  <div class="w-32 h-32 md:w-36 md:h-36 bg-green-50 rounded-full border-4 border-white shadow-xl flex items-center justify-center overflow-hidden">
-                    <img v-if="authStore.profile?.foto" :src="authStore.profile.foto" :alt="authStore.profile.nome || 'Avatar'" class="w-full h-full object-cover" />
-                    <span v-else class="text-5xl font-black text-green-600 uppercase">{{ authStore.profile?.nome?.charAt(0) || '?' }}</span>
+                  <div class="w-32 h-32 md:w-36 md:h-36 bg-green-50 rounded-full border-4 border-white shadow-xl flex items-center justify-center overflow-hidden relative group/avatar">
+                    <Transition name="fade" mode="out-in">
+                      <img v-if="authStore.profile?.foto" :key="authStore.profile.foto" :src="authStore.profile.foto" :alt="authStore.profile.nome || 'Avatar'" class="w-full h-full object-cover" />
+                      <span v-else :key="'letter'" class="text-5xl font-black text-green-600 uppercase flex items-center justify-center w-full h-full bg-green-50">{{ authStore.profile?.nome?.charAt(0) || '?' }}</span>
+                    </Transition>
                   </div>
-                  <button v-if="isEditing" class="absolute bottom-2 right-2 w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-green-400 transition-colors border-2 border-white">
+                  <button v-if="isEditing" @click="fileInput?.click()" class="absolute bottom-2 right-2 w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-green-400 transition-colors border-2 border-white">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   </button>
+                  <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="onFileChange" />
                 </div>
 
                 <h2 class="text-2xl font-bold text-slate-900 mb-1 leading-tight">{{ authStore.profile?.nome || 'Nome da Conta' }}</h2>
@@ -191,8 +242,8 @@ definePageMeta({
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">CNPJ / Documento</label>
-                                    <!-- Use documento field here if present in store, adding to form -->
-                                    <div class="text-xl font-bold text-slate-800">{{ authStore.profile?.documento || 'Não informado' }}</div>
+                                    <div v-if="!isEditing" class="text-xl font-bold text-slate-800">{{ authStore.profile?.documento || 'Não informado' }}</div>
+                                    <input v-else v-model="form.documento" class="w-full bg-slate-50 border-none p-4 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-green-400" placeholder="00.000.000/0001-00" />
                                 </div>
                             </div>
                         </section>
@@ -211,10 +262,41 @@ definePageMeta({
                          <h3 class="text-xs font-black uppercase tracking-[0.2em] text-green-600 mb-4 flex items-center gap-2">
                             <span class="w-8 h-px bg-green-200"></span> Endereço e Localização
                         </h3>
-                         <div v-if="!isEditing" class="text-slate-600 leading-relaxed text-lg">
-                            {{ authStore.profile?.endereco || 'Endereço não informado' }}
-                        </div>
-                         <!-- Assuming endereco is part of form in script update -->
+                         <div class="grid grid-cols-1 gap-6">
+                            <div>
+                                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Endereço Público</label>
+                                <div v-if="!isEditing" class="text-slate-600 leading-relaxed text-lg">
+                                    {{ authStore.profile?.endereco || 'Endereço não informado' }}
+                                </div>
+                                <input v-else v-model="form.endereco" class="w-full bg-slate-50 border-none p-4 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-green-400" placeholder="Ex: Av. Brasil, 1000 - Centro, Pebas" />
+                            </div>
+                            
+                            <div v-if="isEditing" class="bg-green-50 p-6 rounded-2xl border border-green-100">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h4 class="font-bold text-green-900">Localização no Mapa</h4>
+                                        <p class="text-sm text-green-700">Aumente sua visibilidade para talentos próximos.</p>
+                                    </div>
+                                    <button @click="handleGetLocation" :disabled="loading" class="px-4 py-2 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-500 transition-colors shadow-lg shadow-green-600/20 disabled:opacity-50">
+                                        {{ locationLoading ? 'Obtendo...' : 'Obter Minha Posição' }}
+                                    </button>
+                                </div>
+                                <div v-if="form.latitude" class="flex gap-4 text-xs font-mono text-green-800 bg-white/50 p-2 rounded-lg">
+                                    <span>LAT: {{ form.latitude.toFixed(6) }}</span>
+                                    <span>LONG: {{ form.longitude?.toFixed(6) }}</span>
+                                </div>
+                                <div v-else-if="!locationLoading" class="text-xs text-green-600 italic">
+                                    Localização não definida. Clique no botão acima para capturar sua posição atual.
+                                </div>
+                            </div>
+                            <div v-else-if="authStore.profile?.latitude" class="flex items-center gap-2 text-green-600 font-bold text-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                Localização Geográfica Ativada
+                            </div>
+                         </div>
                         </section>
                     </div>
                  </div>
@@ -464,5 +546,13 @@ definePageMeta({
 /* Transições suaves adicionais */
 .container {
     max-width: 1400px;
+}
+
+/* Transições de Fade */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 </style>

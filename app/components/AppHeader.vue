@@ -151,87 +151,96 @@ watch(isMobileMenuOpen, (isOpen) => {
         </template>
 
         <!-- Main Dynamic Menu -->
-        <template v-else>
-          <template v-for="item in activeMenu" :key="item.label">
-            <NuxtLink 
-              :to="item.to" 
-              @click="item.onClick?.()"
-              :class="[
-                'px-4 py-2 text-sm font-bold transition-all rounded-xl tracking-wide uppercase',
-                item.isCTA 
-                  ? 'is-cta ml-3 bg-white text-green-700 hover:bg-green-50 shadow-lg hover:shadow-green-400/20 active:scale-95' 
-                  : 'text-white/90 hover:text-white hover:bg-white/10'
-              ]"
-            >
-              {{ item.label }}
-            </NuxtLink>
-          </template>
-        </template>
-      </nav>
-
-      <!-- AUTH / USER DROPDOWN (DESKTOP) -->
-      <div class="hidden lg:flex items-center gap-3">
-        <template v-if="!initialized">
-          <div class="h-10 w-28 bg-slate-100/50 rounded-xl animate-pulse"></div>
-        </template>
-
-        <template v-else-if="!user">
-          <NuxtLink to="/login" class="px-5 py-2.5 text-sm font-bold text-white hover:bg-white/10 transition-colors rounded-xl">Entrar</NuxtLink>
-          <NuxtLink to="/cadastro" class="ml-2 px-5 py-2.5 text-sm font-bold bg-white text-green-700 hover:bg-green-50 shadow-lg hover:shadow-green-400/20 active:scale-95 transition-all rounded-xl">Cadastrar</NuxtLink>
-        </template>
-
-        <div v-else class="relative user-dropdown-trigger">
-            <button 
-              @click.stop="toggleUserDropdown" 
-              class="flex items-center gap-2 p-1 rounded-xl transition-all active:scale-95"
-            >
-            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm uppercase overflow-hidden">
-               <img 
-                 v-if="profile?.foto" 
-                 :src="profile.foto" 
-                 class="w-full h-full object-cover" 
-                 @error="(e) => (e.target as HTMLImageElement).src = '/default-avatar.png'"
-               />
-               <span v-else class="w-full h-full flex items-center justify-center">{{ profile?.nome?.charAt(0) || user?.email?.charAt(0) || 'U' }}</span>
+        <div class="flex items-center gap-1 min-h-[40px]">
+          <Transition name="fade" mode="out-in">
+            <div v-if="!initialized" class="flex gap-2">
+              <div v-for="i in 4" :key="i" class="h-8 w-24 bg-white/10 rounded-xl animate-pulse mx-1"></div>
             </div>
-            <svg class="w-4 h-4 text-white/60 transition-transform" :class="{ 'rotate-180': isUserDropdownOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          <!-- Dropdown Card -->
-          <Transition name="dropdown">
-            <div v-if="isUserDropdownOpen" class="absolute right-0 mt-3 w-72 bg-white rounded-[24px] shadow-2xl shadow-slate-200/50 border border-slate-100 p-2 overflow-hidden ring-1 ring-black/5">
-              <div class="px-4 py-4 mb-2 bg-slate-50/50 rounded-2xl">
-                <p class="text-xs font-black text-green-600 uppercase tracking-widest mb-1">{{ profile?.tipo_conta }}</p>
-                <p class="text-sm font-black text-slate-900 truncate">{{ profile?.nome }}</p>
-                <p class="text-xs font-medium text-slate-400 truncate">{{ user.email }}</p>
-              </div>
-              
-              <div class="space-y-0.5">
-                <NuxtLink v-if="profile?.role === 'admin'" to="/admin" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-all">
-                  <svg class="w-5 h-5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-                  Administração
+            <div v-else class="flex gap-1">
+              <template v-for="item in activeMenu" :key="item.label">
+                <NuxtLink 
+                  :to="item.to" 
+                  @click="item.onClick?.()"
+                  :class="[
+                    'px-4 py-2 text-sm font-bold transition-all rounded-xl tracking-wide uppercase',
+                    item.isCTA 
+                      ? 'is-cta ml-3 bg-white text-green-700 hover:bg-green-50 shadow-lg hover:shadow-green-400/20 active:scale-95' 
+                      : 'text-white/90 hover:text-white hover:bg-white/10'
+                  ]"
+                >
+                  {{ item.label }}
                 </NuxtLink>
-                <NuxtLink to="/perfil" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-green-50 hover:text-green-700 rounded-xl transition-all">
-                  <svg class="w-5 h-5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                  Meu Perfil
-                </NuxtLink>
-                <NuxtLink :to="profile?.tipo_conta === 'empresa' ? '/painel/empresa/configuracoes' : '/perfil'" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-green-50 hover:text-green-700 rounded-xl transition-all">
-                  <svg class="w-5 h-5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  Configurações
-                </NuxtLink>
-              </div>
-
-              <div class="h-px bg-slate-50 my-2"></div>
-
-              <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-all">
-                <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                Sair da Conta
-              </button>
+              </template>
             </div>
           </Transition>
         </div>
+      </nav>
+
+      <!-- AUTH / USER DROPDOWN (DESKTOP) -->
+      <div class="hidden lg:flex items-center gap-3 min-w-[120px] justify-end">
+        <Transition name="fade" mode="out-in">
+          <div v-if="!initialized" class="h-10 w-28 bg-white/10 rounded-xl animate-pulse"></div>
+          
+          <div v-else-if="!user" class="flex items-center gap-2">
+            <NuxtLink to="/login" class="px-5 py-2.5 text-sm font-bold text-white hover:bg-white/10 transition-colors rounded-xl">Entrar</NuxtLink>
+            <NuxtLink to="/cadastro" class="ml-2 px-5 py-2.5 text-sm font-bold bg-white text-green-700 hover:bg-green-50 shadow-lg hover:shadow-green-400/20 active:scale-95 transition-all rounded-xl">Cadastrar</NuxtLink>
+          </div>
+
+          <div v-else class="relative user-dropdown-trigger">
+              <button 
+                @click.stop="toggleUserDropdown" 
+                class="flex items-center gap-2 p-1 rounded-xl transition-all active:scale-95 group/btn"
+              >
+              <div class="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 text-white font-black text-sm uppercase overflow-hidden ring-2 ring-transparent group-hover/btn:ring-white/30 transition-all">
+                 <Transition name="fade" mode="out-in">
+                   <img 
+                     v-if="profile?.foto" 
+                     :key="profile.foto"
+                     :src="profile.foto" 
+                     class="w-full h-full object-cover" 
+                     @error="(e) => (e.target as HTMLImageElement).src = '/default-avatar.png'"
+                   />
+                   <span v-else :key="'letter'" class="w-full h-full flex items-center justify-center">{{ profile?.nome?.charAt(0) || user?.email?.charAt(0) || '?' }}</span>
+                 </Transition>
+              </div>
+              <svg class="w-4 h-4 text-white/60 transition-transform" :class="{ 'rotate-180': isUserDropdownOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <!-- Dropdown Card -->
+            <Transition name="dropdown">
+              <div v-if="isUserDropdownOpen" class="absolute right-0 mt-3 w-72 bg-white rounded-[24px] shadow-2xl shadow-slate-200/50 border border-slate-100 p-2 overflow-hidden ring-1 ring-black/5">
+                <div class="px-4 py-4 mb-2 bg-slate-50/50 rounded-2xl">
+                  <p class="text-xs font-black text-green-600 uppercase tracking-widest mb-1">{{ profile?.tipo_conta }}</p>
+                  <p class="text-sm font-black text-slate-900 truncate">{{ profile?.nome }}</p>
+                  <p class="text-xs font-medium text-slate-400 truncate">{{ user.email }}</p>
+                </div>
+                
+                <div class="space-y-0.5">
+                  <NuxtLink v-if="profile?.role === 'admin'" to="/admin" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-all">
+                    <svg class="w-5 h-5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+                    Administração
+                  </NuxtLink>
+                  <NuxtLink to="/perfil" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-green-50 hover:text-green-700 rounded-xl transition-all">
+                    <svg class="w-5 h-5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    Meu Perfil
+                  </NuxtLink>
+                  <NuxtLink :to="profile?.tipo_conta === 'empresa' ? '/painel/empresa/configuracoes' : '/perfil'" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-green-50 hover:text-green-700 rounded-xl transition-all">
+                    <svg class="w-5 h-5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    Configurações
+                  </NuxtLink>
+                </div>
+  
+                <div class="h-px bg-slate-50 my-2"></div>
+  
+                <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-all">
+                  <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                  Sair da Conta
+                </button>
+              </div>
+            </Transition>
+          </div>
+        </Transition>
       </div>
 
       <!-- MOBILE CONTROLS -->
@@ -355,6 +364,10 @@ watch(isMobileMenuOpen, (isOpen) => {
 /* Desktop Dropdown Transition */
 .dropdown-enter-active, .dropdown-leave-active { transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .dropdown-enter-from, .dropdown-leave-to { opacity: 0; transform: translateY(15px) scale(0.95); }
+
+/* Fade Transition */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 
 /* Nuxt Link Active State */
 .router-link-active:not(.is-cta) {
