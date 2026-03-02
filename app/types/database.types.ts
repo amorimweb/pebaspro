@@ -619,6 +619,8 @@ export type Servico = Tables<"servicos">
 export type SolicitacaoOrcamento = Tables<"solicitacoes_orcamento">
 export type Avaliacao = Tables<"avaliacoes">
 export type Favorito = Tables<"favoritos">
-export type Usuario = Tables<"usuarios">
+export type Usuario = Tables<"usuarios"> & {
+  curriculo?: Curriculo | null
+}
 export type Vaga = Tables<"vagas">
 export type Curriculo = Tables<"curriculos">

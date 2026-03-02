@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { Database } from '~/types'
+import type { Database } from '~/types/database.types'
 
 // definePageMeta removed as auth.global handles this
 
 const authStore = useAuthStore()
+const { curriculum, saveCurriculum, fetchCurriculum } = useCurriculum()
 const supabase = useSupabaseClient<Database>()
 const user = useSupabaseUser()
 
@@ -63,16 +64,27 @@ const progressColor = computed(() => {
     return 'bg-green-500'
 })
 
+const hydrateForm = (data: any) => {
+    if (!data) return
+    form.value.objetivo_profissional = data.objetivo_profissional || ''
+    form.value.biografia = data.biografia || ''
+    form.value.habilidades = data.habilidades || []
+    form.value.experiencia_profissional = Array.isArray(data.experiencia_profissional) ? data.experiencia_profissional : []
+    form.value.formacao_academica = Array.isArray(data.formacao_academica) ? data.formacao_academica : []
+    form.value.latitude = data.latitude ?? null
+    form.value.longitude = data.longitude ?? null
+}
+
+watch(curriculum, (newVal) => {
+    if (newVal) hydrateForm(newVal)
+}, { immediate: true })
+
 onMounted(async () => {
-    if (authStore.profile) {
-        // Hydrate form
-        form.value.objetivo_profissional = authStore.profile.objetivo_profissional || ''
-        form.value.biografia = authStore.profile.biografia || ''
-        form.value.habilidades = authStore.profile.habilidades || []
-        form.value.experiencia_profissional = Array.isArray(authStore.profile.experiencia_profissional) ? authStore.profile.experiencia_profissional : []
-        form.value.formacao_academica = Array.isArray(authStore.profile.formacao_academica) ? authStore.profile.formacao_academica : []
-        form.value.latitude = authStore.profile.latitude ?? null
-        form.value.longitude = authStore.profile.longitude ?? null
+    await fetchCurriculum()
+    
+    // Fallback if no curriculum but has profile legacy data
+    if (!curriculum.value && authStore.profile) {
+        hydrateForm(authStore.profile)
     }
 })
 
@@ -80,19 +92,24 @@ const saveProfile = async () => {
     if (!user.value) return
     saving.value = true
     
-    // Check completeness for status update
     const isComplete = completeness.value >= 80
 
-    const { error } = await authStore.updateProfile({
+    // Save to dedicated table
+    const { error } = await saveCurriculum({
         objetivo_profissional: form.value.objetivo_profissional,
         biografia: form.value.biografia,
         habilidades: form.value.habilidades,
         experiencia_profissional: form.value.experiencia_profissional,
         formacao_academica: form.value.formacao_academica,
-        cadastro_completo: isComplete
+        latitude: form.value.latitude,
+        longitude: form.value.longitude
     })
 
+    // Also update main user profile for backward compatibility and status
     if (!error) {
+        await authStore.updateProfile({
+            cadastro_completo: isComplete
+        })
         alert('Currículo salvo com sucesso!')
     } else {
         alert('Erro ao salvar currículo.')
@@ -141,7 +158,7 @@ const getLocation = () => {
         form.value.longitude = longitude
         
         // Auto-save location
-        await authStore.updateProfile({ latitude, longitude })
+        await saveCurriculum({ latitude, longitude })
         alert('Localização atualizada!')
     })
 }
@@ -347,7 +364,7 @@ const getLocation = () => {
     <!-- Exp Modal (Refined Design) -->
     <div v-if="showExpModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showExpModal = false"></div>
-        <div class="bg-white rounded-[40px] shadow-2xl p-10 w-full max-w-2xl relative animate-in zoom-in-95 duration-200">
+        <div class="bg-white rounded-[40px] shadow-2xl p-10 w-full max-w-2xl relative animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <h3 class="font-black text-3xl text-slate-900 mb-8 tracking-tight">Adicionar Experiência</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="md:col-span-2 space-y-2">
@@ -387,7 +404,7 @@ const getLocation = () => {
      <!-- Edu Modal (Refined Design) -->
     <div v-if="showEduModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showEduModal = false"></div>
-        <div class="bg-white rounded-[40px] shadow-2xl p-10 w-full max-w-2xl relative animate-in zoom-in-95 duration-200">
+        <div class="bg-white rounded-[40px] shadow-2xl p-10 w-full max-w-2xl relative animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <h3 class="font-black text-3xl text-slate-900 mb-8 tracking-tight">Adicionar Formação</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="md:col-span-2 space-y-2">
@@ -423,6 +440,28 @@ const getLocation = () => {
             </div>
         </div>
     </div>
+    <!-- Floating Save Button -->
+    <div class="floating-save-bar hidden lg:block">
+        <button 
+            @click="saveProfile" 
+            :disabled="saving"
+            class="flex items-center gap-3 px-10 py-5 bg-green-600 text-white rounded-[24px] font-black hover:bg-green-700 transition shadow-2xl shadow-green-600/40 active:scale-95 text-lg disabled:opacity-50 border-4 border-white"
+        >
+            <svg v-if="saving" class="animate-spin h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            {{ saving ? 'Salvando...' : 'Salvar Todas as Alterações' }}
+        </button>
+    </div>
+
+    <!-- Mobile Save Button -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 z-50">
+        <button 
+            @click="saveProfile" 
+            :disabled="saving"
+            class="w-full flex items-center justify-center gap-3 py-4 bg-green-600 text-white rounded-2xl font-black hover:bg-green-700 transition active:scale-95 disabled:opacity-50"
+        >
+            {{ saving ? 'Salvando...' : 'Salvar Currículo' }}
+        </button>
+    </div>
 
   </div>
 </template>
@@ -434,5 +473,15 @@ const getLocation = () => {
 .list-enter-from, .list-leave-to {
   opacity: 0;
   transform: translateY(10px);
+}
+
+/* Floating Action Bar */
+.floating-save-bar {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    width: auto;
 }
 </style>

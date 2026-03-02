@@ -25,27 +25,29 @@ export default defineEventHandler(async (event) => {
     // 3. Consultar a tabela usuarios utilizando Service Role (bypass RLS)
     const client = serverSupabaseServiceRole<Database>(event)
 
-    const { data: profile, error } = await client
+    const { data: profile, error: profileError } = await client
         .from('usuarios')
         .select('*')
         .eq('id', userId)
         .single()
 
-    if (error) {
-        console.error(`Erro ao buscar perfil para o usuário ${userId}:`, error.message)
-
-        if (error.code === 'PGRST116') { // Código para 'no rows returned' no .single()
-            throw createError({
-                statusCode: 404,
-                statusMessage: 'Perfil não encontrado',
-            })
+    if (profileError) {
+        console.error(`Erro ao buscar perfil para o usuário ${userId}:`, profileError.message)
+        if (profileError.code === 'PGRST116') {
+            throw createError({ statusCode: 404, statusMessage: 'Perfil não encontrado' })
         }
-
-        throw createError({
-            statusCode: 500,
-            statusMessage: 'Erro interno ao buscar perfil',
-        })
+        throw createError({ statusCode: 500, statusMessage: 'Erro interno ao buscar perfil' })
     }
 
-    return profile
+    // 4. Buscar currículo separadamente (Left Join manual e seguro)
+    const { data: curriculo } = await client
+        .from('curriculos')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+    return {
+        ...profile,
+        curriculo: curriculo || null
+    }
 })
