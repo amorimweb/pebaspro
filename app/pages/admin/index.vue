@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Database } from '~/types'
 
-definePageMeta({ layout: 'admin', middleware: ['auth', 'admin'] })
+definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
 const supabase = useSupabaseClient<Database>()
 const stats = ref({ usuarios: 0, vagas: 0, servicos: 0, solicitacoes: 0 })

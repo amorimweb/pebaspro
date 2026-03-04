@@ -9,8 +9,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     }
 
     const profile = authStore.profile
+    const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
 
-    if (!profile || profile.role !== 'admin') {
+    if (!profile || !isAdmin) {
         return navigateTo('/')
     }
 })
