@@ -9,6 +9,7 @@ const route = useRoute()
 const id = route.params.id
 const authStore = useAuthStore()
 const supabase = useSupabaseClient<Database>()
+const { translateError } = useTranslation()
 
 // Buscar dados do serviço com join no prestador
 const { data: service, error } = useAsyncData(`service-${id}`, async () => {
@@ -66,21 +67,23 @@ const openWhatsApp = async () => {
      }
 
      // Legado (opcional): mantém registro em solicitacoes_orcamento
+     if (!service.value || !authStore.user) return
+
      await supabase.from('solicitacoes_orcamento').insert({
         servico_id: service.value.id,
         cliente_id: authStore.user.id,
         mensagem: 'Interesse via botão WhatsApp'
      })
   } catch (e) {
-      console.error('Erro ao registrar interesse:', e)
+      console.error('Erro ao registrar interesse:', translateError(e))
   }
 
-  const phone = service.value.prestador?.telefone?.replace(/\D/g, '')
+  const phone = service.value?.prestador?.telefone?.replace(/\D/g, '')
   if (!phone) {
       alert('Prestador sem telefone cadastrado.')
       return
   }
-  const message = encodeURIComponent(`Olá ${service.value.prestador.nome}, vi seu serviço de "${service.value.titulo}" no PebasPro e gostaria de um orçamento.`)
+  const message = encodeURIComponent(`Olá ${service.value?.prestador?.nome || ''}, vi seu serviço de "${service.value?.titulo || ''}" no PebasPro e gostaria de um orçamento.`)
   window.open(`https://wa.me/55${phone}?text=${message}`, '_blank')
 }
 </script>

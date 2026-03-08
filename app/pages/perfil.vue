@@ -9,6 +9,7 @@ const supabase = useSupabaseClient<Database>()
 // Usamos o loading global do store
 const { uploadFile, loading: uploading } = useFileUpload()
 const { coords, getLocation, loading: locationLoading } = useLocation()
+const { translateError } = useTranslation()
 const loading = computed(() => authStore.profileLoading || uploading.value || locationLoading.value)
 
 onMounted(async () => {
@@ -119,7 +120,7 @@ const onFileChange = async (e: Event) => {
             
             if (error) {
                 console.error('Erro retornado pelo uploadFile:', error)
-                alert('Erro ao carregar foto: ' + error)
+                alert('Erro ao carregar foto: ' + translateError(error))
                 return
             }
 
@@ -175,7 +176,7 @@ const handleSave = async () => {
     if (!error) {
         isEditing.value = false
     } else {
-        alert('Erro ao salvar perfil: ' + (error.message || JSON.stringify(error)))
+        alert('Erro ao salvar perfil: ' + translateError(error))
     }
 }
 

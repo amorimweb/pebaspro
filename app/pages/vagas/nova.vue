@@ -6,6 +6,7 @@ const authStore = useAuthStore()
 const user = useSupabaseUser()
 const supabase = useSupabaseClient<Database>()
 const loading = ref(false)
+const { translateError } = useTranslation()
 
 const form = ref({
   titulo: '',
@@ -61,7 +62,7 @@ const handleSubmit = async () => {
   })
 
   if (error) {
-    alert('Erro ao publicar vaga: ' + error.message)
+    alert('Erro ao publicar vaga: ' + translateError(error))
     loading.value = false
   } else {
     navigateTo('/vagas')

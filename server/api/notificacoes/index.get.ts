@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
         .limit(50)
 
     if (error) {
-        throw createError({ statusCode: 400, message: error.message })
+        throw createError({ statusCode: 400, message: 'Erro ao carregar notificações' })
     }
 
     return data

@@ -404,8 +404,8 @@ const subscribeToConversations = () => {
           <div class="w-24 h-24 bg-white rounded-[32px] shadow-sm border border-slate-100 flex items-center justify-center mb-6 opacity-50">
             <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
           </div>
-          <p class="text-lg font-black uppercase tracking-widest text-slate-400">Selecione uma conversa</p>
-          <p class="text-sm font-medium text-slate-400 mt-2">Suas mensagens e negociações aparecem aqui.</p>
+          <p class="text-lg font-black uppercase tracking-widest text-slate-400">Selecione uma Conexão</p>
+          <p class="text-sm font-medium text-slate-400 mt-2">Seu histórico de contatos e negociações aparece aqui.</p>
       </div>
 
     </div>

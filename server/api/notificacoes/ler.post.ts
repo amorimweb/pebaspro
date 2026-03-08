@@ -1,4 +1,4 @@
-import { serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/database.types'
 
 export default defineEventHandler(async (event) => {
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
             .update({ lida: true })
             .eq('user_id', user.id)
 
-        if (error) throw createError({ statusCode: 400, message: error.message })
+        if (error) throw createError({ statusCode: 400, message: 'Erro ao marcar notificações como lidas' })
         return { success: true }
     }
 
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
         .eq('user_id', user.id)
 
     if (error) {
-        throw createError({ statusCode: 400, message: error.message })
+        throw createError({ statusCode: 400, message: 'Erro ao atualizar notificação' })
     }
 
     return { success: true }

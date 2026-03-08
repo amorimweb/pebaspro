@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
     const { error } = await client.auth.admin.deleteUser(targetId)
 
     if (error) {
-        throw createError({ statusCode: 500, statusMessage: 'Erro ao deletar usuário: ' + error.message })
+        throw createError({ statusCode: 500, statusMessage: 'Erro ao deletar usuário' })
     }
 
     return { success: true, message: 'Usuário deletado com sucesso' }

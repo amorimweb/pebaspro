@@ -10,6 +10,7 @@ definePageMeta({ layout: 'default' })
 
 const authStore = useAuthStore()
 const { curriculum, saveCurriculum, fetchCurriculum } = useCurriculum()
+const { translateError } = useTranslation()
 const supabase = useSupabaseClient<Database>()
 const user = useSupabaseUser()
 
@@ -118,7 +119,7 @@ const saveProfile = async () => {
         })
         alert('Currículo salvo com sucesso!')
     } else {
-        alert('Erro ao salvar currículo.')
+        alert('Erro ao salvar currículo: ' + translateError(error))
     }
     saving.value = false
 }

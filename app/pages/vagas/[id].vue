@@ -10,6 +10,7 @@ const id = route.params.id
 const user = useSupabaseUser()
 const supabase = useSupabaseClient<Database>()
 const authStore = useAuthStore()
+const { translateError } = useTranslation()
 
 // Buscar dados reais da vaga com join na empresa
 const { data: job, error } = useAsyncData(`job-${id}`, async () => {
@@ -128,7 +129,7 @@ const openWhatsApp = async () => {
         }
      }
   } catch (e) {
-      console.error('Erro ao salvar lead:', e)
+      console.error('Erro ao salvar lead:', translateError(e))
   }
 
   // Limpa o número: remove parênteses, traços, espaços e o + se houver
@@ -147,7 +148,7 @@ const openWhatsApp = async () => {
       vaga_id: job.value.id,
       talento_id: authStore.profile.id
   }).then(({ error }) => {
-      if (error) console.error('Erro ao registrar métrica:', error)
+      if (error) console.error('Erro ao registrar métrica:', translateError(error))
   })
 
   // Redireciona imediatamente para evitar pop-up blocker

@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
         .select()
         .single()
 
-    if (error) throw createError({ statusCode: 400, message: error.message })
+    if (error) throw createError({ statusCode: 400, message: 'Erro ao salvar dados do usuário' })
 
     return data
 })

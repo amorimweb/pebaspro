@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
     if (error?.code === 'PGRST116') {
         throw createError({ statusCode: 404, message: 'Usuário não encontrado' })
     }
-    if (error) throw createError({ statusCode: 400, message: error.message })
+    if (error) throw createError({ statusCode: 400, message: 'Erro ao atualizar dados do usuário' })
 
     return data
 })
