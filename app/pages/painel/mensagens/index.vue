@@ -2,7 +2,7 @@
 import type { Database } from '~/types'
 
 definePageMeta({
-  layout: 'dashboard'
+  layout: 'default'
 })
 
 const user = useSupabaseUser()
@@ -211,7 +211,8 @@ const subscribeToConversations = () => {
 </script>
 
 <template>
-  <div class="h-[calc(100vh-theme('spacing.20'))] bg-white rounded-xl shadow-sm border border-gray-200 flex overflow-hidden">
+  <div class="max-w-6xl mx-auto px-4 md:px-8 py-8 h-[calc(100vh-6rem)]">
+  <div class="h-full bg-white rounded-xl shadow-sm border border-gray-200 flex overflow-hidden">
     
     <!-- Sidebar (Conversations List) -->
     <div class="w-full md:w-80 border-r border-gray-200 flex flex-col bg-gray-50">
@@ -331,5 +332,6 @@ const subscribeToConversations = () => {
         <p class="text-lg font-medium">Selecione uma conversa para começar</p>
     </div>
 
+  </div>
   </div>
 </template>

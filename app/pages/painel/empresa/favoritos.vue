@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
+import { useFavorites } from '~/composables/useFavorites'
 import type { Database } from '~/types/database.types'
 
 definePageMeta({
-  layout: 'default'
+  layout: 'dashboard'
 })
 
 const authStore = useAuthStore()
@@ -82,7 +83,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="p-6 md:p-10 max-w-6xl mx-auto">
+    <div class="max-w-6xl mx-auto">
         <header class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
                 <h1 class="text-3xl font-black text-slate-900 mb-2">Meus Favoritos</h1>
@@ -153,7 +154,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between pt-6 border-t border-slate-50">
                             <span class="text-xs font-bold text-slate-400">📍 {{ prof.regiao || 'Na região' }}</span>
                             <NuxtLink 
-                                :to="authStore.profile?.tipo_conta === 'empresa' ? '/painel/empresa/buscar-talentos' : '/perfil'"
+                                to="/painel/empresa/buscar-talentos"
                                 class="text-sm font-black text-slate-600 hover:text-green-600 flex items-center gap-1 transition-all"
                             >
                                 Ver Perfil

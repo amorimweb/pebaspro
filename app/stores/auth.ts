@@ -1,9 +1,8 @@
 import { defineStore } from 'pinia'
 import { useProfileStore } from '~/stores/profile'
-import type { Usuario } from '~/types/database.types'
+import type { UpdateUsuarioPayload } from '~/types/usuarios'
 
 export const useAuthStore = defineStore('auth', () => {
-    const supabase = useSupabaseClient()
     const user = useSupabaseUser()
     const profileStore = useProfileStore()
 
@@ -42,21 +41,16 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    async function updateProfile(data: Partial<Usuario>) {
+    async function updateProfile(data: UpdateUsuarioPayload) {
         const userId = user.value?.id || profile.value?.id
         if (!userId) return { error: { message: 'Usuário não autenticado' } }
 
         profileStore.loading = true
         try {
-            const { error: err } = await supabase
-                .from('usuarios')
-                .upsert({
-                    id: userId,
-                    ...data,
-                    updated_at: new Date().toISOString()
-                })
-
-            if (err) throw err
+            await $fetch(`/api/usuarios/${userId}`, {
+                method: 'PUT',
+                body: data
+            })
 
             // Forçar a re-busca do perfil para atualizar todos os componentes
             await profileStore.fetchProfile()
@@ -70,6 +64,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     async function signOut() {
+        const supabase = useSupabaseClient()
         profileStore.clearProfile()
         return await supabase.auth.signOut()
     }

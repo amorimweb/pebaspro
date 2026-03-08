@@ -525,6 +525,86 @@ export interface Database {
           }
         ]
       }
+      notificacoes: {
+        Row: {
+          id: string
+          user_id: string
+          titulo: string
+          mensagem: string
+          tipo: string
+          lida: boolean
+          link: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          titulo: string
+          mensagem: string
+          tipo?: string
+          lida?: boolean
+          link?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          titulo?: string
+          mensagem?: string
+          tipo?: string
+          lida?: boolean
+          link?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      visualizacoes_vitrine: {
+        Row: {
+          id: string
+          vitrine_id: string
+          visitante_id: string | null
+          ip_address: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          vitrine_id: string
+          visitante_id?: string | null
+          ip_address?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          vitrine_id?: string
+          visitante_id?: string | null
+          ip_address?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visualizacoes_vitrine_vitrine_id_fkey"
+            columns: ["vitrine_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visualizacoes_vitrine_visitante_id_fkey"
+            columns: ["visitante_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       talento_curriculos: {
@@ -539,6 +619,7 @@ export interface Database {
           regiao: string | null
           cadastro_completo: boolean | null
           status: string | null
+          tipo_conta: string | null
           created_at: string
           updated_at: string
           objetivo_profissional: string | null

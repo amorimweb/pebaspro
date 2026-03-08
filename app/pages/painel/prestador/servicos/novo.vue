@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { Database } from '~/types'
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
-  layout: 'dashboard'
+  layout: 'default'
 })
 
 const authStore = useAuthStore()
@@ -87,7 +88,7 @@ const onPriceInput = (e: Event) => {
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto">
+  <div class="max-w-2xl mx-auto px-4 md:px-8 py-8">
     <div class="mb-8">
          <NuxtLink to="/painel/prestador/servicos" class="text-sm font-bold text-gray-500 hover:text-green-600 flex items-center gap-2 mb-4">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>

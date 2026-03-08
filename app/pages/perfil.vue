@@ -62,7 +62,9 @@ const addExperience = () => {
 }
 
 const removeExperience = (index: number) => {
-    form.value.experiencia_profissional.splice(index, 1)
+    if (confirm('Deseja realmente excluir esta experiência profissional?')) {
+        form.value.experiencia_profissional.splice(index, 1)
+    }
 }
 
 const addEducation = () => {
@@ -70,7 +72,9 @@ const addEducation = () => {
 }
 
 const removeEducation = (index: number) => {
-    form.value.formacao_academica.splice(index, 1)
+    if (confirm('Deseja realmente excluir esta formação acadêmica?')) {
+        form.value.formacao_academica.splice(index, 1)
+    }
 }
 
 const addSkill = () => {
@@ -81,7 +85,9 @@ const addSkill = () => {
 }
 
 const removeSkill = (skill: string) => {
-    form.value.habilidades = form.value.habilidades.filter(s => s !== skill)
+    if (confirm(`Deseja realmente excluir a habilidade "${skill}"?`)) {
+        form.value.habilidades = form.value.habilidades.filter(s => s !== skill)
+    }
 }
 
 const onFileChange = async (e: Event) => {
@@ -179,7 +185,7 @@ const handleLogout = async () => {
 }
 
 definePageMeta({
-    layout: 'dashboard'
+    layout: 'default'
 })
 </script>
 

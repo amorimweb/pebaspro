@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
+import { useNotifications } from '~/composables/useNotifications'
+import { storeToRefs } from 'pinia'
+import { useCurriculum } from '~/composables/useCurriculum'
 
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
@@ -15,6 +17,20 @@ const isMobileMenuOpen = ref(false)
 const isUserDropdownOpen = ref(false)
 const isScrolled = ref(false)
 const route = useRoute()
+
+// Notificações
+const { notifications, unreadCount, markAsRead, loading: loadingNotifications } = useNotifications()
+const showNotifications = ref(false)
+const notificationRef = ref<HTMLElement | null>(null)
+
+// Fechar ao clicar fora
+if (process.client) {
+  window.addEventListener('click', (e) => {
+    if (showNotifications.value && notificationRef.value && !notificationRef.value.contains(e.target as Node)) {
+      showNotifications.value = false
+    }
+  })
+}
 const isHomePage = computed(() => route.path === '/')
 
 interface MenuItem {
@@ -75,6 +91,7 @@ const menus: Record<string, MenuItem[]> = {
   prestador: [
     { label: 'Dashboard', to: '/painel/prestador' },
     { label: 'Meus Serviços', to: '/painel/prestador/servicos' },
+    { label: 'Favoritos', to: '/painel/favoritos' },
     { label: 'Mensagens', to: '/painel/mensagens' },
     { label: 'Perfil', to: '/perfil' },
     { label: 'Divulgar Serviço', to: '/divulgar-servico', isCTA: true },
@@ -83,6 +100,8 @@ const menus: Record<string, MenuItem[]> = {
     { label: 'Dashboard', to: '/painel/empresa' },
     { label: 'Minhas Vagas', to: '/painel/empresa/vagas' },
     { label: 'Buscar Talentos', to: '/painel/empresa/buscar-talentos' },
+    { label: 'Favoritos', to: '/painel/empresa/favoritos' },
+    { label: 'Mensagens', to: '/painel/empresa/mensagens' },
     { label: 'Perfil', to: '/perfil' },
     { label: 'Anunciar Vaga', to: '/divulgar-vaga', isCTA: true },
   ],
@@ -186,7 +205,56 @@ watch(isMobileMenuOpen, (isOpen) => {
             <NuxtLink to="/cadastro" class="ml-2 px-5 py-2.5 text-sm font-bold bg-white text-green-700 hover:bg-green-50 shadow-lg hover:shadow-green-400/20 active:scale-95 transition-all rounded-xl">Cadastrar</NuxtLink>
           </div>
 
-          <div v-else class="relative user-dropdown-trigger">
+          <div v-else class="flex items-center gap-4">
+            <!-- Notificações Desktop -->
+            <div class="relative" ref="notificationRef">
+              <button @click="showNotifications = !showNotifications" class="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-xl transition-all relative group">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span v-if="unreadCount > 0" class="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-green-950 group-hover:scale-110 transition-transform">
+                  {{ unreadCount }}
+                </span>
+              </button>
+
+              <!-- Dropdown Notificações Desktop -->
+              <div v-if="showNotifications" class="absolute right-0 mt-4 w-80 bg-white rounded-[24px] shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in slide-in-from-top-2 duration-200">
+                <div class="p-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                  <span class="font-black text-slate-800 text-xs uppercase tracking-widest">Notificações</span>
+                  <button v-if="unreadCount > 0" @click="markAsRead()" class="text-[10px] font-bold text-green-600 hover:text-green-500 uppercase tracking-wider">Marcar todas como lidas</button>
+                </div>
+                <div class="max-h-[400px] overflow-y-auto custom-scrollbar">
+                  <div v-if="loadingNotifications" class="p-10 text-center text-slate-400 italic text-sm">Carregando...</div>
+                  <div v-else-if="notifications.length === 0" class="p-10 text-center text-slate-400 text-sm italic">Nenhuma notificação recente.</div>
+                  <div 
+                    v-for="n in notifications" 
+                    :key="n.id" 
+                    :class="{'bg-green-50/40': !n.lida}" 
+                    class="p-5 border-b border-slate-50 hover:bg-slate-50 transition-all cursor-pointer group/item"
+                    @click="markAsRead(n.id); if(n.link) navigateTo(n.link); showNotifications = false"
+                  >
+                    <div class="flex gap-4">
+                      <div class="w-10 h-10 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center shrink-0 group-hover/item:border-green-200 transition-colors">
+                        <span class="text-lg">{{ n.tipo === 'vaga' ? '💼' : '💬' }}</span>
+                      </div>
+                      <div class="min-w-0">
+                        <p class="text-sm font-bold text-slate-900 mb-1 leading-tight text-left">{{ n.titulo }}</p>
+                        <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-2 text-left">{{ n.mensagem }}</p>
+                        <div class="flex items-center gap-2">
+                           <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest">{{ new Date(n.created_at).toLocaleDateString() }}</span>
+                           <span v-if="!n.lida" class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <NuxtLink v-if="notifications.length > 0" to="/painel/notificacoes" class="block p-4 text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-green-600 transition-colors border-t border-slate-50">
+                  Ver todo o histórico
+                </NuxtLink>
+              </div>
+            </div>
+
+            <div class="relative user-dropdown-trigger">
               <button 
                 @click.stop="toggleUserDropdown" 
                 class="flex items-center gap-2 p-1 rounded-xl transition-all active:scale-95 group/btn"
@@ -239,12 +307,47 @@ watch(isMobileMenuOpen, (isOpen) => {
                 </button>
               </div>
             </Transition>
+            </div>
           </div>
         </Transition>
       </div>
 
       <!-- MOBILE CONTROLS -->
       <div class="flex lg:hidden items-center gap-3">
+        <!-- Notificações Mobile -->
+        <div v-if="initialized && user" class="relative" ref="notificationRef">
+          <button @click="showNotifications = !showNotifications" class="p-2 text-white/70 hover:bg-white/10 rounded-xl relative">
+            <span class="text-xl">🔔</span>
+            <span v-if="unreadCount > 0" class="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-green-950">
+              {{ unreadCount }}
+            </span>
+          </button>
+          
+          <!-- Dropdown Notificações Mobile -->
+          <div v-if="showNotifications" class="absolute right-[-40px] mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden">
+            <div class="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+              <span class="font-bold text-slate-800 text-sm">Notificações</span>
+              <button v-if="unreadCount > 0" @click="markAsRead()" class="text-[10px] font-bold text-green-600 hover:underline">Limpar tudo</button>
+            </div>
+            <div class="max-h-80 overflow-y-auto">
+              <div v-if="loadingNotifications" class="p-8 text-center"><div class="animate-spin h-5 w-5 border-2 border-green-500 border-t-transparent rounded-full mx-auto"></div></div>
+              <div v-else-if="notifications.length === 0" class="p-8 text-center text-slate-400 text-xs italic">Nenhuma notificação por aqui.</div>
+              <div v-for="n in notifications" :key="n.id" :class="{'bg-green-50/30': !n.lida}" class="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer" @click="markAsRead(n.id); n.link && navigateTo(n.link); showNotifications = false">
+                <div class="flex gap-3 text-left">
+                  <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                    {{ n.tipo === 'vaga' ? '💼' : '💬' }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-slate-800 mb-0.5 truncate text-left">{{ n.titulo }}</p>
+                    <p class="text-[10px] text-slate-500 line-clamp-2 leading-relaxed text-left">{{ n.mensagem }}</p>
+                    <p class="text-[9px] text-slate-400 mt-1 uppercase font-bold text-left">{{ new Date(n.created_at).toLocaleDateString() }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Profile Avatar (Mobile) -->
         <NuxtLink v-if="initialized && user" to="/perfil" class="w-10 h-10 rounded-full flex items-center justify-center text-white font-black overflow-hidden transition-colors">
            <img v-if="profile?.foto" :src="profile.foto" class="w-full h-full object-cover" />

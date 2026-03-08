@@ -42,7 +42,9 @@ const addSkill = () => {
 }
 
 const removeSkill = (skill: string) => {
-    form.value.habilidades_exigidas = form.value.habilidades_exigidas.filter(s => s !== skill)
+    if (confirm(`Deseja realmente excluir a habilidade "${skill}" de foma definitiva?`)) {
+        form.value.habilidades_exigidas = form.value.habilidades_exigidas.filter(s => s !== skill)
+    }
 }
 
 const fetchVaga = async () => {

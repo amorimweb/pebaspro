@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
+import { useFavorites } from '~/composables/useFavorites'
 import type { Database } from '~/types/database.types'
-
 import { storeToRefs } from 'pinia'
 
 definePageMeta({
@@ -55,9 +55,12 @@ const fetchCandidates = async () => {
             .select('*')
         
         if (searchQuery.value) {
-            // Busca aprimorada: nome ou profissão ou biografia ou objetivo
             const term = `%${searchQuery.value}%`
             query = query.or(`nome.ilike.${term},profissao.ilike.${term},objetivo_profissional.ilike.${term},biografia.ilike.${term}`)
+        }
+
+        if (selectedRole.value) {
+            query = query.eq('profissao', selectedRole.value)
         }
 
         const { data, error } = await query
@@ -118,11 +121,26 @@ watch([initialized, user], ([isInit, newUser]) => {
     }
 }, { immediate: true })
 
-// Avatar helper
-const getAvatarInitial = (name?: string) => name?.charAt(0) || 'U'
-
 // Tab state
 const activeTab = ref('curriculo') // curriculo, pebaspro, avaliacoes
+
+// Distance calculation (Haversine)
+const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371 // Radius of the earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLon = (lon2 - lon1) * Math.PI / 180
+    const a = 
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c // Distance in km
+}
+
+const getAvatarInitial = (name?: string | null) => {
+    if (!name) return '?'
+    return name.charAt(0).toUpperCase()
+}
 </script>
 
 <template>
@@ -146,6 +164,25 @@ const activeTab = ref('curriculo') // curriculo, pebaspro, avaliacoes
                         placeholder="Buscar por nome ou profissão..." 
                         class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none text-base transition-all font-medium"
                     />
+                </div>
+
+                <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                    <button 
+                        @click="selectedRole = ''"
+                        class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all"
+                        :class="selectedRole === '' ? 'bg-green-600 text-white shadow-md shadow-green-600/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
+                    >
+                        Todos
+                    </button>
+                    <button 
+                        v-for="role in roles" 
+                        :key="role"
+                        @click="selectedRole = role"
+                        class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all"
+                        :class="selectedRole === role ? 'bg-green-600 text-white shadow-md shadow-green-600/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
+                    >
+                        {{ role }}
+                    </button>
                 </div>
             </div>
         </div>
@@ -196,6 +233,9 @@ const activeTab = ref('curriculo') // curriculo, pebaspro, avaliacoes
                         </p>
                         <div class="flex items-center gap-2 text-xs text-slate-400">
                             <span>📍 {{ candidate.regiao || 'Na região' }}</span>
+                            <span v-if="authStore.profile?.latitude && candidate.latitude" class="text-green-600 font-bold">
+                                • {{ getDistance(authStore.profile.latitude, authStore.profile.longitude!, candidate.latitude, candidate.longitude).toFixed(1) }} km
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -261,6 +301,9 @@ const activeTab = ref('curriculo') // curriculo, pebaspro, avaliacoes
                                 <p class="text-lg text-green-600 font-bold mb-1">{{ selectedCandidate.profissao }}</p>
                                 <p class="text-slate-500 flex items-center justify-center md:justify-start gap-1">
                                     📍 {{ selectedCandidate.regiao || 'Na região' }}
+                                    <span v-if="authStore.profile?.latitude && selectedCandidate.latitude" class="bg-green-50 text-green-700 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ml-2">
+                                        A {{ getDistance(authStore.profile.latitude, authStore.profile.longitude!, selectedCandidate.latitude, selectedCandidate.longitude).toFixed(1) }} km de você
+                                    </span>
                                 </p>
                             </div>
                             <!-- Actions -->

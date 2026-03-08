@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import type { Usuario } from '~/types/database.types'
+import type { CreateUsuarioPayload } from '~/types/usuarios'
 
 export const useProfileStore = defineStore('profile', {
     state: () => ({
@@ -8,7 +9,7 @@ export const useProfileStore = defineStore('profile', {
         error: null as string | null
     }),
 
-    persist: true,
+    persist: { pick: ['profile'] },
 
     getters: {
         isAuthenticated: (state) => !!state.profile,
@@ -34,18 +35,13 @@ export const useProfileStore = defineStore('profile', {
             }
         },
 
-        async createProfile(data: Partial<Usuario>) {
-            const supabase = useSupabaseClient()
+        async createProfile(data: CreateUsuarioPayload) {
             this.loading = true
             try {
-                const { error: err } = await supabase
-                    .from('usuarios')
-                    .upsert({
-                        ...data,
-                        updated_at: new Date().toISOString()
-                    })
-
-                if (err) throw err
+                await $fetch('/api/usuarios', {
+                    method: 'POST',
+                    body: data
+                })
                 await this.fetchProfile()
                 return { error: null }
             } catch (e: any) {

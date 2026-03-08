@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import type { Database } from '~/types'
-import type { Servico } from '~/types/servicos.types'
+import type { Database, Servico } from '~/types'
+import { useAuthStore } from '~/stores/auth'
+import { storeToRefs } from 'pinia'
 
-definePageMeta({
-  layout: 'dashboard'
-})
-
+// definePageMeta removed as auth.global handles this
 const authStore = useAuthStore()
 const supabase = useSupabaseClient<Database>()
 const user = useSupabaseUser()
@@ -85,7 +83,7 @@ watch(() => authStore.profile, (newProfile) => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-6">
 
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -119,7 +117,7 @@ watch(() => authStore.profile, (newProfile) => {
     <!-- Stats -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- Serviços Ativos -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between group hover:-translate-y-1 transition-transform duration-300">
+      <NuxtLink to="/painel/prestador/servicos" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between group hover:-translate-y-1 hover:border-teal-200 hover:shadow-md transition-all duration-300 cursor-pointer">
         <div>
           <p class="text-sm font-medium text-gray-500 mb-1">Serviços Ativos</p>
           <div v-if="loading" class="h-8 w-16 bg-gray-200 rounded animate-pulse"/>
@@ -129,15 +127,15 @@ watch(() => authStore.profile, (newProfile) => {
         <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
           <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
         </div>
-      </div>
+      </NuxtLink>
 
       <!-- Solicitações de Orçamento -->
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between group hover:-translate-y-1 transition-transform duration-300">
         <div>
-          <p class="text-sm font-medium text-gray-500 mb-1">Solicitações Recebidas</p>
+          <p class="text-sm font-medium text-gray-500 mb-1">Clientes Atendidos</p>
           <div v-if="loading" class="h-8 w-16 bg-gray-200 rounded animate-pulse"/>
           <h3 v-else class="text-3xl font-bold text-gray-900">{{ stats.solicitacoes }}</h3>
-          <span v-if="!loading" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">de orçamento</span>
+          <span v-if="!loading" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">total acumulado</span>
         </div>
         <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
           <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
@@ -145,7 +143,7 @@ watch(() => authStore.profile, (newProfile) => {
       </div>
 
       <!-- Visualizações -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between group hover:-translate-y-1 transition-transform duration-300">
+      <NuxtLink :to="`/empresas/${authStore.profile?.id}`" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between group hover:-translate-y-1 hover:border-cyan-200 hover:shadow-md transition-all duration-300 cursor-pointer">
         <div>
           <p class="text-sm font-medium text-gray-500 mb-1">Visualizações da Vitrine</p>
           <div v-if="loading" class="h-8 w-16 bg-gray-200 rounded animate-pulse"/>
@@ -155,7 +153,7 @@ watch(() => authStore.profile, (newProfile) => {
         <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center">
           <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
         </div>
-      </div>
+      </NuxtLink>
     </div>
 
     <!-- Bottom Section -->

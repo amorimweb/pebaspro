@@ -2,7 +2,10 @@
 import type { Database } from '~/types'
 import VagasRecomendadas from '~/components/dashboard/VagasRecomendadas.vue'
 
+import { useAuthStore } from '~/stores/auth'
 import { storeToRefs } from 'pinia'
+
+definePageMeta({ layout: 'default' })
 
 // definePageMeta removed as auth.global handles this
 

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { Database } from '~/types'
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
-  layout: 'dashboard'
+  layout: 'default'
 })
 
 const authStore = useAuthStore()
@@ -12,12 +13,13 @@ const services = ref<any[]>([])
 const loading = ref(true)
 
 const fetchServices = async () => {
+    if (!authStore.profile?.id) return
     loading.value = true
     try {
         const { data, error } = await supabase
             .from('servicos')
             .select('*')
-            .eq('prestador_id', authStore.profile?.id)
+            .eq('prestador_id', authStore.profile.id)
             .order('created_at', { ascending: false })
 
         if (error) throw error
@@ -72,7 +74,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-5xl mx-auto">
+  <div class="max-w-5xl mx-auto px-4 md:px-8 py-8">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Meus Serviços</h1>
