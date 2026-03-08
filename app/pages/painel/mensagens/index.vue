@@ -218,7 +218,7 @@ const subscribeToConversations = () => {
     <div class="w-full md:w-80 border-r border-gray-200 flex flex-col bg-gray-50">
         <!-- Header -->
         <div class="p-4 border-b border-gray-200 bg-white">
-            <h2 class="font-bold text-gray-800">Mensagens</h2>
+            <h2 class="font-bold text-gray-800">Conexões</h2>
         </div>
         
         <!-- List -->

@@ -94,6 +94,43 @@ const openWhatsApp = async () => {
     return
   }
 
+  // Registrar candidatura/interesse nas "Conversas" para rastreamento (CRM)
+  try {
+     if (authStore.profile && job.value) {
+        const [p1, p2] = [authStore.profile.id, job.value.empresa_id].sort()
+        
+        const { data: existing } = await supabase
+            .from('conversas')
+            .select('id')
+            .eq('participante1_id', p1)
+            .eq('participante2_id', p2)
+            .maybeSingle()
+
+        if (existing) {
+            await supabase
+                .from('conversas')
+                .update({ 
+                    updated_at: new Date().toISOString(),
+                    tipo_contato: 'whatsapp',
+                    ultima_mensagem: `Candidatura (WhatsApp): ${job.value.titulo}`
+                })
+                .eq('id', existing.id)
+        } else {
+            await supabase
+                .from('conversas')
+                .insert({
+                    participante1_id: p1,
+                    participante2_id: p2,
+                    tipo_contato: 'whatsapp',
+                    status_contratacao: 'interessado',
+                    ultima_mensagem: `Candidatura (WhatsApp): ${job.value.titulo}`
+                })
+        }
+     }
+  } catch (e) {
+      console.error('Erro ao salvar lead:', e)
+  }
+
   // Limpa o número: remove parênteses, traços, espaços e o + se houver
   let phone = phoneRaw.replace(/\D/g, '')
   

@@ -15,7 +15,7 @@ const menuItems = computed(() => {
     menu.push(
       { name: 'Dashboard', path: '/painel/talento', icon: '📊' },
       { name: 'Favoritos', path: '/painel/favoritos', icon: '⭐' },
-      { name: 'Mensagens', path: '/painel/mensagens', icon: '💬' },
+      { name: 'Conexões', path: '/painel/mensagens', icon: '💬' },
     )
   }
 
@@ -25,7 +25,7 @@ const menuItems = computed(() => {
       { name: 'Minhas Vagas', path: '/painel/empresa/vagas', icon: '🏢' },
       { name: 'Buscar Talentos', path: '/painel/empresa/buscar-talentos', icon: '🔍' },
       { name: 'Favoritos', path: '/painel/empresa/favoritos', icon: '⭐' },
-      { name: 'Mensagens', path: '/painel/empresa/mensagens', icon: '💬' },
+      { name: 'Conexões', path: '/painel/empresa/mensagens', icon: '💬' },
     )
   }
 

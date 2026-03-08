@@ -42,6 +42,8 @@ export interface Database {
           participante1_id: string
           participante2_id: string
           ultima_mensagem: string | null
+          tipo_contato: string | null
+          status_contratacao: string | null
           updated_at: string
           created_at: string
         }
@@ -50,6 +52,8 @@ export interface Database {
           participante1_id: string
           participante2_id: string
           ultima_mensagem?: string | null
+          tipo_contato?: string | null
+          status_contratacao?: string | null
           updated_at?: string
           created_at?: string
         }
@@ -58,6 +62,8 @@ export interface Database {
           participante1_id?: string
           participante2_id?: string
           ultima_mensagem?: string | null
+          tipo_contato?: string | null
+          status_contratacao?: string | null
           updated_at?: string
           created_at?: string
         }

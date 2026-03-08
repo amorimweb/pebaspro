@@ -31,8 +31,41 @@ const openWhatsApp = async () => {
     return navigateTo('/login')
   }
 
-  // Registrar solicitação de orçamento/interesse no banco
+  // Registrar interesse em "Conversas" para o CRM do painel
   try {
+     if (!service.value || !service.value.prestador) return
+
+     const [p1, p2] = [authStore.user.id, service.value.prestador.id].sort()
+     
+     const { data: existing } = await supabase
+        .from('conversas')
+        .select('id')
+        .eq('participante1_id', p1)
+        .eq('participante2_id', p2)
+        .maybeSingle()
+
+     if (existing) {
+        await supabase
+            .from('conversas')
+            .update({ 
+                updated_at: new Date().toISOString(),
+                tipo_contato: 'whatsapp',
+                ultima_mensagem: `Interesse no serviço: ${service.value.titulo}`
+            })
+            .eq('id', existing.id)
+     } else {
+        await supabase
+            .from('conversas')
+            .insert({
+                participante1_id: p1,
+                participante2_id: p2,
+                tipo_contato: 'whatsapp',
+                status_contratacao: 'interessado',
+                ultima_mensagem: `Interesse no serviço: ${service.value.titulo}`
+            })
+     }
+
+     // Legado (opcional): mantém registro em solicitacoes_orcamento
      await supabase.from('solicitacoes_orcamento').insert({
         servico_id: service.value.id,
         cliente_id: authStore.user.id,

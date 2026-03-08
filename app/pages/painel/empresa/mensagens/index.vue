@@ -162,6 +162,27 @@ const scrollToBottom = () => {
     }
 }
 
+const updateStatus = async (status: string) => {
+    if (!selectedConversationId.value) return
+    
+    try {
+        const { error } = await supabase
+            .from('conversas')
+            .update({ status_contratacao: status })
+            .eq('id', selectedConversationId.value)
+        
+        if (error) throw error
+        
+        // Atualiza estado local
+        const idx = conversations.value.findIndex(c => c.id === selectedConversationId.value)
+        if (idx !== -1) {
+            conversations.value[idx].status_contratacao = status
+        }
+    } catch (e) {
+        console.error('Erro ao atualizar status:', e)
+    }
+}
+
 // Realtime
 const subscribeToMessages = (conversationId: string) => {
     supabase.channel(`chat:${conversationId}`)
@@ -189,6 +210,8 @@ const subscribeToConversations = () => {
                 // Update fields
                 conversations.value[idx].ultima_mensagem = payload.new.ultima_mensagem
                 conversations.value[idx].updated_at = payload.new.updated_at
+                conversations.value[idx].status_contratacao = payload.new.status_contratacao
+                conversations.value[idx].tipo_contato = payload.new.tipo_contato
                 // Re-sort
                 conversations.value.sort((a, b) => 
                  new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
@@ -219,7 +242,7 @@ const subscribeToConversations = () => {
       <div class="w-full md:w-80 border-r border-slate-50 flex flex-col bg-slate-50/30">
           <!-- Header -->
           <div class="p-6 border-b border-slate-50 bg-white/50 backdrop-blur-sm">
-              <h2 class="text-xl font-black text-slate-800">Mensagens</h2>
+              <h2 class="text-xl font-black text-slate-800">Conexões</h2>
           </div>
           
           <!-- List -->
@@ -254,6 +277,10 @@ const subscribeToConversations = () => {
                               <h3 class="font-bold text-slate-900 truncate group-hover:text-green-700 transition-colors">{{ conv.otherUser?.nome || 'Usuário' }}</h3>
                               <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">{{ new Date(conv.updated_at).toLocaleDateString() }}</span>
                           </div>
+                          <div class="flex items-center gap-2 mb-1">
+                              <span v-if="conv.tipo_contato === 'whatsapp'" class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">WhatsApp</span>
+                              <span v-if="conv.status_contratacao === 'contratado'" class="text-[9px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Contratado ✅</span>
+                          </div>
                           <p class="text-sm text-slate-500 truncate font-medium">
                               {{ conv.ultima_mensagem || 'Inicie a conversa...' }}
                           </p>
@@ -276,6 +303,48 @@ const subscribeToConversations = () => {
               <div>
                   <h3 class="font-black text-slate-900 leading-tight">{{ selectedConversation?.otherUser?.nome }}</h3>
                   <p class="text-[10px] font-black text-green-600 uppercase tracking-[0.2em]">{{ selectedConversation?.otherUser?.tipo_conta }}</p>
+              </div>
+          </div>
+
+          <!-- Status Bar (CRM) -->
+          <div v-if="authStore.profile?.tipo_conta === 'empresa'" class="px-6 py-3 bg-slate-50 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+              <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">Status da Negociação:</span>
+                  <span 
+                    class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm border border-white"
+                    :class="{
+                        'bg-blue-500 text-white': selectedConversation?.status_contratacao === 'interessado' || !selectedConversation?.status_contratacao,
+                        'bg-orange-500 text-white': selectedConversation?.status_contratacao === 'negociando',
+                        'bg-green-600 text-white': selectedConversation?.status_contratacao === 'contratado',
+                        'bg-slate-400 text-white': selectedConversation?.status_contratacao === 'recusado'
+                    }"
+                  >
+                    {{ selectedConversation?.status_contratacao || 'interessado' }}
+                  </span>
+              </div>
+              
+              <div class="flex gap-2">
+                  <button 
+                    v-if="selectedConversation?.status_contratacao !== 'contratado'"
+                    @click="updateStatus('contratado')"
+                    class="px-4 py-2 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 active:scale-95"
+                  >
+                    Contratei! ✅
+                  </button>
+                  <button 
+                    v-if="selectedConversation?.status_contratacao === 'interessado' || !selectedConversation?.status_contratacao"
+                    @click="updateStatus('negociando')"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-95"
+                  >
+                    Negociar
+                  </button>
+                  <button 
+                    v-if="selectedConversation?.status_contratacao !== 'recusado' && selectedConversation?.status_contratacao !== 'contratado'"
+                    @click="updateStatus('recusado')"
+                    class="px-4 py-2 bg-white text-slate-400 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
+                  >
+                    Sem Interesse
+                  </button>
               </div>
           </div>
 
