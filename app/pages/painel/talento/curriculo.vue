@@ -6,7 +6,7 @@ import { useCurriculum } from '~/composables/useCurriculum'
 
 // definePageMeta removed as auth.global handles this
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'dashboard' })
 
 const authStore = useAuthStore()
 const { curriculum, saveCurriculum, fetchCurriculum } = useCurriculum()
@@ -203,6 +203,10 @@ onMounted(() => {
         if (el) observer.observe(el)
     })
 })
+
+const openPrintView = () => {
+    window.open('/painel/talento/curriculo-print', '_blank')
+}
 </script>
 
 <template>
@@ -224,6 +228,13 @@ onMounted(() => {
                 </div>
                 
                 <div class="flex items-center gap-3">
+                    <button 
+                        @click="openPrintView" 
+                        class="flex items-center gap-2 px-6 py-4 bg-slate-600 text-white rounded-2xl font-bold hover:bg-slate-700 transition shadow-lg shadow-slate-600/20 active:scale-95 text-lg"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4H7a2 2 0 01-2-2v-4a2 2 0 012-2h10a2 2 0 012 2v4a2 2 0 01-2 2zm0 0h6a2 2 0 002-2v-4a2 2 0 00-2-2h-2.5a2 2 0 01-1-3.8l-2.5-2m0 0a2 2 0 01 2-2h4a2 2 0 011 3.8l-2.5 2"></path></svg>
+                        Imprimir
+                    </button>
                     <button 
                         @click="saveProfile" 
                         :disabled="saving"
@@ -549,6 +560,7 @@ onMounted(() => {
     </div>
 
     </div>
+
 </template>
 
 <style scoped>

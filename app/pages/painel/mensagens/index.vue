@@ -2,7 +2,7 @@
 import type { Database } from '~/types'
 
 definePageMeta({
-  layout: 'default'
+  layout: 'dashboard'
 })
 
 const user = useSupabaseUser()

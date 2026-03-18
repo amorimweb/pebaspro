@@ -1,5 +1,5 @@
--- Function to search jobs by location and skills match
--- Updated: 2026-03-18 to include closed jobs and sort them last
+-- Migration: update_search_vagas_include_closed
+-- Created: 2026-03-18
 CREATE OR REPLACE FUNCTION public.search_vagas(
   user_lat double precision,
   user_lon double precision,
@@ -81,7 +81,7 @@ BEGIN
       )
     ) <= radius_km
   ORDER BY 
-    (v.encerramento IS NOT NULL AND v.encerramento < CURRENT_DATE) ASC, -- False (active) comes before True (closed)
+    (v.encerramento IS NOT NULL AND v.encerramento < CURRENT_DATE) ASC,
     skill_match_count DESC, 
     dist_km ASC,
     v.data_publicacao DESC;

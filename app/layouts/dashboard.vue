@@ -11,7 +11,17 @@ const menuItems = computed(() => {
 
   const menu = []
 
-  if (profile.tipo_conta === 'prestador' || profile.tipo_conta === 'talento') {
+  if (profile.tipo_conta === 'talento') {
+    menu.push(
+      { name: 'Dashboard', path: '/painel/talento', icon: '📊' },
+      { name: 'Buscar Vagas', path: '/vagas', icon: '🔍' },
+      { name: 'Meu Currículo', path: '/painel/talento/curriculo', icon: '📄' },
+      { name: 'Mensagens', path: '/painel/mensagens', icon: '💬' },
+      { name: 'Favoritos', path: '/painel/favoritos', icon: '⭐' },
+    )
+  }
+
+  if (profile.tipo_conta === 'prestador') {
     menu.push(
       { name: 'Dashboard', path: '/painel/talento', icon: '📊' },
       { name: 'Favoritos', path: '/painel/favoritos', icon: '⭐' },

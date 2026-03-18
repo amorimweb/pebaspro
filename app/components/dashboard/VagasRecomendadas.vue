@@ -107,12 +107,32 @@ const fetchJobs = async () => {
             jobs.value = data || []
         }
 
+        // Client-side sort safety: Closed jobs always last
+        jobs.value = [...jobs.value].sort((a, b) => {
+            const closedA = isClosed(a.encerramento)
+            const closedB = isClosed(b.encerramento)
+            if (closedA && !closedB) return 1
+            if (!closedA && closedB) return -1
+            return 0
+        })
+
     } catch (e) {
         console.error('Erro ao buscar vagas recomendadas:', e)
     } finally {
         loading.value = false
     }
 }
+
+const isClosed = (dateStr: string | null) => {
+    if (!dateStr) {
+        return false
+    }
+    const date = new Date(dateStr + 'T00:00:00')
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return date < today
+}
+
 </script>
 
 <template>
@@ -153,8 +173,15 @@ const fetchJobs = async () => {
             
             <div class="flex-1">
                 <div class="flex items-center justify-between mb-1">
-                    <h3 class="font-bold text-gray-900">{{ job.titulo }}</h3>
-                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-800" v-if="job.skill_match_count > 0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-bold text-gray-900" :class="{ 'text-gray-500': isClosed(job.encerramento) }">
+                            {{ job.titulo }}
+                        </h3>
+                        <span v-if="isClosed(job.encerramento)" class="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 border border-gray-200">
+                            Encerrada
+                        </span>
+                    </div>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-800" v-if="job.skill_match_count > 0 && !isClosed(job.encerramento)">
                         {{ job.skill_match_count }} skills
                     </span>
                 </div>

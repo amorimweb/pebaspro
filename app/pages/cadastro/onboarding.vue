@@ -8,6 +8,59 @@ const supabase = useSupabaseClient<Database>()
 const { uploadFile, loading: uploading } = useFileUpload()
 const { coords, getLocation } = useLocation()
 const step = ref(1)
+const typeCookie = useCookie<string | null>('pebas_pending_type')
+
+// Profissões A-Z
+const profissoesList = [
+  'Administrador de Banco de Dados', 'Almoxarife', 'Analista Administrativo',
+  'Analista de Dados', 'Analista de RH', 'Analista de Sistemas', 'Analista de Suporte',
+  'Analista Financeiro', 'Assistente Administrativo', 'Assistente de Atendimento',
+  'Assistente de RH', 'Assistente Financeiro', 'Atendente', 'Atendente de Clínica',
+  'Atendente de Telemarketing', 'Auxiliar Administrativo', 'Auxiliar de Cozinha',
+  'Auxiliar de Enfermagem', 'Auxiliar de Escritório', 'Auxiliar de Logística',
+  'Auxiliar de Produção', 'Auxiliar de Sala', 'Auxiliar de Serviços Gerais',
+  'Barman', 'Caixa', 'Chapeiro', 'Conferente', 'Consultor de Vendas',
+  'Coordenador Pedagógico', 'Copywriter', 'Cozinheiro', 'Customer Success',
+  'Designer Gráfico', 'DevOps', 'Desenvolvedor Back-end', 'Desenvolvedor Front-end',
+  'Desenvolvedor Full Stack', 'Desenvolvedor Web', 'Editor de Vídeo', 'Eletricista',
+  'Encanador', 'Entregador', 'Especialista em Inteligência Artificial', 'Estoquista',
+  'Fiscal de Loja', 'Garçom', 'Gerente de Loja', 'Gerente de Restaurante',
+  'Gerente de Vendas', 'Gestor de Tráfego', 'Marketing Digital', 'Monitor Escolar',
+  'Motorista', 'Operador de Call Center', 'Operador de Caixa', 'Operador de Máquinas',
+  'Professor', 'Programador', 'Promotor de Vendas', 'Recepcionista',
+  'Recepcionista Hospitalar', 'Repositor', 'Representante Comercial', 'Secretária',
+  'Social Media', 'Subgerente', 'Suporte Técnico', 'Suporte ao Cliente',
+  'Supervisor Comercial', 'Técnico de Enfermagem', 'Técnico em Informática',
+  'Técnico em Manutenção', 'Vendedor', 'Vendedor de Loja', 'Zelador', 'Outros'
+]
+
+const profissaoSearch = ref('')
+const showProfissaoDropdown = ref(false)
+
+const profissoesFiltradas = computed(() => {
+  const q = profissaoSearch.value.toLowerCase()
+  return profissoesList.filter(p => p.toLowerCase().includes(q))
+})
+
+const selecionarProfissao = (p: string) => {
+  form.value.profissao = p
+  profissaoSearch.value = p
+  showProfissaoDropdown.value = false
+}
+
+const onProfissaoInput = () => {
+  form.value.profissao = profissaoSearch.value
+  showProfissaoDropdown.value = true
+}
+
+const onProfissaoFocus = () => {
+  showProfissaoDropdown.value = true
+}
+
+const onProfissaoBlur = () => {
+  // delay so click on item registers first
+  setTimeout(() => { showProfissaoDropdown.value = false }, 180)
+}
 
 const profileTypes = [
   { id: 'talento',   icon: '🎯', title: 'Talento',   subtitle: 'Busco vagas de emprego' },
@@ -113,6 +166,11 @@ onMounted(async () => {
   }
   // Capturar localização silenciosamente
   getLocation()
+
+  // Garantir que o tipo_conta venha do cookie caso não esteja no perfil
+  if (!form.value.tipo_conta && typeCookie.value) {
+    form.value.tipo_conta = typeCookie.value as any
+  }
 })
 
 const nextStep = () => step.value++
@@ -195,24 +253,18 @@ definePageMeta({
           <p>Confirme seus dados e adicione uma foto de perfil ou logo.</p>
         </div>
 
-        <!-- Seleção / confirmação do tipo de conta -->
-        <div class="tipo-conta-selector">
-          <label class="tipo-conta-label">Confirme seu perfil</label>
-          <div class="tipos-grid">
-            <button
-              v-for="tipo in profileTypes"
-              :key="tipo.id"
-              type="button"
-              class="tipo-card"
-              :class="{ active: form.tipo_conta === tipo.id }"
-              @click="form.tipo_conta = tipo.id as any"
-            >
-              <span class="tipo-icon">{{ tipo.icon }}</span>
-              <div>
-                <strong>{{ tipo.title }}</strong>
-                <small>{{ tipo.subtitle }}</small>
-              </div>
-            </button>
+        <!-- Perfil selecionado (read-only) -->
+        <div class="tipo-conta-readonly">
+          <span class="tipo-conta-label">Perfil selecionado</span>
+          <div class="tipo-conta-badge">
+            <span class="tipo-icon">
+              {{ profileTypes.find(t => t.id === form.tipo_conta)?.icon || '👤' }}
+            </span>
+            <div>
+              <strong>{{ profileTypes.find(t => t.id === form.tipo_conta)?.title || form.tipo_conta }}</strong>
+              <small>{{ profileTypes.find(t => t.id === form.tipo_conta)?.subtitle }}</small>
+            </div>
+            <span class="tipo-lock" title="Perfil definido no cadastro">🔒</span>
           </div>
         </div>
 
@@ -262,7 +314,7 @@ definePageMeta({
           
           <div class="form-row">
             <div class="form-group">
-              <label>Região / Bairro</label>
+              <label>Bairro/Cidade</label>
               <input v-model="form.regiao" type="text" placeholder="Ex: Cidade Nova" />
             </div>
             <div class="form-group">
@@ -290,67 +342,28 @@ definePageMeta({
         <div class="form-container">
           <div class="form-group">
             <label>{{ form.tipo_conta === 'empresa' ? 'Segmento da Empresa' : 'Sua Profissão / Especialidade' }}</label>
-            <div class="relative">
-              <input 
-                v-model="form.profissao" 
-                list="profissoes-list"
-                type="text" 
-                placeholder="Selecione ou digite sua profissão..." 
-                class="w-full"
+            <div class="profissao-wrapper">
+              <input
+                v-model="profissaoSearch"
+                @input="onProfissaoInput"
+                @focus="onProfissaoFocus"
+                @blur="onProfissaoBlur"
+                type="text"
+                placeholder="Digite ou selecione sua profissão..."
+                class="profissao-input"
+                autocomplete="off"
               />
-              <datalist id="profissoes-list">
-                <optgroup label="Construção e Reformas">
-                  <option value="Pedreiro"></option>
-                  <option value="Pintor"></option>
-                  <option value="Eletricista Residencial"></option>
-                  <option value="Encanador"></option>
-                  <option value="Carpinteiro"></option>
-                  <option value="Gesseiro"></option>
-                  <option value="Serralheiro"></option>
-                  <option value="Marido de Aluguel"></option>
-                </optgroup>
-                <optgroup label="Indústria e Manutenção">
-                  <option value="Mecânico Industrial"></option>
-                  <option value="Soldador"></option>
-                  <option value="Caldereiro"></option>
-                  <option value="Operador de Máquinas Pesadas"></option>
-                  <option value="Eletricista Industrial"></option>
-                  <option value="Instrumentista"></option>
-                  <option value="Técnico de Mineração"></option>
-                </optgroup>
-                <optgroup label="Serviços Domésticos">
-                  <option value="Diarista"></option>
-                  <option value="Cozinheira"></option>
-                  <option value="Babá"></option>
-                  <option value="Passadeira"></option>
-                  <option value="Cuidador de Idosos"></option>
-                  <option value="Jardineiro"></option>
-                </optgroup>
-                <optgroup label="Beleza e Estética">
-                  <option value="Cabeleireiro"></option>
-                  <option value="Manicure/Pedicure"></option>
-                  <option value="Maquiadora"></option>
-                  <option value="Barbeiro"></option>
-                  <option value="Esteticista"></option>
-                  <option value="Designer de Sobrancelhas"></option>
-                </optgroup>
-                <optgroup label="Tecnologia e Escritório">
-                  <option value="Auxiliar Administrativo"></option>
-                  <option value="Vendedor/Comercial"></option>
-                  <option value="Atendente/Recepcionista"></option>
-                  <option value="Desenvolvedor"></option>
-                  <option value="Designer Gráfico"></option>
-                  <option value="Social Media"></option>
-                  <option value="Contador"></option>
-                </optgroup>
-                <optgroup label="Logística e Automotiva">
-                  <option value="Motorista (CNH D/E)"></option>
-                  <option value="Entregador"></option>
-                  <option value="Mecânico Automotivo"></option>
-                  <option value="Borracheiro"></option>
-                  <option value="Alinhador/Balanceador"></option>
-                </optgroup>
-              </datalist>
+              <ul v-if="showProfissaoDropdown && profissoesFiltradas.length" class="profissao-list">
+                <li
+                  v-for="p in profissoesFiltradas"
+                  :key="p"
+                  @mousedown.prevent="selecionarProfissao(p)"
+                  class="profissao-item"
+                  :class="{ selected: form.profissao === p }"
+                >
+                  {{ p }}
+                </li>
+              </ul>
             </div>
           </div>
           
@@ -416,6 +429,33 @@ definePageMeta({
   color: #dc2626;
   font-weight: 600;
   margin-top: 2px;
+}
+
+.tipo-conta-readonly {
+  margin-bottom: 28px;
+}
+
+.tipo-conta-badge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: #f0fdf4;
+  border: 2px solid #268C52;
+  border-radius: 14px;
+  color: #0f172a;
+}
+
+.tipo-conta-badge > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tipo-lock {
+  margin-left: auto;
+  font-size: 1rem;
+  opacity: 0.4;
 }
 
 .tipo-conta-selector {
@@ -504,6 +544,49 @@ definePageMeta({
   .onboarding-card { padding: 40px 24px; }
   .form-row { grid-template-columns: 1fr; }
 }
+
+/* Custom profissão dropdown */
+.profissao-wrapper { position: relative; }
+
+.profissao-input {
+  width: 100%;
+  padding: 14px 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1rem;
+  outline: none;
+  font-family: inherit;
+}
+
+.profissao-input:focus { border-color: #268C52; }
+
+.profissao-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 200;
+  list-style: none;
+  padding: 6px;
+  margin: 0;
+}
+
+.profissao-item {
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #374151;
+  transition: background 0.1s;
+}
+
+.profissao-item:hover { background: #f0fdf4; color: #268C52; }
+.profissao-item.selected { background: #dcfce7; color: #166534; font-weight: 700; }
 
 .progress-container {
   position: absolute;

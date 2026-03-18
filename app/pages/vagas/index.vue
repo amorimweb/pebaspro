@@ -30,15 +30,27 @@ const { data: jobs, refresh, pending, error } = await useAsyncData<any[]>('vagas
     query = query.eq('tipo', selectedType.value)
   }
 
-  // Apenas vagas abertas (sem data de encerramento OU com data de encerramento >= hoje)
-  query = query.or(`encerramento.is.null,encerramento.gte.${hojeISO}`)
+  // Apenas vagas abertas (Removido para mostrar todas com badge)
+  // query = query.or(`encerramento.is.null,encerramento.gte.${hojeISO}`)
 
   const { data, error } = await query
   if (error) throw error
-  return data || []
+  
+  // Ordenar: Encerradas por último, mantendo a ordem de publicação
+  return (data || []).sort((a, b) => {
+    const isClosedA = a.encerramento && a.encerramento < hojeISO
+    const isClosedB = b.encerramento && b.encerramento < hojeISO
+    if (isClosedA && !isClosedB) return 1
+    if (!isClosedA && isClosedB) return -1
+    return 0
+  })
 }, {
   watch: [selectedType] // Recarregar quando o tipo mudar
 })
+
+const hojeISO = new Date().toISOString().split('T')[0]
+
+const isExpired = (job: any) => job.encerramento && job.encerramento < hojeISO
 
 const handleSearch = () => {
   refresh()
@@ -109,11 +121,21 @@ const formatDate = (dateStr: string) => {
           </div>
           
           <template v-else-if="jobs && jobs.length > 0">
-            <div v-for="job in jobs" :key="job.id" class="job-card group">
+            <div
+              v-for="job in jobs"
+              :key="job.id"
+              class="job-card group"
+              :class="{ 'job-card--expired': isExpired(job) }"
+            >
               <div class="job-info flex-1">
                 <div class="job-header flex items-center justify-between mb-4">
                   <div class="flex items-center gap-3">
-                    <span class="job-type bg-green-50 text-green-700 font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-full border border-green-100">
+                    <span
+                      class="job-type font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-full border"
+                      :class="isExpired(job)
+                        ? 'bg-slate-100 text-slate-400 border-slate-200'
+                        : 'bg-green-50 text-green-700 border-green-100'"
+                    >
                       {{ job.tipo }}
                     </span>
                     <span class="job-date text-xs text-slate-400 font-bold">
@@ -121,39 +143,51 @@ const formatDate = (dateStr: string) => {
                     </span>
                   </div>
                   
-                  <!-- Match Badge (Only for Talents) -->
-                  <div v-if="userStore.profile?.tipo_conta === 'talento'" class="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-full border border-blue-100 animate-pulse">
+                  <!-- Badge encerrada -->
+                  <span v-if="isExpired(job)" class="expired-badge">
+                    ⏸ Encerrada
+                  </span>
+
+                  <!-- Match Badge (Only for active + Talents) -->
+                  <div v-else-if="userStore.profile?.tipo_conta === 'talento'" class="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-full border border-blue-100 animate-pulse">
                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
                     <span class="text-[10px] font-black uppercase tracking-tighter">98% Match</span>
                   </div>
                 </div>
 
-                <h2 class="job-title text-2xl font-black text-slate-900 mb-2 group-hover:text-green-600 transition-colors">
+                <h2
+                  class="job-title text-2xl font-black mb-2 transition-colors flex items-center gap-3"
+                  :class="isExpired(job) ? 'text-slate-400' : 'text-slate-900 group-hover:text-green-600'"
+                >
                   {{ job.titulo }}
                 </h2>
-                <p class="job-company text-lg font-bold text-slate-500 mb-6 italic">
+                <p class="job-company text-lg font-bold mb-6 italic" :class="isExpired(job) ? 'text-slate-400' : 'text-slate-500'">
                    {{ (job.empresa as any)?.nome || 'Empresa Privada' }}
                 </p>
                 
                 <div class="job-meta flex flex-wrap gap-6 text-sm">
-                  <div class="meta-item flex items-center gap-2 text-slate-600 font-medium">
-                    <div class="p-2 bg-slate-100 rounded-lg"><span class="icon">📍</span></div>
+                  <div class="meta-item flex items-center gap-2 font-medium" :class="isExpired(job) ? 'text-slate-400' : 'text-slate-600'">
+                    <div class="p-2 rounded-lg" :class="isExpired(job) ? 'bg-slate-50' : 'bg-slate-100'"><span class="icon">📍</span></div>
                     <span>{{ job.local }}</span>
                   </div>
-                  <div class="meta-item flex items-center gap-2 text-slate-600 font-medium">
-                    <div class="p-2 bg-slate-100 rounded-lg"><span class="icon">💰</span></div>
+                  <div class="meta-item flex items-center gap-2 font-medium" :class="isExpired(job) ? 'text-slate-400' : 'text-slate-600'">
+                    <div class="p-2 rounded-lg" :class="isExpired(job) ? 'bg-slate-50' : 'bg-slate-100'"><span class="icon">💰</span></div>
                     <span class="font-bold">{{ job.salario || 'Valor a negociar' }}</span>
                   </div>
-                  <div class="meta-item flex items-center gap-2 text-slate-600 font-medium">
-                    <div class="p-2 bg-slate-100 rounded-lg"><span class="icon">🏢</span></div>
+                  <div class="meta-item flex items-center gap-2 font-medium" :class="isExpired(job) ? 'text-slate-400' : 'text-slate-600'">
+                    <div class="p-2 rounded-lg" :class="isExpired(job) ? 'bg-slate-50' : 'bg-slate-100'"><span class="icon">🏢</span></div>
                     <span class="capitalize">{{ job.modalidade }}</span>
                   </div>
                 </div>
               </div>
               
               <div class="job-actions shrink-0 ml-8">
-                <NuxtLink :to="`/vagas/${job.id}`" class="details-btn block text-center min-w-[180px]">
-                  {{ isLoggedIn ? 'Ver Detalhes' : 'Entrar para Candidatar' }}
+                <NuxtLink
+                  :to="`/vagas/${job.id}`"
+                  class="details-btn block text-center min-w-[180px]"
+                  :class="{ 'details-btn--expired': isExpired(job) }"
+                >
+                  {{ isExpired(job) ? 'Ver Vaga (Encerrada)' : (isLoggedIn ? 'Ver Detalhes' : 'Entrar para Candidatar') }}
                 </NuxtLink>
               </div>
             </div>
@@ -195,7 +229,26 @@ const formatDate = (dateStr: string) => {
 
 .jobs-list { display: flex; flex-direction: column; gap: 24px; }
 .job-card { background: white; padding: 32px; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; transition: all 0.3s; border: 1px solid transparent; }
-.job-card:hover { transform: translateY(-4px); border-color: #268C52; box-shadow: 0 12px 30px rgba(38, 140, 82, 0.08); }
+.job-card:hover:not(.job-card--expired) { transform: translateY(-4px); border-color: #268C52; box-shadow: 0 12px 30px rgba(38, 140, 82, 0.08); }
+
+/* Vagas encerradas */
+.job-card--expired { background: #f8fafc; border: 1px solid #e2e8f0; opacity: 0.72; }
+.job-card--expired:hover { opacity: 0.85; }
+
+.expired-badge {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.12em; color: #94a3b8;
+  background: #f1f5f9; border: 1px solid #e2e8f0;
+  padding: 0.25rem 0.75rem; border-radius: 999px;
+}
+
+.details-btn--expired {
+  background: #e2e8f0 !important;
+  color: #94a3b8 !important;
+  pointer-events: auto;
+  cursor: default;
+}
 
 @media (max-width: 640px) { .job-card { flex-direction: column; align-items: flex-start; gap: 24px; } }
 
