@@ -1,4 +1,4 @@
-import { serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/database.types'
 
 export default defineEventHandler(async (event) => {
@@ -17,7 +17,8 @@ export default defineEventHandler(async (event) => {
         .limit(50)
 
     if (error) {
-        throw createError({ statusCode: 400, message: 'Erro ao carregar notificações' })
+        console.error('API Notificacoes Error:', error)
+        throw createError({ statusCode: 400, message: 'Erro ao carregar notificações: ' + error.message })
     }
 
     return data

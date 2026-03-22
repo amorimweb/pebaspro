@@ -87,12 +87,7 @@ watch(curriculum, (newVal) => {
 }, { immediate: true })
 
 onMounted(async () => {
-    await fetchCurriculum()
-    
-    // Fallback if no curriculum but has profile legacy data
-    if (!curriculum.value && authStore.profile) {
-        hydrateForm(authStore.profile)
-    }
+    navigateTo('/curriculo', { replace: true })
 })
 
 const saveProfile = async () => {

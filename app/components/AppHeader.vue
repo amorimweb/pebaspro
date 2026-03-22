@@ -83,16 +83,16 @@ const menus: Record<string, MenuItem[]> = {
   ],
   talento: [
     { label: 'Buscar Vagas', to: '/vagas' },
-    { label: 'Minhas Vagas', to: '/painel/talento' },
-    { label: 'Meu Currículo', to: '/painel/talento/curriculo' },
-    { label: 'Mensagens', to: '/painel/mensagens' },
+    { label: 'Minhas Vagas', to: '/minhas_vagas' },
+    { label: 'Meu Currículo', to: '/curriculo' },
+    { label: 'Mensagens', to: '/mensagens' },
     { label: 'Perfil', to: '/perfil' },
   ],
   prestador: [
     { label: 'Dashboard', to: '/painel/prestador' },
     { label: 'Meus Serviços', to: '/painel/prestador/servicos' },
     { label: 'Favoritos', to: '/painel/favoritos' },
-    { label: 'Mensagens', to: '/painel/mensagens' },
+    { label: 'Mensagens', to: '/mensagens' },
     { label: 'Perfil', to: '/perfil' },
     { label: 'Divulgar Serviço', to: '/divulgar-servico', isCTA: true },
   ],
@@ -101,7 +101,7 @@ const menus: Record<string, MenuItem[]> = {
     { label: 'Minhas Vagas', to: '/painel/empresa/vagas' },
     { label: 'Buscar Talentos', to: '/painel/empresa/buscar-talentos' },
     { label: 'Favoritos', to: '/painel/empresa/favoritos' },
-    { label: 'Mensagens', to: '/painel/empresa/mensagens' },
+    { label: 'Mensagens', to: '/mensagens' },
     { label: 'Perfil', to: '/perfil' },
     { label: 'Anunciar Vaga', to: '/divulgar-vaga', isCTA: true },
   ],
@@ -145,7 +145,7 @@ watch(isMobileMenuOpen, (isOpen) => {
 <template>
   <header 
     :class="[
-      'fixed top-0 left-0 right-0 z-[100] h-24 transition-all duration-500 backdrop-blur-md',
+      'fixed top-0 left-0 right-0 z-[100] h-24 transition-all duration-500 backdrop-blur-md print:hidden',
       isHomePage 
         ? (isScrolled ? 'bg-green-950/80 shadow-xl' : 'bg-transparent') 
         : 'bg-green-950/90 shadow-lg'

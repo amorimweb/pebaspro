@@ -40,7 +40,7 @@ onMounted(async () => {
     loading.value = false
 })
 
-const goBack = () => window.history.back()
+const goBack = () => navigateTo('/painel/talento/curriculo')
 const printPage = () => window.print()
 
 const formatDate = (dateStr: string, opts?: Intl.DateTimeFormatOptions) => {

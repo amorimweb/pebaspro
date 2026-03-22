@@ -20,7 +20,7 @@ const { data: job, error } = useAsyncData(`job-${id}`, async () => {
       *,
       empresa:usuarios (*)
     `) as any)
-    .eq('id', id)
+    .eq('id', id as string)
     .single()
   
   if (error) throw error
@@ -66,6 +66,61 @@ const isVagaAtiva = computed(() => {
     return dataEnc >= hoje
 })
 
+const openInternalChat = async () => {
+  if (!isVagaAtiva.value) {
+    alert('Esta vaga já foi encerrada.')
+    return
+  }
+
+  if (!authStore.profile) {
+    alert('Você precisa estar logado para se candidatar.')
+    navigateTo('/login')
+    return
+  }
+
+  try {
+     if (authStore.profile && job.value) {
+        const [p1, p2] = [authStore.profile.id, job.value.empresa_id].sort()
+        
+        const { data: existing } = await supabase
+            .from('conversas')
+            .select('id')
+            .eq('participante1_id', p1)
+            .eq('participante2_id', p2)
+            .maybeSingle()
+
+        let conversaId = existing?.id
+
+        if (!conversaId) {
+            const { data: newConv, error } = await supabase
+                .from('conversas')
+                .insert({
+                    participante1_id: p1,
+                    participante2_id: p2,
+                    tipo_contato: 'interno',
+                    status_contratacao: 'interessado',
+                    ultima_mensagem: `Candidatura (Interno): ${job.value.titulo}`
+                })
+                .select('id')
+                .single()
+            
+            if (error) throw error
+            conversaId = newConv.id
+        }
+
+        // Registrar candidatura de forma assíncrona
+        supabase.from('candidaturas' as any).insert({
+            vaga_id: job.value.id,
+            talento_id: authStore.profile.id
+        })
+
+        return navigateTo(`/painel/mensagens?id=${conversaId}`)
+     }
+  } catch (e) {
+      console.error('Erro ao iniciar chat:', translateError(e))
+  }
+}
+
 const openWhatsApp = async () => {
   if (!isVagaAtiva.value) {
     alert('Esta vaga já foi encerrada.')
@@ -82,7 +137,7 @@ const openWhatsApp = async () => {
   // Só valida currículo se for TALENTO
   if (authStore.profile?.tipo_conta === 'talento' && !isResumeComplete.value) {
     alert('Seu currículo está incompleto! Complete seu perfil com objetivo e habilidades para se candidatar.')
-    navigateTo('/painel/talento/curriculo')
+    navigateTo('/curriculo/editar')
     return
   }
 
@@ -271,7 +326,7 @@ const openEmail = async () => {
                  <div v-else-if="authStore.profile?.tipo_conta === 'talento' && !isResumeComplete" class="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 text-center shadow-sm">
                     <p class="text-yellow-800 font-black text-lg mb-2">Currículo Incompleto</p>
                     <p class="text-yellow-700 text-sm mb-6 font-medium">Para se candidatar, você precisa completar seu perfil profissional com objetivo e habilidades.</p>
-                    <NuxtLink to="/painel/talento/curriculo" class="block w-full py-4 bg-yellow-600 text-white rounded-xl font-bold hover:bg-yellow-700 transition shadow-lg shadow-yellow-600/20 active:scale-95">
+                    <NuxtLink to="/curriculo/editar" class="block w-full py-4 bg-yellow-600 text-white rounded-xl font-bold hover:bg-yellow-700 transition shadow-lg shadow-yellow-600/20 active:scale-95">
                         Completar Currículo Agora
                     </NuxtLink>
                 </div>
@@ -298,6 +353,14 @@ const openEmail = async () => {
                     </div>
 
                     <div v-if="isVagaAtiva" class="space-y-3">
+                        <button 
+                            @click="openInternalChat" 
+                            class="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition shadow-lg shadow-slate-900/10 active:scale-95 flex items-center justify-center gap-3"
+                        >
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                            Conversar via Chat Interno
+                        </button>
+
                         <button 
                             v-if="!job.tipo_contato || job.tipo_contato === 'whatsapp' || job.tipo_contato === 'ambos'"
                             @click="openWhatsApp" 

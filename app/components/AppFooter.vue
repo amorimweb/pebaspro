@@ -3,7 +3,7 @@ const ano = new Date().getFullYear()
 </script>
 
 <template>
-  <footer class="bg-slate-900 mt-20 pt-20 pb-10 overflow-hidden relative">
+  <footer class="bg-slate-900 mt-20 pt-20 pb-10 overflow-hidden relative print:hidden">
     <!-- Decorative elements -->
     <div class="absolute top-0 left-0 w-96 h-96 bg-green-500 opacity-[0.03] rounded-full blur-[100px] -ml-48 -mt-48"></div>
     <div class="absolute bottom-0 right-0 w-96 h-96 bg-teal-500 opacity-[0.03] rounded-full blur-[100px] -mr-48 -mb-48"></div>
@@ -70,9 +70,15 @@ const ano = new Date().getFullYear()
       </div>
 
       <div class="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
-        <p class="text-slate-500 text-sm text-center md:text-left font-medium">
-          © {{ ano }} PebasPro. Desenvolvido com ❤️ em Parauapebas.
-        </p>
+        <div class="flex flex-col md:flex-row items-center gap-4 md:gap-8">
+          <p class="text-slate-500 text-sm text-center md:text-left font-medium">
+            © {{ ano }} PebasPro. Desenvolvido com ❤️ em Parauapebas.
+          </p>
+          <div class="flex gap-6">
+            <NuxtLink to="/termos" class="text-slate-500 hover:text-slate-300 transition-colors text-xs font-medium">Termos de Uso</NuxtLink>
+            <NuxtLink to="/privacidade" class="text-slate-500 hover:text-slate-300 transition-colors text-xs font-medium">Privacidade</NuxtLink>
+          </div>
+        </div>
         <div class="flex gap-4">
           <a href="#" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-green-600 hover:text-white transition-all transform hover:-translate-y-1">IG</a>
           <a href="#" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-green-600 hover:text-white transition-all transform hover:-translate-y-1">LK</a>

@@ -14,6 +14,7 @@ const menuItems = computed(() => {
   if (profile.tipo_conta === 'talento') {
     menu.push(
       { name: 'Dashboard', path: '/painel/talento', icon: '📊' },
+      { name: 'Minhas Vagas', path: '/minhas_vagas', icon: '💼' },
       { name: 'Buscar Vagas', path: '/vagas', icon: '🔍' },
       { name: 'Meu Currículo', path: '/painel/talento/curriculo', icon: '📄' },
       { name: 'Mensagens', path: '/painel/mensagens', icon: '💬' },

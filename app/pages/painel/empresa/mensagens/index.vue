@@ -9,6 +9,7 @@ definePageMeta({
 const user = useSupabaseUser()
 const supabase = useSupabaseClient<Database>()
 const authStore = useAuthStore()
+const route = useRoute()
 
 // State
 const conversations = ref<any[]>([])
@@ -32,8 +33,7 @@ const orderedMessages = computed(() => {
 
 // Lifecycle
 onMounted(async () => {
-    await fetchConversations()
-    subscribeToConversations()
+    navigateTo({ path: '/mensagens', query: route.query }, { replace: true })
 })
 
 onUnmounted(() => {

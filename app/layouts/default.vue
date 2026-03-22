@@ -2,6 +2,7 @@
 // Default Layout
 const route = useRoute()
 const showPadding = computed(() => !route.meta.noPadding)
+const showFooter = computed(() => !route.meta.hideFooter)
 </script>
 
 <template>
@@ -15,6 +16,6 @@ const showPadding = computed(() => !route.meta.noPadding)
       <slot />
     </main>
     
-    <AppFooter />
+    <AppFooter v-if="showFooter" />
   </div>
 </template>

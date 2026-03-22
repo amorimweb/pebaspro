@@ -3,14 +3,14 @@ import type { Database } from '~/types/database.types'
 type Notificacao = Database['public']['Tables']['notificacoes']['Row']
 
 export const useNotifications = () => {
+    const authStore = useAuthStore()
     const notifications = useState<Notificacao[]>('user_notifications', () => [])
     const loading = ref(false)
-    const { profile } = useAuthStore()
 
     const unreadCount = computed(() => notifications.value.filter(n => !n.lida).length)
 
     const fetchNotifications = async () => {
-        if (!profile?.id) return
+        if (!authStore.profile?.id) return
         loading.value = true
         try {
             const data = await $fetch<Notificacao[]>('/api/notificacoes')
@@ -39,12 +39,10 @@ export const useNotifications = () => {
         }
     }
 
-    // Polling opcional ou via Supabase Realtime se necessário no futuro
-    onMounted(() => {
-        if (profile?.id) {
-            fetchNotifications()
-        }
-    })
+    // Reactivo: busca notificações assim que o perfil estiver pronto
+    watch(() => authStore.profile?.id, (newId) => {
+        if (newId) fetchNotifications()
+    }, { immediate: true })
 
     return {
         notifications,

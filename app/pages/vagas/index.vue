@@ -68,7 +68,7 @@ const formatDate = (dateStr: string) => {
 <template>
   <div class="vagas-page">
 
-    <main class="vagas-container">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
       <header class="vagas-header">
         <h1>Vagas na Região</h1>
         <p>Acompanhe as últimas oportunidades publicadas na região.</p>
@@ -207,7 +207,7 @@ const formatDate = (dateStr: string) => {
 
 <style scoped>
 .vagas-page { background-color: #f8fafc; min-height: 100vh; }
-.vagas-container { max-width: 1200px; margin: 0 auto; padding: 0 20px 60px 20px; }
+.vagas-container { width: 100%; }
 .vagas-header { margin-bottom: 48px; text-align: left; }
 .vagas-header h1 { font-size: 2.5rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; }
 .vagas-header p { font-size: 1.125rem; color: #64748b; }
