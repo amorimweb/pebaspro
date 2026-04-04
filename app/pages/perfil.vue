@@ -33,8 +33,13 @@ const form = ref({
     longitude: null as number | null
 })
 
-const fileInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
+const passwordForm = ref({
+    novaSenha: '',
+    confirmarSenha: '',
+    loading: false,
+    showPassword: false
+})
 
 watch(() => authStore.profile, (p) => {
     if (p) {
@@ -136,6 +141,40 @@ const handleSave = async () => {
 const handleLogout = async () => {
     await authStore.signOut()
     navigateTo('/')
+}
+
+const handleUpdatePassword = async () => {
+    if (!passwordForm.value.novaSenha || !passwordForm.value.confirmarSenha) {
+        alert('Preencha os campos de senha.')
+        return
+    }
+
+    if (passwordForm.value.novaSenha.length < 6) {
+        alert('A senha deve ter no mínimo 6 caracteres.')
+        return
+    }
+
+    if (passwordForm.value.novaSenha !== passwordForm.value.confirmarSenha) {
+        alert('As senhas não coincidem.')
+        return
+    }
+
+    passwordForm.value.loading = true
+    try {
+        const { error } = await supabase.auth.updateUser({ 
+            password: passwordForm.value.novaSenha 
+        })
+        
+        if (error) throw error
+
+        alert('Senha definida com sucesso! Agora você também pode logar usando seu e-mail e esta senha.')
+        passwordForm.value.novaSenha = ''
+        passwordForm.value.confirmarSenha = ''
+    } catch (err: any) {
+        alert('Erro ao atualizar senha: ' + (err.message || 'Tente novamente.'))
+    } finally {
+        passwordForm.value.loading = false
+    }
 }
 
 definePageMeta({
@@ -431,6 +470,56 @@ definePageMeta({
         </div>
       </template>
 
+      <!-- ═══ SEÇÃO DE SEGURANÇA (GLOBAL) ═══ -->
+      <div class="mt-8 bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-10">
+        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-800 mb-8 flex items-center gap-2">
+          <span class="w-6 h-px bg-slate-200"></span> Segurança e Senha
+        </h3>
+        
+        <div class="flex flex-col lg:flex-row gap-8 lg:items-end">
+          <div class="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Nova Senha</label>
+              <div class="relative">
+                <input 
+                  v-model="passwordForm.novaSenha" 
+                  :type="passwordForm.showPassword ? 'text' : 'password'"
+                  class="w-full bg-slate-50 border-none p-4 rounded-2xl font-bold text-slate-800 focus:ring-2 focus:ring-green-400 transition-all pr-12" 
+                  placeholder="Mínimo 6 caracteres"
+                />
+                <button type="button" @click="passwordForm.showPassword = !passwordForm.showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  <svg v-if="!passwordForm.showPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.049m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Confirmar Nova Senha</label>
+              <input 
+                v-model="passwordForm.confirmarSenha" 
+                :type="passwordForm.showPassword ? 'text' : 'password'"
+                class="w-full bg-slate-50 border-none p-4 rounded-2xl font-bold text-slate-800 focus:ring-2 focus:ring-green-400 transition-all" 
+                placeholder="Repita a nova senha"
+              />
+            </div>
+          </div>
+          
+          <button 
+            @click="handleUpdatePassword" 
+            :disabled="passwordForm.loading"
+            class="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-slate-900/20 active:scale-95 transition-all disabled:opacity-50 h-[56px] shrink-0"
+          >
+            {{ passwordForm.loading ? 'Salvando...' : 'Definir Senha' }}
+          </button>
+        </div>
+        
+        <div class="mt-6 flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <div class="w-8 h-8 bg-white text-green-600 rounded-lg flex items-center justify-center shadow-sm text-sm">💡</div>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Ao definir uma senha, você poderá acessar o **PEBASPRO** utilizando seu e-mail padrão mesmo em dispositivos onde não esteja logado com sua conta Google.
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
