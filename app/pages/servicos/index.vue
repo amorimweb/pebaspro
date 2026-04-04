@@ -98,47 +98,47 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="services-page min-h-screen bg-slate-50 pt-24 pb-20">
+  <div class="services-page min-h-screen bg-slate-50 pt-20 md:pt-24 pb-12 md:pb-20">
     <div class="container mx-auto px-4">
       
       <!-- HEADER DA PÁGINA -->
-      <div class="mb-12 text-center md:text-left">
-        <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-4 uppercase tracking-tight">
+      <div class="mb-8 md:mb-12 text-center md:text-left">
+        <h1 class="text-2xl sm:text-3xl md:text-5xl font-black text-slate-900 mb-3 md:mb-4 uppercase tracking-tight">
           Prestadores de <span class="text-green-600">Serviço</span>
         </h1>
-        <p class="text-lg text-slate-500 max-w-2xl font-medium">
-          Encontre os melhores profissionais de Parauapebas e região para o seu projeto.
+        <p class="text-base md:text-lg text-slate-500 max-w-2xl font-medium">
+          Encontre os melhores profissionais de toda a região para o seu projeto.
         </p>
       </div>
 
-      <div class="flex flex-col lg:flex-row gap-8">
+      <div class="flex flex-col lg:flex-row gap-6 md:gap-8">
         <!-- BARRA LATERAL / FILTROS -->
         <aside class="w-full lg:w-80 flex-shrink-0">
-          <div class="bg-white rounded-[32px] p-6 shadow-sm border border-slate-100 sticky top-32">
-            <div class="mb-8">
-              <h3 class="text-sm font-black uppercase tracking-widest text-slate-400 mb-4">Busca rápida</h3>
+          <div class="bg-white rounded-[24px] md:rounded-[32px] p-5 md:p-6 shadow-sm border border-slate-100 sticky top-24 md:top-32">
+            <div class="mb-6 md:mb-8">
+              <h3 class="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3 md:mb-4">Busca rápida</h3>
               <div class="relative">
                 <input 
                   v-model="search"
                   @keyup.enter="handleSearch"
                   type="text" 
                   placeholder="Ex: Pintura residencial" 
-                  class="w-full pl-4 pr-12 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-green-400 font-bold text-slate-800"
+                  class="w-full pl-4 pr-12 py-3.5 md:py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-green-400 font-bold text-slate-800 text-sm md:text-base"
                 />
-                <button @click="handleSearch" class="absolute right-2 top-2 p-2 bg-green-500 text-white rounded-xl shadow-lg shadow-green-500/20 active:scale-90 transition-all">
+                <button @click="handleSearch" class="absolute right-1.5 top-1.5 p-2 bg-green-500 text-white rounded-xl shadow-lg shadow-green-500/20 active:scale-90 transition-all">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </button>
               </div>
             </div>
 
             <div>
-              <h3 class="text-sm font-black uppercase tracking-widest text-slate-400 mb-4">Categorias</h3>
-              <div class="flex flex-col gap-2">
+              <h3 class="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3 md:mb-4">Categorias</h3>
+              <div class="flex flex-row overflow-x-auto pb-2 mb-[-8px] gap-2 lg:flex-col lg:overflow-visible lg:pb-0 lg:mb-0 lg:gap-2 custom-scrollbar">
                 <button 
                   v-for="cat in categories" 
                   :key="cat.id"
-                  class="text-left px-4 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2"
-                  :class="selectedCategory === cat.id ? 'bg-green-600 text-white shadow-lg shadow-green-600/20' : 'text-slate-600 hover:bg-slate-50'"
+                  class="text-left px-4 py-2.5 md:py-3 rounded-2xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 whitespace-nowrap lg:whitespace-normal shrink-0 lg:shrink"
+                  :class="selectedCategory === cat.id ? 'bg-green-600 text-white shadow-lg shadow-green-600/20' : 'bg-slate-50 lg:bg-transparent text-slate-600 hover:bg-slate-50'"
                   @click="selectedCategory = (selectedCategory === cat.id ? '' : cat.id)"
                 >
                   <span v-if="cat.icone">{{ cat.icone }}</span>
@@ -151,17 +151,17 @@ onMounted(() => {
 
         <!-- LISTAGEM -->
         <section class="flex-grow">
-          <div v-if="pending" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div v-for="i in 4" :key="i" class="h-64 bg-white rounded-[32px] animate-pulse"></div>
+          <div v-if="pending" class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+            <div v-for="i in 4" :key="i" class="h-64 bg-white rounded-[24px] md:rounded-[32px] animate-pulse"></div>
           </div>
 
-          <div v-else-if="services?.length === 0" class="bg-white rounded-[40px] p-20 text-center border-2 border-dashed border-slate-100">
-            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl opacity-50">🔍</div>
-            <h3 class="text-2xl font-black text-slate-800 mb-2">Nenhum serviço encontrado</h3>
-            <p class="text-slate-500 font-medium">Tente ajustar seus filtros ou buscar por outra palavra-chave.</p>
+          <div v-else-if="services?.length === 0" class="bg-white rounded-[32px] md:rounded-[40px] p-12 md:p-20 text-center border-2 border-dashed border-slate-100">
+            <div class="w-16 h-16 md:w-20 md:h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl md:text-4xl opacity-50">🔍</div>
+            <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-2">Nenhum serviço encontrado</h3>
+            <p class="text-sm md:text-base text-slate-500 font-medium">Tente ajustar seus filtros ou buscar por outra palavra-chave.</p>
           </div>
 
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
             <NuxtLink 
               v-for="service in services" 
               :key="service.id"

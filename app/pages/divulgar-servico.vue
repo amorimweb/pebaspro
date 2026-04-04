@@ -1,8 +1,8 @@
 <script setup lang="ts">
 useHead({
-  title: 'Divulgar Serviço - PebasPro',
+  title: 'Divulgar Serviço - PEBASPRO',
   meta: [
-    { name: 'description', content: 'Em breve você poderá divulgar seus serviços na PebasPro.' }
+    { name: 'description', content: 'Em breve você poderá divulgar seus serviços na PEBASPRO.' }
   ]
 })
 </script>

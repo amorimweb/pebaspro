@@ -411,7 +411,7 @@ const getAvatarInitial = (name?: string | null) => {
                         class="px-6 py-3 font-bold text-sm border-b-2 transition-colors"
                          :class="activeTab === 'pebaspro' ? 'border-green-600 text-green-700' : 'border-transparent text-slate-500 hover:text-slate-700'"
                     >
-                        PebasPro Info
+                        PEBASPRO Info
                     </button>
                 </div>
 

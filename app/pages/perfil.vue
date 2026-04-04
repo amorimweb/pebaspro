@@ -148,61 +148,61 @@ definePageMeta({
     <!-- Input Global para Foto -->
     <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="onFileChange" />
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 w-full">
-
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-8 pb-12 md:pb-20 w-full">
+ 
       <!-- ═══ HERO CARD ═══ -->
-      <div class="bg-white rounded-[32px] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden mb-8">
+      <div class="bg-white rounded-[24px] md:rounded-[32px] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden mb-6 md:mb-8">
         <!-- Cover Banner -->
-        <div class="h-36 md:h-52 bg-gradient-to-br from-green-600 via-green-700 to-green-900 relative overflow-hidden">
+        <div class="h-28 md:h-52 bg-gradient-to-br from-green-600 via-green-700 to-green-900 relative overflow-hidden">
           <div class="absolute inset-0 opacity-10 pointer-events-none">
             <svg class="absolute -right-24 -top-24 text-white" width="500" height="500" viewBox="0 0 100 100" fill="currentColor"><circle cx="50" cy="50" r="50"/></svg>
             <svg class="absolute -left-16 bottom-0 text-white" width="200" height="200" viewBox="0 0 100 100" fill="currentColor"><path d="M50 0 L100 50 L50 100 L0 50 Z"/></svg>
           </div>
         </div>
-
+ 
         <!-- Profile Info Bar -->
-        <div class="px-6 md:px-10 pb-8 flex flex-col sm:flex-row items-end sm:items-center gap-5 -mt-14 md:-mt-16">
+        <div class="px-5 md:px-10 pb-6 md:pb-8 flex flex-col sm:flex-row items-center sm:items-center gap-4 md:gap-5 -mt-10 md:-mt-16">
           <!-- Avatar -->
           <div class="relative shrink-0">
-            <div class="w-28 h-28 md:w-36 md:h-36 bg-white rounded-[32px] p-1.5 shadow-2xl">
-              <div class="w-full h-full rounded-[26px] bg-slate-50 overflow-hidden border border-slate-100">
+            <div class="w-24 h-24 md:w-36 md:h-36 bg-white rounded-[24px] md:rounded-[32px] p-1 md:p-1.5 shadow-2xl">
+              <div class="w-full h-full rounded-[20px] md:rounded-[26px] bg-slate-50 overflow-hidden border border-slate-100">
                 <Transition name="fade" mode="out-in">
                   <img v-if="authStore.profile?.foto" :key="authStore.profile.foto" :src="authStore.profile.foto" :alt="authStore.profile.nome || 'Avatar'" class="w-full h-full object-cover" />
-                  <span v-else :key="'letter'" class="text-5xl font-black text-green-600 uppercase flex items-center justify-center w-full h-full">{{ authStore.profile?.nome?.charAt(0) || '?' }}</span>
+                  <span v-else :key="'letter'" class="text-3xl md:text-5xl font-black text-green-600 uppercase flex items-center justify-center w-full h-full">{{ authStore.profile?.nome?.charAt(0) || '?' }}</span>
                 </Transition>
               </div>
-              <div v-if="uploading" class="absolute inset-1.5 bg-black/20 backdrop-blur-sm rounded-[26px] flex items-center justify-center z-10">
-                <div class="w-7 h-7 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div v-if="uploading" class="absolute inset-1 md:inset-1.5 bg-black/20 backdrop-blur-sm rounded-[20px] md:rounded-[26px] flex items-center justify-center z-10">
+                <div class="w-6 h-6 md:w-7 md:h-7 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               </div>
             </div>
-            <button @click="fileInput?.click()" :disabled="uploading" class="absolute -bottom-2 -right-2 w-10 h-10 bg-white text-slate-700 rounded-2xl flex items-center justify-center shadow-lg hover:bg-slate-50 transition-all border border-slate-100 z-20 active:scale-95 group/btn">
-              <svg v-if="!uploading" class="w-5 h-5 group-hover/btn:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812 1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-              <div v-else class="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
+            <button @click="fileInput?.click()" :disabled="uploading" class="absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 w-9 h-9 md:w-10 md:h-10 bg-white text-slate-700 rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg hover:bg-slate-50 transition-all border border-slate-100 z-20 active:scale-95 group/btn">
+              <svg v-if="!uploading" class="w-4 h-4 md:w-5 md:h-5 group-hover/btn:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812 1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <div v-else class="w-3.5 h-3.5 md:w-4 md:h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
             </button>
           </div>
-
+ 
           <!-- Name & Email -->
-          <div class="flex-1 mt-4 sm:mt-10 overflow-hidden">
+          <div class="flex-1 mt-2 sm:mt-8 md:mt-12 overflow-hidden text-center sm:text-left w-full">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div class="min-w-0">
-                <div class="flex flex-wrap items-center gap-2 mb-1">
-                  <h1 class="text-2xl md:text-3xl font-black text-slate-900 truncate uppercase tracking-tight">{{ authStore.profile?.nome || 'Meu Perfil' }}</h1>
-                  <span class="px-2.5 py-1 bg-green-50 text-green-700 text-[10px] font-black uppercase tracking-widest rounded-lg border border-green-100 shrink-0">
+                <div class="flex flex-col sm:flex-row sm:items-center items-center gap-2 mb-1">
+                  <h1 class="text-xl md:text-3xl font-black text-slate-900 truncate uppercase tracking-tight">{{ authStore.profile?.nome || 'Meu Perfil' }}</h1>
+                  <span class="px-2 py-0.5 md:px-2.5 md:py-1 bg-green-50 text-green-700 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-lg border border-green-100 shrink-0">
                     {{ authStore.profile?.tipo_conta === 'talento' ? 'Candidato' : authStore.profile?.tipo_conta === 'empresa' ? 'Empresa' : 'Prestador' }}
                   </span>
                 </div>
-                <p class="text-slate-400 font-semibold text-sm truncate">{{ user?.email }}</p>
+                <p class="text-slate-400 font-semibold text-xs md:text-sm truncate">{{ user?.email }}</p>
               </div>
-
-              <div class="flex items-center gap-3 shrink-0">
+ 
+              <div class="flex items-center justify-center sm:justify-start gap-2 md:gap-3 shrink-0">
                 <button
                   @click="isEditing = !isEditing"
                   :class="isEditing ? 'bg-red-50 text-red-600 border-red-100' : 'bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:bg-slate-800'"
-                  class="px-6 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 border border-transparent"
+                  class="px-4 py-2.5 md:px-6 md:py-3 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest transition-all active:scale-95 border border-transparent"
                 >
                   {{ isEditing ? 'Cancelar' : 'Editar Perfil' }}
                 </button>
-                <button v-if="!isEditing" @click="handleLogout" title="Sair" class="p-3 text-slate-400 hover:text-red-500 transition-colors bg-slate-50 rounded-2xl hover:bg-red-50">
+                <button v-if="!isEditing" @click="handleLogout" title="Sair" class="p-2.5 md:p-3 text-slate-400 hover:text-red-500 transition-colors bg-slate-50 rounded-xl md:rounded-2xl hover:bg-red-50">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                 </button>
               </div>
@@ -217,7 +217,7 @@ definePageMeta({
       <template v-if="authStore.profile?.tipo_conta === 'talento'">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <!-- Contatos -->
-          <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 flex flex-col">
+          <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-6 md:p-8 flex flex-col">
             <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-green-600 mb-8 flex items-center gap-2">
               <span class="w-6 h-px bg-green-100"></span> Dados de Contato
             </h3>
@@ -287,7 +287,7 @@ definePageMeta({
 
       <!-- VIEW: EMPRESA -->
       <template v-else-if="authStore.profile?.tipo_conta === 'empresa'">
-        <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12">
+        <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-6 md:p-12">
           <div class="flex flex-col gap-10">
             <section>
               <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-green-600 mb-8 flex items-center gap-2">
@@ -357,7 +357,7 @@ definePageMeta({
 
       <!-- VIEW: PRESTADOR -->
       <template v-else-if="authStore.profile?.tipo_conta === 'prestador'">
-        <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8 md:p-12">
+        <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-6 md:p-12">
           <div class="flex flex-col gap-10">
             <section>
               <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-green-600 mb-8 flex items-center gap-2">

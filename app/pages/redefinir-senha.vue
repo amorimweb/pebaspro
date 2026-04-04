@@ -67,7 +67,7 @@ const strengthLabel = computed(() => {
       <!-- Logo -->
       <div class="logo">
         <span>⚡</span>
-        <strong>PebasPro</strong>
+        <strong class="text-green-600">PEBASPRO</strong>
       </div>
 
       <!-- Sessão não encontrada -->

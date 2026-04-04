@@ -1,7 +1,7 @@
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Sobre o PebasPro - Nossa Missão',
-  description: 'Conheça a história e o propósito do PebasPro, conectando talentos e oportunidades na região.'
+  title: 'Sobre o PEBASPRO - Nossa Missão',
+  description: 'Conheça a história e o propósito do PEBASPRO, conectando talentos e oportunidades na região.'
 })
 
 const values = [
@@ -21,7 +21,7 @@ const values = [
         <div class="container">
           <h1>Conectando o talento<br/><span class="text-gradient">à oportunidade</span></h1>
           <p class="lead">
-            O PebasPro nasceu com a missão de simplificar o mercado de trabalho na região, 
+            O PEBASPRO nasceu com a missão de simplificar o mercado de trabalho na região, 
             eliminando intermediários e criando conexões diretas entre profissionais qualificados e empresas visionárias.
           </p>
         </div>
@@ -38,7 +38,7 @@ const values = [
               analógico em um mundo digital.
             </p>
             <p>
-              O PebasPro surgiu como a solução definitiva para unificar o ecossistema de serviços e vagas, 
+              O PEBASPRO surgiu como a solução definitiva para unificar o ecossistema de serviços e vagas, 
               focalizando na facilidade de uso e na confiança mútua.
             </p>
           </div>
@@ -69,7 +69,7 @@ const values = [
       <section class="about-cta">
         <div class="container text-center">
           <h2>Pronto para começar?</h2>
-          <p>Junte-se a milhares de profissionais e empresas que já confiam no PebasPro.</p>
+          <p>Junte-se a milhares de profissionais e empresas que já confiam no PEBASPRO.</p>
           <div class="cta-actions">
             <NuxtLink to="/cadastro" class="btn-primary">Criar Conta Agora</NuxtLink>
             <NuxtLink to="/vagas" class="btn-secondary">Ver Vagas Disponíveis</NuxtLink>

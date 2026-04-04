@@ -43,29 +43,18 @@ const isEmpresa = computed(() => chosenType.value === 'empresa')
 
 // Detecta se o campo atual é CNPJ (empresa sempre é CNPJ; prestador é CNPJ se já tem >11 dígitos)
 const isCNPJ = computed(() => {
-  if (isEmpresa.value) return true
-  if (isPrestador.value) return documento.value.replace(/\D/g, '').length > 11
-  return false
+  return isEmpresa.value || isPrestador.value
 })
 
 const docLabel = computed(() => {
-  if (isEmpresa.value) return 'CNPJ'
-  if (isPrestador.value) return 'CPF / CNPJ'
+  if (isEmpresa.value || isPrestador.value) return 'CNPJ'
   return 'CPF'
 })
 const docPlaceholder = computed(() => isCNPJ.value ? '00.000.000/0001-00' : '000.000.000-00')
-const docMaxLength = computed(() => {
-  if (isPrestador.value) return 18 // sempre 18: deixa o usuário digitar CNPJ depois do CPF
-  return isCNPJ.value ? 18 : 14
-})
+const docMaxLength = computed(() => isCNPJ.value ? 18 : 14)
 
 const applyDocMask = (raw: string) => {
-  const digits = raw.replace(/\D/g, '')
-  // Para prestador: detecta pelo número de dígitos DO VALOR RECEBIDO, não do estado anterior
-  if (isPrestador.value) {
-    return digits.length > 11 ? maskCNPJ(raw) : maskCPF(raw)
-  }
-  return isEmpresa.value ? maskCNPJ(raw) : maskCPF(raw)
+  return (isEmpresa.value || isPrestador.value) ? maskCNPJ(raw) : maskCPF(raw)
 }
 
 // Validações de dígito verificador
@@ -101,14 +90,8 @@ const validateDoc = () => {
   const digits = documento.value.replace(/\D/g, '')
   if (!digits) { docError.value = ''; return }
 
-  if (isEmpresa.value) {
+  if (isEmpresa.value || isPrestador.value) {
     docError.value = validarCNPJ(documento.value) ? '' : 'CNPJ inválido'
-  } else if (isPrestador.value) {
-    if (digits.length <= 11) {
-      docError.value = validarCPF(documento.value) ? '' : 'CPF inválido'
-    } else {
-      docError.value = validarCNPJ(documento.value) ? '' : 'CNPJ inválido'
-    }
   } else {
     docError.value = validarCPF(documento.value) ? '' : 'CPF inválido'
   }
@@ -136,15 +119,8 @@ const handleSignUp = async () => {
     }
 
     // 2. Validar documento
-    const digits = documento.value.replace(/\D/g, '')
-    let docValido: boolean
-    if (isEmpresa.value) {
-      docValido = validarCNPJ(documento.value)
-    } else if (isPrestador.value) {
-      docValido = digits.length <= 11 ? validarCPF(documento.value) : validarCNPJ(documento.value)
-    } else {
-      docValido = validarCPF(documento.value)
-    }
+    const docValido = (isEmpresa.value || isPrestador.value) ? validarCNPJ(documento.value) : validarCPF(documento.value)
+    
     if (!docValido) {
       errorMsg.value = `${docLabel.value} inválido. Verifique os dados e tente novamente.`
       loading.value = false
@@ -207,18 +183,22 @@ const loginWithGoogle = async () => {
   })
   if (error) errorMsg.value = error.message
 }
+const goBack = () => {
+  typeCookie.value = null
+  navigateTo('/cadastro')
+}
 </script>
 
 <template>
   <div class="auth-page">
     <div class="auth-card">
       <div class="auth-header">
-        <NuxtLink to="/cadastro" class="back-link">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 icon-small" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button @click="goBack" class="back-btn mb-6">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
-          Mudar perfil
-        </NuxtLink>
+          Mudar perfil selecionado
+        </button>
         <h1>Dados do seu perfil</h1>
         <p>Complete o cadastro como <strong>{{ chosenType === 'talento' ? 'Talento' : chosenType === 'prestador' ? 'Prestador' : 'Empresa' }}</strong></p>
       </div>
@@ -344,28 +324,54 @@ const loginWithGoogle = async () => {
   max-width: 560px;
   width: 100%;
   background: white;
-  padding: 56px;
+  padding: 32px 24px;
   border-radius: 32px;
   box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+}
+
+@media (min-width: 768px) {
+  .auth-card {
+    padding: 56px;
+  }
 }
 
 .auth-header {
   margin-bottom: 32px;
 }
 
-.back-link {
+.back-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #64748b;
-  text-decoration: none;
+  justify-content: center;
+  gap: 10px;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 10px 18px;
+  border-radius: 14px;
   font-size: 0.875rem;
-  margin-bottom: 24px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: fit-content;
 }
 
-.icon-small {
-  width: 18px !important;
-  height: 18px !important;
+.back-btn:hover {
+  background-color: white;
+  border-color: #268C52;
+  color: #268C52;
+  transform: translateX(-4px);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+
+.back-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mb-6 {
+    margin-bottom: 24px;
 }
 
 .auth-header h1 {
@@ -391,7 +397,7 @@ const loginWithGoogle = async () => {
   gap: 16px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .form-row { grid-template-columns: 1fr; }
 }
 

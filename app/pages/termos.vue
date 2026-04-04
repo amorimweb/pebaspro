@@ -1,7 +1,7 @@
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Termos de Uso - PebasPro',
-  description: 'Leia os termos e condições de uso da plataforma PebasPro.'
+  title: 'Termos de Uso - PEBASPRO',
+  description: 'Leia os termos e condições de uso da plataforma PEBASPRO.'
 })
 </script>
 
@@ -13,7 +13,7 @@ useSeoMeta({
         <div class="container">
           <h1>Termos de <span class="text-gradient">Uso</span></h1>
           <p class="lead">
-            Bem-vindo ao PebasPro. Ao acessar nossa plataforma, você concorda com os termos abaixo.
+            Bem-vindo ao PEBASPRO. Ao acessar nossa plataforma, você concorda com os termos abaixo.
           </p>
         </div>
       </section>
@@ -24,14 +24,14 @@ useSeoMeta({
           <div class="legal-block">
             <h2>1. Aceitação dos Termos</h2>
             <p>
-              Ao utilizar o PebasPro, você concorda em cumprir estes Termos de Uso e todas as leis e regulamentos aplicáveis. Se você não concordar com algum destes termos, está proibido de usar ou acessar este site.
+              Ao utilizar o PEBASPRO, você concorda em cumprir estes Termos de Uso e todas as leis e regulamentos aplicáveis. Se você não concordar com algum destes termos, está proibido de usar ou acessar este site.
             </p>
           </div>
 
           <div class="legal-block">
             <h2>2. Uso da Plataforma</h2>
             <p>
-              O PebasPro é uma plataforma de conexão entre profissionais (Talentos) e contratantes (Empresas/Indivíduos). Não somos responsáveis pela execução dos serviços ou pelas contratações realizadas através da plataforma.
+              O PEBASPRO é uma plataforma de conexão entre profissionais (Talentos) e contratantes (Empresas/Indivíduos). Não somos responsáveis pela execução dos serviços ou pelas contratações realizadas através da plataforma.
             </p>
             <ul>
               <li>Você deve ter pelo menos 18 anos para criar uma conta.</li>
@@ -50,14 +50,14 @@ useSeoMeta({
           <div class="legal-block">
             <h2>4. Limitação de Responsabilidade</h2>
             <p>
-              Em nenhum caso o PebasPro ou seus fornecedores serão responsáveis por quaisquer danos decorrentes do uso ou da incapacidade de usar os materiais em nossa plataforma.
+              Em nenhum caso o PEBASPRO ou seus fornecedores serão responsáveis por quaisquer danos decorrentes do uso ou da incapacidade de usar os materiais em nossa plataforma.
             </p>
           </div>
 
           <div class="legal-block">
             <h2>5. Modificações</h2>
             <p>
-              O PebasPro pode revisar estes termos de uso a qualquer momento, sem aviso prévio. Ao usar este site, você concorda em ficar vinculado à versão atual desses termos de uso.
+              O PEBASPRO pode revisar estes termos de uso a qualquer momento, sem aviso prévio. Ao usar este site, você concorda em ficar vinculado à versão atual desses termos de uso.
             </p>
           </div>
         </div>

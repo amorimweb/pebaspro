@@ -194,16 +194,16 @@ if (process.client) {
         </div>
       </header>
       <!-- Mobile Topbar -->
-      <header class="lg:hidden h-24 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-30">
+      <header class="lg:hidden h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-30">
         <div class="flex items-center gap-3">
-          <button @click="isSidebarOpen = true" class="text-slate-600 hover:text-slate-900 p-1">
+          <button @click="isSidebarOpen = true" class="text-slate-600 hover:text-green-600 p-2 rounded-xl hover:bg-green-50 transition-colors">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <img src="/PEBASPRO-logo.png" alt="PebasPro" class="h-10 md:h-14 w-auto object-contain drop-shadow-sm" />
+          <img src="/PEBASPRO-logo.png" alt="PebasPro" class="h-10 w-auto object-contain drop-shadow-sm" />
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 sm:gap-4">
           <!-- Notificações Mobile -->
           <div class="relative" ref="notificationRef">
             <button @click="showNotifications = !showNotifications" class="p-2 text-slate-600 hover:bg-slate-50 rounded-xl relative">
@@ -214,17 +214,17 @@ if (process.client) {
             </button>
             
             <!-- Dropdown Notificações Mobile -->
-            <div v-if="showNotifications" class="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden">
+            <div v-if="showNotifications" class="absolute right-0 mt-3 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden animate-in slide-in-from-top-2 duration-200">
               <div class="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                <span class="font-bold text-slate-800 text-sm">Notificações</span>
+                <span class="font-black text-slate-800 text-xs uppercase tracking-widest px-1">Notificações</span>
                 <button v-if="unreadCount > 0" @click="markAsRead()" class="text-[10px] font-bold text-green-600 hover:underline">Limpar tudo</button>
               </div>
-              <div class="max-h-80 overflow-y-auto">
-                <div v-if="loadingNotifications" class="p-8 text-center"><div class="animate-spin h-5 w-5 border-2 border-green-500 border-t-transparent rounded-full mx-auto"></div></div>
-                <div v-else-if="notifications.length === 0" class="p-8 text-center text-slate-400 text-xs italic">Nenhuma notificação por aqui.</div>
-                <div v-for="n in notifications" :key="n.id" :class="{'bg-green-50/30': !n.lida}" class="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer" @click="markAsRead(n.id); n.link && navigateTo(n.link)">
+              <div class="max-h-80 overflow-y-auto custom-scrollbar">
+                <div v-if="loadingNotifications" class="p-10 text-center"><div class="animate-spin h-5 w-5 border-2 border-green-500 border-t-transparent rounded-full mx-auto"></div></div>
+                <div v-else-if="notifications.length === 0" class="p-10 text-center text-slate-400 text-xs italic">Nenhuma notificação por aqui.</div>
+                <div v-for="n in notifications" :key="n.id" :class="{'bg-green-50/30': !n.lida}" class="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer" @click="markAsRead(n.id); n.link && navigateTo(n.link); showNotifications = false">
                   <div class="flex gap-3">
-                    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                    <div class="w-10 h-10 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center shrink-0">
                       {{ n.tipo === 'vaga' ? '💼' : '💬' }}
                     </div>
                     <div class="min-w-0">
@@ -237,15 +237,15 @@ if (process.client) {
               </div>
             </div>
           </div>
-
-          <NuxtLink to="/perfil">
-            <img :src="authStore.profile?.foto || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'" class="w-10 h-10 rounded-full border border-slate-200" />
+ 
+          <NuxtLink to="/perfil" class="p-1">
+            <img :src="authStore.profile?.foto || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'" class="w-10 h-10 rounded-xl border border-slate-200 object-cover shadow-sm" />
           </NuxtLink>
         </div>
       </header>
-
+ 
       <!-- Page Content Wrapper -->
-      <div class="flex-1 overflow-auto p-4 md:p-8">
+      <div class="flex-1 overflow-x-hidden overflow-y-auto px-4 py-8 md:p-8 lg:p-12">
         <div class="max-w-6xl mx-auto">
           <slot />
         </div>

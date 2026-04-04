@@ -32,7 +32,7 @@ const handleReset = async () => {
       <!-- Logo -->
       <div class="logo">
         <span>⚡</span>
-        <strong>PebasPro</strong>
+        <strong>PEBASPRO</strong>
       </div>
 
       <!-- Enviado com sucesso -->

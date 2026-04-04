@@ -525,32 +525,44 @@ definePageMeta({
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 20px;
   font-family: 'Inter', sans-serif;
 }
 
+@media (min-width: 768px) {
+  .onboarding-page {
+    padding: 40px 20px;
+  }
+}
+ 
 .onboarding-card {
   max-width: 640px;
   width: 100%;
   background: white;
   border-radius: 32px;
-  padding: 60px;
+  padding: 32px 20px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.05);
   position: relative;
   overflow: hidden;
 }
 
+@media (min-width: 768px) {
+  .onboarding-card {
+    padding: 60px;
+  }
+}
+ 
 @media (max-width: 640px) {
-  .onboarding-card { padding: 40px 24px; }
+  .onboarding-card { padding: 32px 20px; }
   .form-row { grid-template-columns: 1fr; }
 }
-
+ 
 /* Custom profissão dropdown */
 .profissao-wrapper { position: relative; }
-
+ 
 .profissao-input {
   width: 100%;
-  padding: 14px 18px;
+  padding: 12px 16px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   font-size: 1rem;
@@ -558,8 +570,14 @@ definePageMeta({
   font-family: inherit;
 }
 
+@media (min-width: 768px) {
+  .profissao-input {
+    padding: 14px 18px;
+  }
+}
+ 
 .profissao-input:focus { border-color: #268C52; }
-
+ 
 .profissao-list {
   position: absolute;
   top: calc(100% + 4px);
@@ -575,7 +593,7 @@ definePageMeta({
   padding: 6px;
   margin: 0;
 }
-
+ 
 .profissao-item {
   padding: 10px 14px;
   border-radius: 8px;
@@ -584,10 +602,10 @@ definePageMeta({
   color: #374151;
   transition: background 0.1s;
 }
-
+ 
 .profissao-item:hover { background: #f0fdf4; color: #268C52; }
 .profissao-item.selected { background: #dcfce7; color: #166534; font-weight: 700; }
-
+ 
 .progress-container {
   position: absolute;
   top: 0;
@@ -596,47 +614,73 @@ definePageMeta({
   height: 6px;
   background-color: #f1f5f9;
 }
-
+ 
 .progress-bar {
   height: 100%;
   background: linear-gradient(to right, #268C52, #177486);
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
+ 
 .step-fade {
   animation: fadeIn 0.4s ease-out;
 }
-
+ 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
+ 
 .step-header {
-  margin-bottom: 40px;
+  margin-bottom: 24px;
   text-align: center;
 }
 
+@media (min-width: 768px) {
+  .step-header {
+    margin-bottom: 40px;
+  }
+}
+ 
 .step-number {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #268C52;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   display: block;
-  margin-bottom: 16px;
-}
-
-.step-header h1 {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #0f172a;
   margin-bottom: 12px;
 }
 
+@media (min-width: 768px) {
+  .step-number {
+    font-size: 0.875rem;
+    margin-bottom: 16px;
+  }
+}
+ 
+.step-header h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+@media (min-width: 768px) {
+  .step-header h1 {
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+}
+ 
 .step-header p {
   color: #64748b;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
+}
+
+@media (min-width: 768px) {
+  .step-header p {
+    font-size: 1.1rem;
+  }
 }
 
 .form-container {

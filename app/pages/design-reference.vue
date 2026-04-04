@@ -4,7 +4,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Arquivo Visual - PebasPro',
+  title: 'Arquivo Visual - PEBASPRO',
   description: 'Páginas antigas do backup renderizadas'
 })
 </script>
@@ -217,7 +217,7 @@ useSeoMeta({
                 Missão
               </h4>
               <p style="color: #666; line-height: 1.6; font-size: 0.875rem;">
-                Conectar pessoas, profissionais e empresas de Parauapebas por meio de tecnologia
+                Conectar pessoas, profissionais e empresas de toda a região por meio de tecnologia
               </p>
             </div>
             <!-- Compromisso -->
@@ -245,7 +245,7 @@ useSeoMeta({
                 Inovação
               </h4>
               <p style="color: #666; line-height: 1.6; font-size: 0.875rem;">
-                Ser a principal plataforma de referência em Parauapebas
+                Ser a principal plataforma de referência em nossa região
               </p>
             </div>
           </div>
@@ -328,7 +328,7 @@ useSeoMeta({
                 R$ 5.000 - R$ 8.000
               </span>
               <span style="background: white; border: 1px solid #C8E6C9; padding: 4px 12px; border-radius: 16px; font-size: 0.875rem; font-weight: 600;">
-                Parauapebas
+                Nossa Região
               </span>
               <span style="background: white; border: 1px solid #C8E6C9; padding: 4px 12px; border-radius: 16px; font-size: 0.875rem; font-weight: 600;">
                 Sênior
@@ -366,7 +366,7 @@ useSeoMeta({
                     Eletricista
                   </p>
                   <p style="font-size: 0.875rem; color: #666;">
-                    Parauapebas
+                    Região
                   </p>
                 </div>
               </div>

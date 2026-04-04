@@ -73,7 +73,7 @@ const onFileChange = (e: Event) => {
 
 const steps = [
   { id: 1, title: 'Seu Nome', subtitle: 'Como devemos te chamar?' },
-  { id: 2, title: 'Tipo de Conta', subtitle: 'Qual o seu objetivo na PebasPro?' },
+  { id: 2, title: 'Tipo de Conta', subtitle: 'Qual o seu objetivo na PEBASPRO?' },
   { id: 3, title: 'Documento', subtitle: 'Para sua segurança, informe seu CPF ou CNPJ.' },
   { id: 4, title: 'Contato', subtitle: 'Seu WhatsApp principal.' },
   { id: 5, title: 'Localização', subtitle: 'Onde você está localizado?' },
@@ -214,7 +214,7 @@ definePageMeta({
 
       <div class="step-content">
         <div class="logo-container">
-          <img src="/PEBASPRO-logo.png" alt="PebasPro" class="onboarding-logo" />
+          <img src="/PEBASPRO-logo.png" alt="PEBASPRO" class="onboarding-logo" />
         </div>
         <div class="step-header">
           <span class="step-indicator">Pergunta {{ step }} de {{ totalSteps }}</span>

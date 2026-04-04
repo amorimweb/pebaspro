@@ -22,7 +22,7 @@ const form = ref({
     tipo: 'CLT',
     jornada: '44h semanais',
     salario: '',
-    local: 'Parauapebas - PA',
+    local: 'Nossa Região',
     modalidade: 'presencial',
     whatsapp: '',
     email: '',
@@ -111,7 +111,7 @@ const handleSubmit = async () => {
         </div>
     </div>
 
-    <div class="bg-white rounded-[32px] shadow-xl shadow-slate-200/50 border border-slate-100 p-10">
+    <div class="bg-white rounded-[32px] shadow-xl shadow-slate-200/50 border border-slate-100 p-6 md:p-10">
         <form @submit.prevent="handleSubmit" class="space-y-8">
             
             <!-- Título -->
@@ -176,7 +176,7 @@ const handleSubmit = async () => {
                 </div>
                 <div>
                     <label class="block text-sm font-black text-slate-900 uppercase tracking-widest mb-2">Local</label>
-                    <input v-model="form.local" type="text" placeholder="Ex: Parauapebas - PA" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-medium" />
+                    <input v-model="form.local" type="text" placeholder="Ex: Toda a região" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-medium" />
                 </div>
                 <div>
                     <label class="block text-sm font-black text-slate-900 uppercase tracking-widest mb-2">Modalidade</label>

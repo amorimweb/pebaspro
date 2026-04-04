@@ -1,7 +1,7 @@
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Política de Privacidade - PebasPro',
-  description: 'Saiba como o PebasPro protege e utiliza seus dados pessoais.'
+  title: 'Política de Privacidade - PEBASPRO',
+  description: 'Saiba como o PEBASPRO protege e utiliza seus dados pessoais.'
 })
 </script>
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 useHead({
-  title: 'Anunciar Vaga - PebasPro',
+  title: 'Anunciar Vaga - PEBASPRO',
   meta: [
-    { name: 'description', content: 'Em breve você poderá anunciar suas vagas na PebasPro.' }
+    { name: 'description', content: 'Em breve você poderá anunciar suas vagas na PEBASPRO.' }
   ]
 })
 </script>
@@ -17,7 +17,7 @@ useHead({
       <h1 class="text-3xl font-black text-slate-900 tracking-tight">Novidades em Breve!</h1>
       
       <p class="text-lg text-slate-500 font-medium leading-relaxed">
-        Estamos preparando um novo espaço incrível para você anunciar suas vagas e encontrar os melhores talentos de Parauapebas.
+        Estamos preparando um novo espaço incrível para você anunciar suas vagas e encontrar os melhores talentos de toda a região.
       </p>
 
       <div class="pt-8">

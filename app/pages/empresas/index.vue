@@ -40,9 +40,9 @@ const handleSearch = () => {
 
 // SEO
 useHead({
-  title: 'Vitrine de Empresas - PebasPro',
+  title: 'Vitrine de Empresas - PEBASPRO',
   meta: [
-    { name: 'description', content: 'Conheça as empresas parceiras da PebasPro e veja as vagas abertas.' }
+    { name: 'description', content: 'Conheça as empresas parceiras da PEBASPRO e veja as vagas abertas.' }
   ]
 })
 </script>

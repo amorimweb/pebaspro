@@ -39,7 +39,7 @@ onMounted(() => {
 })
 
 useSeoMeta({
-  title: 'PebasPro - Encontre o profissional ideal',
+  title: 'PEBASPRO - Encontre o profissional ideal',
   description: 'Conectamos você com os melhores prestadores da região de forma rápida e segura.'
 })
 

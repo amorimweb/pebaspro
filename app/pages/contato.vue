@@ -75,7 +75,7 @@ const handleSubmit = async () => {
 
           <!-- Formulário -->
           <section class="w-full lg:w-1/2">
-            <div class="bg-white rounded-[40px] p-8 md:p-12 shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden relative">
+            <div class="bg-white rounded-[32px] shadow-xl shadow-slate-200/50 border border-slate-100 p-6 md:p-10 overflow-hidden relative">
               <div v-if="success" class="py-12 flex flex-col items-center text-center animate-in zoom-in duration-500">
                 <div class="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-5xl mb-8 animate-bounce">
                   ✓

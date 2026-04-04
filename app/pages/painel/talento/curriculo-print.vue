@@ -145,7 +145,7 @@ const initials = computed(() => {
 
           <!-- Rodapé -->
           <div class="sidebar-footer">
-            <p>Pebas Pro</p>
+            <p>PEBASPRO</p>
             <p>Onde o talento encontra a oportunidade</p>
           </div>
         </aside>

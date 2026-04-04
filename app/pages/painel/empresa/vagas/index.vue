@@ -137,7 +137,7 @@ watch(() => authStore.profile, (newProfile) => {
                         </span>
                     </td>
                     <td class="px-6 py-4">
-                        {{ job.cidade || 'Parauapebas' }}
+                        {{ job.cidade || 'Região' }}
                     </td>
                     <td class="px-6 py-4">
                         {{ new Date(job.data_publicacao).toLocaleDateString('pt-BR') }}

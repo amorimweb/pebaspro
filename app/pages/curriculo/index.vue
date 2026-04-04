@@ -185,7 +185,7 @@ const printResume = () => {
             <!-- Footer -->
             <footer class="mt-24 pt-10 border-t-2 border-slate-100 text-center">
                 <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mb-2">
-                    Gerado via Pebas Pro
+                    Gerado via PEBASPRO
                 </p>
                 <p class="text-slate-300 text-[8px] font-bold uppercase tracking-widest">
                     Onde o talento encontra a oportunidade certa

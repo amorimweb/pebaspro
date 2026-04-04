@@ -1,16 +1,16 @@
 <template>
-  <section class="py-20 bg-slate-50">
+  <section class="py-12 md:py-20 bg-slate-50">
     <div class="container mx-auto px-4">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
+      <div class="text-center mb-8 md:mb-12">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 mb-3 md:mb-4">
           Empresas que <span class="text-green-600">confiam</span> em nós
         </h2>
-        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        <p class="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
           Parceiros que escolheram nossa plataforma para conectar talentos
         </p>
       </div>
       
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 max-w-5xl mx-auto">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-5xl mx-auto">
         <div
           v-for="(empresa, index) in empresas"
           :key="index"

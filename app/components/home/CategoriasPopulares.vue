@@ -1,16 +1,16 @@
 <template>
-  <section class="py-20 bg-slate-50">
+  <section class="py-12 md:py-20 bg-slate-50">
     <div class="container mx-auto px-4">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
+      <div class="text-center mb-8 md:mb-12">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 mb-3 md:mb-4">
           Categorias <span class="text-green-600">Populares</span>
         </h2>
-        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        <p class="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
           Profissionais qualificados nas áreas mais procuradas
         </p>
       </div>
       
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-5xl mx-auto">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-5xl mx-auto">
         <!-- Eletricista -->
         <NuxtLink to="/servicos?search=Eletricista" class="group cursor-pointer">
           <div class="bg-white p-6 md:p-8 rounded-3xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-yellow-400">

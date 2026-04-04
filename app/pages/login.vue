@@ -83,7 +83,7 @@ const loginWithGoogle = async () => {
     <div class="auth-card">
       <div class="auth-header">
         <NuxtLink to="/">
-          <img src="/PEBASPRO-logo.png" alt="PebasPro" class="auth-logo" />
+          <img src="/PEBASPRO-logo.png" alt="PEBASPRO" class="auth-logo" />
         </NuxtLink>
         <h1>Bem-vindo de volta</h1>
         <p>Acesse sua conta para continuar</p>
@@ -155,22 +155,40 @@ const loginWithGoogle = async () => {
   align-items: center;
   justify-content: center;
   background-color: #f1f5f9; /* Um pouco mais escuro para destacar o card branco */
-  padding: 40px 20px;
+  padding: 20px;
   font-family: 'Inter', sans-serif;
 }
 
+@media (min-width: 768px) {
+  .auth-page {
+    padding: 40px 20px;
+  }
+}
+ 
 .auth-card {
-  max-width: 560px;
+  max-width: 480px;
   width: 100%;
   background: white;
-  padding: 48px;
+  padding: 32px 20px;
   border-radius: 24px;
   box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
 }
 
+@media (min-width: 768px) {
+  .auth-card {
+    padding: 40px 48px;
+  }
+}
+ 
 .auth-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 768px) {
+  .auth-header {
+    margin-bottom: 32px;
+  }
 }
 
 .auth-logo {

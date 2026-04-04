@@ -195,7 +195,7 @@ const openWhatsApp = async () => {
     phone = '55' + phone
   }
 
-  const message = encodeURIComponent(`Olá! Vi a vaga de "${job.value.titulo}" no PebasPro e gostaria de me candidatar.`)
+  const message = encodeURIComponent(`Olá! Vi a vaga de "${job.value.titulo}" no PEBASPRO e gostaria de me candidatar.`)
   const url = `https://wa.me/${phone}?text=${message}`
 
   // Registrar candidatura de forma assíncrona sem travar o redirecionamento
@@ -240,8 +240,8 @@ const openEmail = async () => {
       talento_id: authStore.profile.id
   })
 
-  const subject = encodeURIComponent(`Candidatura: ${job.value.titulo} - PebasPro`)
-  const body = encodeURIComponent(`Olá! Vi a vaga de "${job.value.titulo}" no PebasPro e gostaria de me candidatar. Em anexo envio meu interesse.`)
+  const subject = encodeURIComponent(`Candidatura: ${job.value.titulo} - PEBASPRO`)
+  const body = encodeURIComponent(`Olá! Vi a vaga de "${job.value.titulo}" no PEBASPRO e gostaria de me candidatar. Em anexo envio meu interesse.`)
   window.location.href = `mailto:${emailRaw}?subject=${subject}&body=${body}`
 }
 </script>
@@ -385,7 +385,7 @@ const openEmail = async () => {
             <p class="direct-contact">Falando direto com o contratante</p>
             
             <p class="safety-tip">
-              🛡️ <strong>Dica de segurança:</strong> O PebasPro não cobra taxas de candidatos. Nunca faça pagamentos para garantir vagas.
+              🛡️ <strong>Dica de segurança:</strong> O PEBASPRO não cobra taxas de candidatos. Nunca faça pagamentos para garantir vagas.
             </p>
           </div>
 
@@ -422,56 +422,424 @@ const openEmail = async () => {
 </template>
 
 <style scoped>
-.container { max-width: 1200px; margin: 0 auto; padding: 40px 20px 60px 20px; }
-.job-layout { display: grid; grid-template-columns: 1fr 380px; gap: 40px; }
+.container { 
+  max-width: 1200px; 
+  margin: 0 auto; 
+  padding: 24px 16px 40px 16px; 
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 40px 20px 60px 20px;
+  }
+}
+
+.job-layout { 
+  display: grid; 
+  grid-template-columns: 1fr 380px; 
+  gap: 24px; 
+}
+
+@media (min-width: 768px) {
+  .job-layout {
+    gap: 40px;
+  }
+}
+
 @media (max-width: 1024px) { .job-layout { grid-template-columns: 1fr; } }
+ 
+.job-header-card { 
+  background: white; 
+  padding: 24px; 
+  border-radius: 24px; 
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+  margin-bottom: 24px; 
+}
 
-.job-header-card { background: white; padding: 48px; border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 24px; }
-.job-top { display: flex; justify-content: space-between; margin-bottom: 24px; align-items: center; }
-.job-type { background-color: #f0fdf4; color: #166534; padding: 8px 16px; border-radius: 20px; font-size: 0.875rem; font-weight: 800; text-transform: uppercase; }
-.job-date { color: #94a3b8; font-size: 0.9rem; font-weight: 500; }
+@media (min-width: 768px) {
+  .job-header-card {
+    padding: 48px;
+  }
+}
 
-.job-header-card h1 { font-size: 2.75rem; font-weight: 900; color: #0f172a; margin-bottom: 16px; line-height: 1.2; }
-.job-subtitle { display: flex; align-items: center; gap: 16px; color: #4b5563; font-size: 1.125rem; font-weight: 500; }
-.dot { color: #d1d5db; }
+.job-top { 
+  display: flex; 
+  flex-wrap: wrap; 
+  justify-content: space-between; 
+  margin-bottom: 16px; 
+  align-items: center; 
+  gap: 12px; 
+}
 
-.job-content-card { background: white; padding: 48px; border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-.content-section { margin-bottom: 48px; }
+@media (min-width: 768px) {
+  .job-top {
+    margin-bottom: 24px;
+  }
+}
+
+.job-type { 
+  background-color: #f0fdf4; 
+  color: #166534; 
+  padding: 6px 12px; 
+  border-radius: 20px; 
+  font-size: 0.75rem; 
+  font-weight: 800; 
+  text-transform: uppercase; 
+}
+
+@media (min-width: 768px) {
+  .job-type {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+  }
+}
+
+.job-date { 
+  color: #94a3b8; 
+  font-size: 0.85rem; 
+  font-weight: 500; 
+}
+
+@media (min-width: 768px) {
+  .job-date {
+    font-size: 0.9rem;
+  }
+}
+ 
+.job-header-card h1 { 
+  font-size: 1.75rem; 
+  font-weight: 900; 
+  color: #0f172a; 
+  margin-bottom: 12px; 
+  line-height: 1.2; 
+}
+
+@media (min-width: 768px) {
+  .job-header-card h1 {
+    font-size: 2.75rem;
+    margin-bottom: 16px;
+  }
+}
+
+.job-subtitle { 
+  display: flex; 
+  flex-wrap: wrap; 
+  align-items: center; 
+  gap: 8px; 
+  color: #4b5563; 
+  font-size: 1rem; 
+  font-weight: 600; 
+}
+
+@media (min-width: 768px) {
+  .job-subtitle {
+    gap: 16px;
+    font-size: 1.125rem;
+  }
+}
+.dot { 
+  color: #d1d5db; 
+  display: none; 
+}
+
+@media (min-width: 768px) {
+  .dot {
+    display: inline;
+  }
+}
+ 
+.job-content-card { 
+  background: white; 
+  padding: 24px; 
+  border-radius: 24px; 
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+}
+
+@media (min-width: 768px) {
+  .job-content-card {
+    padding: 48px;
+  }
+}
+
+.content-section { 
+  margin-bottom: 32px; 
+}
+
+@media (min-width: 768px) {
+  .content-section {
+    margin-bottom: 48px;
+  }
+}
+
 .content-section:last-child { margin-bottom: 0; }
-.content-section h3 { font-size: 1.4rem; font-weight: 800; margin-bottom: 24px; color: #1e293b; position: relative; padding-left: 16px; }
+.content-section h3 { 
+  font-size: 1.15rem; 
+  font-weight: 800; 
+  margin-bottom: 16px; 
+  color: #1e293b; 
+  position: relative; 
+  padding-left: 16px; 
+}
+
+@media (min-width: 768px) {
+  .content-section h3 {
+    font-size: 1.4rem;
+    margin-bottom: 24px;
+  }
+}
 .content-section h3::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #268C52; border-radius: 2px; }
+ 
+.description-text { 
+  white-space: pre-line; 
+  line-height: 1.7; 
+  color: #374151; 
+  font-size: 1rem; 
+}
 
-.description-text { white-space: pre-line; line-height: 1.9; color: #374151; font-size: 1.15rem; }
-
+@media (min-width: 768px) {
+  .description-text {
+    line-height: 1.9;
+    font-size: 1.15rem;
+  }
+}
+ 
 .job-sidebar { display: flex; flex-direction: column; gap: 24px; }
-.apply-card, .company-card { background: white; padding: 32px; border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+.apply-card, .company-card { 
+  background: white; 
+  padding: 24px; 
+  border-radius: 24px; 
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+}
 
-.price-box { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 32px 24px; border-radius: 20px; text-align: center; margin-bottom: 32px; border: 1px solid #e2e8f0; }
-.price-box .label { display: block; font-size: 0.875rem; color: #64748b; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
-.price-box .value { font-size: 1.75rem; font-weight: 900; color: #1e293b; }
+@media (min-width: 768px) {
+  .apply-card, .company-card {
+    padding: 32px;
+  }
+}
+ 
+.price-box { 
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); 
+  padding: 24px 20px; 
+  border-radius: 20px; 
+  text-align: center; 
+  margin-bottom: 24px; 
+  border: 1px solid #e2e8f0; 
+}
 
-.job-details-list { margin-bottom: 32px; display: flex; flex-direction: column; gap: 16px; }
-.detail-item { display: flex; justify-content: space-between; font-size: 0.95rem; }
+@media (min-width: 768px) {
+  .price-box {
+    padding: 32px 24px;
+    margin-bottom: 32px;
+  }
+}
+.price-box .label { 
+  display: block; 
+  font-size: 0.75rem; 
+  color: #64748b; 
+  margin-bottom: 8px; 
+  font-weight: 600; 
+  text-transform: uppercase; 
+}
+
+@media (min-width: 768px) {
+  .price-box .label {
+    font-size: 0.875rem;
+  }
+}
+
+.price-box .value { 
+  font-size: 1.5rem; 
+  font-weight: 900; 
+  color: #1e293b; 
+}
+
+@media (min-width: 768px) {
+  .price-box .value {
+    font-size: 1.75rem;
+  }
+}
+ 
+.job-details-list { 
+  margin-bottom: 24px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 12px; 
+}
+
+@media (min-width: 768px) {
+  .job-details-list {
+    margin-bottom: 32px;
+    gap: 16px;
+  }
+}
+
+.detail-item { 
+  display: flex; 
+  justify-content: space-between; 
+  font-size: 0.9rem; 
+}
+
+@media (min-width: 768px) {
+  .detail-item {
+    font-size: 0.95rem;
+  }
+}
 .detail-item.warning .val { color: #dc2626; font-weight: 700; }
 .detail-item .label { color: #64748b; font-weight: 500; }
 .detail-item .val { color: #1e293b; font-weight: 700; }
-
+ 
 .full-width { width: 100%; }
 .rounded-16 { border-radius: 16px; }
-.btn-primary { height: 60px; background: linear-gradient(to right, #25D366, #128C7E); color: white; border: none; border-radius: 16px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2); }
+.btn-primary { 
+  height: 56px; 
+  background: linear-gradient(to right, #25D366, #128C7E); 
+  color: white; 
+  border: none; 
+  border-radius: 16px; 
+  font-size: 1rem; 
+  font-weight: 800; 
+  cursor: pointer; 
+  transition: all 0.3s; 
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2); 
+}
+
+@media (min-width: 768px) {
+  .btn-primary {
+    height: 60px;
+    font-size: 1.1rem;
+  }
+}
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3); }
+ 
+.direct-contact { 
+  text-align: center; 
+  font-size: 0.8rem; 
+  color: #94a3b8; 
+  margin-top: 12px; 
+  font-weight: 500; 
+}
 
-.direct-contact { text-align: center; font-size: 0.85rem; color: #94a3b8; margin-top: 12px; font-weight: 500; }
-.safety-tip { margin-top: 32px; font-size: 0.8rem; color: #64748b; line-height: 1.6; padding: 16px; background: #fffbeb; border-radius: 12px; border: 1px solid #fef3c7; }
+@media (min-width: 768px) {
+  .direct-contact {
+    font-size: 0.85rem;
+  }
+}
+.safety-tip { 
+  margin-top: 24px; 
+  font-size: 0.75rem; 
+  color: #64748b; 
+  line-height: 1.6; 
+  padding: 14px; 
+  background: #fffbeb; 
+  border-radius: 12px; 
+  border: 1px solid #fef3c7; 
+}
 
-.company-mini-info { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
-.mini-logo { width: 48px; height: 48px; background: #f1f5f9; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #268C52; font-size: 1.25rem; }
-.bold { font-weight: 800; color: #1e293b; font-size: 1.1rem; }
-.light { color: #64748b; font-size: 0.9rem; }
-.company-bio { font-size: 0.95rem; color: #4b5563; line-height: 1.6; margin-bottom: 24px; }
-.view-company { color: #268C52; text-decoration: none; font-weight: 700; font-size: 0.95rem; display: block; text-align: center; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; transition: all 0.2s; }
+@media (min-width: 768px) {
+  .safety-tip {
+    margin-top: 32px;
+    font-size: 0.8rem;
+    padding: 16px;
+  }
+}
+ 
+.company-mini-info { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  margin-bottom: 20px; 
+}
+
+@media (min-width: 768px) {
+  .company-mini-info {
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+}
+.mini-logo { 
+  width: 44px; 
+  height: 44px; 
+  background: #f1f5f9; 
+  border-radius: 12px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-weight: 800; 
+  color: #268C52; 
+  font-size: 1.1rem; 
+}
+
+@media (min-width: 768px) {
+  .mini-logo {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+  }
+}
+.bold { 
+  font-weight: 800; 
+  color: #1e293b; 
+  font-size: 1rem; 
+}
+
+@media (min-width: 768px) {
+  .bold {
+    font-size: 1.1rem;
+  }
+}
+.light { 
+  color: #64748b; 
+  font-size: 0.85rem; 
+}
+
+@media (min-width: 768px) {
+  .light {
+    font-size: 0.9rem;
+  }
+}
+.company-bio { 
+  font-size: 0.9rem; 
+  color: #4b5563; 
+  line-height: 1.6; 
+  margin-bottom: 20px; 
+}
+
+@media (min-width: 768px) {
+  .company-bio {
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+  }
+}
+.view-company { 
+  color: #268C52; 
+  text-decoration: none; 
+  font-weight: 700; 
+  font-size: 0.9rem; 
+  display: block; 
+  text-align: center; 
+  padding: 10px; 
+  border: 1px solid #e2e8f0; 
+  border-radius: 12px; 
+  transition: all 0.2s; 
+}
+
+@media (min-width: 768px) {
+  .view-company {
+    font-size: 0.95rem;
+    padding: 12px;
+  }
+}
 .view-company:hover { background: #f8fafc; border-color: #268C52; }
-
+ 
 .capitalize { text-transform: capitalize; }
-.error-state, .loading-state { text-align: center; padding: 100px 20px; }
+.error-state, .loading-state { 
+  text-align: center; 
+  padding: 80px 20px; 
+}
+
+@media (min-width: 768px) {
+  .error-state, .loading-state {
+    padding: 100px 20px;
+  }
+}
 </style>

@@ -3,18 +3,18 @@ const ano = new Date().getFullYear()
 </script>
 
 <template>
-  <footer class="bg-slate-900 mt-20 pt-20 pb-10 overflow-hidden relative print:hidden">
+  <footer class="bg-slate-900 mt-10 md:mt-20 pt-12 md:pt-20 pb-10 overflow-hidden relative print:hidden">
     <!-- Decorative elements -->
     <div class="absolute top-0 left-0 w-96 h-96 bg-green-500 opacity-[0.03] rounded-full blur-[100px] -ml-48 -mt-48"></div>
     <div class="absolute bottom-0 right-0 w-96 h-96 bg-teal-500 opacity-[0.03] rounded-full blur-[100px] -mr-48 -mb-48"></div>
-
+ 
     <div class="container mx-auto px-4 relative z-10">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8 mb-20">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8 mb-16 md:mb-20">
         <!-- Brand & Info -->
         <div class="space-y-6">
           <img src="/PEBASPRO-logo.png" alt="PebasPro Logo" class="h-14 w-auto rounded-2xl shadow-sm" />
           <p class="text-slate-400 leading-relaxed text-sm md:text-base">
-            A maior plataforma de conexão profissional de Parauapebas. Conectamos talentos locais com as melhores oportunidades de forma rápida e segura.
+            A maior plataforma de conexão profissional de toda a região. Conectamos talentos locais com as melhores oportunidades de forma rápida e segura.
           </p>
           <div class="flex items-center gap-2 text-green-400 font-bold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
@@ -72,7 +72,7 @@ const ano = new Date().getFullYear()
       <div class="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
         <div class="flex flex-col md:flex-row items-center gap-4 md:gap-8">
           <p class="text-slate-500 text-sm text-center md:text-left font-medium">
-            © {{ ano }} PebasPro. Desenvolvido com ❤️ em Parauapebas.
+            © {{ ano }} PEBASPRO. Desenvolvido com ❤️ na nossa região.
           </p>
           <div class="flex gap-6">
             <NuxtLink to="/termos" class="text-slate-500 hover:text-slate-300 transition-colors text-xs font-medium">Termos de Uso</NuxtLink>

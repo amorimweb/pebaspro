@@ -22,7 +22,7 @@ const form = ref({
     tipo: 'CLT',
     jornada: '44h semanais',
     salario: '',
-    local: 'Parauapebas - PA',
+    local: 'Nossa Região',
     modalidade: 'presencial',
     whatsapp: '',
     encerramento: '',
@@ -58,7 +58,7 @@ const fetchVaga = async () => {
             tipo: data.tipo || 'CLT',
             jornada: data.jornada || '44h semanais',
             salario: data.salario || '',
-            local: data.local || 'Parauapebas - PA',
+            local: data.local || 'Nossa Região',
             modalidade: data.modalidade || 'presencial',
             whatsapp: data.whatsapp || '',
             encerramento: data.encerramento || '',
@@ -165,7 +165,7 @@ const handleSubmit = async () => {
                 </div>
                 <div>
                     <label class="block text-sm font-black text-slate-900 uppercase tracking-widest mb-2">Local</label>
-                    <input v-model="form.local" type="text" placeholder="Ex: Parauapebas - PA" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-medium" />
+                    <input v-model="form.local" type="text" placeholder="Ex: Toda a região" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all font-medium" />
                 </div>
                 <div>
                     <label class="block text-sm font-black text-slate-900 uppercase tracking-widest mb-2">Modalidade</label>

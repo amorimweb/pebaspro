@@ -67,7 +67,7 @@ const supabase = useSupabaseClient<Database>()
         </div>
         <div>
             <h3 class="font-bold text-lg text-gray-800">Assinatura & Plano</h3>
-            <p class="text-sm text-gray-500 mt-1">Gerencie seu plano de acesso ao PebasPro.</p>
+            <p class="text-sm text-gray-500 mt-1">Gerencie seu plano de acesso ao PEBASPRO.</p>
         </div>
         <div class="mt-auto">
             <span class="text-sm font-bold text-slate-700">Plano Gratuito</span>

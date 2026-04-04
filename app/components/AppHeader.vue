@@ -324,7 +324,7 @@ watch(isMobileMenuOpen, (isOpen) => {
           </button>
           
           <!-- Dropdown Notificações Mobile -->
-          <div v-if="showNotifications" class="absolute right-[-40px] mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden">
+          <div v-if="showNotifications" class="absolute right-0 sm:-right-10 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden">
             <div class="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
               <span class="font-bold text-slate-800 text-sm">Notificações</span>
               <button v-if="unreadCount > 0" @click="markAsRead()" class="text-[10px] font-bold text-green-600 hover:underline">Limpar tudo</button>

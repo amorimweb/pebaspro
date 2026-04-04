@@ -75,9 +75,9 @@ const profileTypes = [
     <div class="selection-container">
       <div class="header">
         <NuxtLink to="/">
-          <img src="/PEBASPRO-logo.png" alt="PebasPro" class="logo" />
+          <img src="/PEBASPRO-logo.png" alt="PEBASPRO" class="logo" />
         </NuxtLink>
-        <h1>Como você quer usar o <span class="brand">PebasPro</span>?</h1>
+        <h1>Como você quer usar o <span class="brand">PEBASPRO</span>?</h1>
         <p>Escolha o perfil que melhor descreve seu objetivo hoje.</p>
       </div>
 
@@ -124,7 +124,7 @@ const profileTypes = [
           <button class="close-modal" @click="showTypeSelection = false">&times;</button>
           
           <div class="modal-header">
-            <h2>Como você quer usar o PebasPro?</h2>
+            <h2>Como você quer usar o PEBASPRO?</h2>
             <p>Se você for um novo usuário, esse será o seu perfil inicial.</p>
           </div>
 
@@ -157,68 +157,114 @@ const profileTypes = [
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 24px 20px;
   font-family: 'Inter', sans-serif;
 }
 
+@media (min-width: 768px) {
+  .selection-page {
+    padding: 40px 20px;
+  }
+}
+ 
 .selection-container {
   max-width: 1000px;
   width: 100%;
 }
-
+ 
 .header {
   text-align: center;
-  margin-bottom: 60px;
+  margin-bottom: 32px;
 }
 
+@media (min-width: 768px) {
+  .header {
+    margin-bottom: 60px;
+  }
+}
+ 
 .logo {
-  height: 80px;
-  margin: 0 auto 32px;
+  height: 64px;
+  margin: 0 auto 24px;
   display: block;
 }
 
+@media (min-width: 768px) {
+  .logo {
+    height: 80px;
+    margin: 0 auto 32px;
+  }
+}
+ 
 .header h1 {
-  font-size: 2.5rem;
+  font-size: 1.75rem;
   font-weight: 800;
   color: #1e293b;
   margin-bottom: 12px;
+  padding: 0 10px;
 }
 
+@media (min-width: 768px) {
+  .header h1 {
+    font-size: 2.5rem;
+  }
+}
+ 
 .brand {
   color: #268C52;
 }
-
+ 
 .header p {
-  font-size: 1.125rem;
+  font-size: 1rem;
   color: #64748b;
+  padding: 0 20px;
 }
 
+@media (min-width: 768px) {
+  .header p {
+    font-size: 1.125rem;
+  }
+}
+ 
 .types-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 16px;
 }
 
+@media (min-width: 768px) {
+  .types-grid {
+    gap: 24px;
+  }
+}
+ 
 @media (max-width: 900px) {
   .types-grid {
     grid-template-columns: 1fr;
   }
 }
-
+ 
 .type-card {
   background: white;
-  padding: 40px;
+  padding: 24px;
   border-radius: 24px;
   border: 1px solid #e2e8f0;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
+  align-items: center;
   position: relative;
   overflow: hidden;
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
-  text-align: left;
+  text-align: center;
   width: 100%;
+}
+
+@media (min-width: 768px) {
+  .type-card {
+    padding: 40px;
+  }
 }
 
 .type-card:hover {
@@ -258,6 +304,7 @@ const profileTypes = [
   color: #64748b;
   line-height: 1.6;
   font-size: 0.95rem;
+  text-align: justify;
 }
 
 .card-arrow {

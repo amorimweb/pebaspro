@@ -19,7 +19,7 @@ const content = computed(() => {
   if (tipo === 'empresa') {
     return {
       title: 'Encontre o talento certo agora',
-      subtitle: 'Publique sua vaga e conecte-se com os melhores candidatos de Parauapebas.',
+      subtitle: 'Publique sua vaga e conecte-se com os melhores candidatos da nossa região.',
       placeholder: 'Buscar talentos (Ex: Vendedor, TI)...',
       button: 'Buscar Talentos',
       to: '/painel/empresa/buscar-talentos'
@@ -101,7 +101,7 @@ onUnmounted(() => {
 
 <template>
   <div
-    class="bg-gradient-to-r from-green-700 to-teal-700 text-white text-center px-4 pt-32 h-[70vh] md:h-[80vh] flex flex-col justify-center items-center relative overflow-visible"
+    class="bg-gradient-to-r from-green-700 to-teal-700 text-white text-center px-4 py-20 md:pt-32 h-auto min-h-[70vh] md:h-[80vh] flex flex-col justify-center items-center relative overflow-visible"
   >
     <!-- Elementos Decorativos de Fundo -->
     <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
@@ -110,17 +110,17 @@ onUnmounted(() => {
     </div>
 
     <div class="relative z-10 max-w-4xl mx-auto">
-      <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight leading-[1.1]">
+      <h1 class="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6 tracking-tight leading-[1.1]">
         {{ content.title.split(' ').slice(0, -1).join(' ') }} 
         <span class="text-green-300">{{ content.title.split(' ').pop() }}</span>
       </h1>
 
-      <p class="text-lg md:text-2xl max-w-2xl mx-auto opacity-90 mb-12 leading-relaxed font-medium">
+      <p class="text-base sm:text-lg md:text-2xl max-w-2xl mx-auto opacity-90 mb-8 md:mb-12 leading-relaxed font-medium px-4">
         {{ content.subtitle }}
       </p>
 
       <!-- Busca Ao Vivo -->
-      <div class="flex flex-col items-center w-full group/search relative mb-12 z-50" ref="dropdownRef">
+      <div class="flex flex-col items-center w-full group/search relative mb-8 md:mb-12 z-50 px-2" ref="dropdownRef">
         <div class="relative w-full max-w-2xl mx-auto group z-50">
           <input
             v-model="searchQuery"
@@ -128,7 +128,7 @@ onUnmounted(() => {
             @focus="() => { if (results.length > 0) showDropdown = true }"
             type="text"
             placeholder="Busque serviços ou empresas..."
-            class="w-full px-8 py-5 rounded-2xl text-slate-800 placeholder-slate-400 font-bold focus:outline-none focus:ring-8 focus:ring-green-500/20 transition-all shadow-2xl border-2 border-transparent focus:border-green-400 text-lg"
+            class="w-full px-6 md:px-8 py-4 md:py-5 rounded-2xl text-slate-800 placeholder-slate-400 font-bold focus:outline-none focus:ring-8 focus:ring-green-500/20 transition-all shadow-2xl border-2 border-transparent focus:border-green-400 text-base md:text-lg"
           />
           <svg v-if="!isSearching" class="absolute right-6 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-300 group-focus-within:text-green-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
