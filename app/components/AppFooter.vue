@@ -14,7 +14,8 @@ const ano = new Date().getFullYear()
         <div class="space-y-6">
           <img src="/PEBASPRO-logo.png" alt="PebasPro Logo" class="h-14 w-auto rounded-2xl shadow-sm" />
           <p class="text-slate-400 leading-relaxed text-sm md:text-base">
-            A maior plataforma de conexão profissional de toda a região. Conectamos talentos locais com as melhores oportunidades de forma rápida e segura.
+            Uma plataforma completa de conexão entre profissionais, empresas e cidadãos.
+O PEBASPRO integra a economia local, facilitando o acesso a serviços, oportunidades de trabalho e recrutamento, com eficiência, transparência e impacto social direto.
           </p>
           <div class="flex items-center gap-2 text-green-400 font-bold text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">

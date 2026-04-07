@@ -43,18 +43,27 @@ const isEmpresa = computed(() => chosenType.value === 'empresa')
 
 // Detecta se o campo atual é CNPJ (empresa sempre é CNPJ; prestador é CNPJ se já tem >11 dígitos)
 const isCNPJ = computed(() => {
-  return isEmpresa.value || isPrestador.value
+  if (isEmpresa.value) return true
+  if (isPrestador.value) return documento.value.replace(/\D/g, '').length > 11
+  return false
 })
 
 const docLabel = computed(() => {
-  if (isEmpresa.value || isPrestador.value) return 'CNPJ'
+  if (isEmpresa.value) return 'CNPJ'
+  if (isPrestador.value) return 'CPF ou CNPJ'
   return 'CPF'
 })
 const docPlaceholder = computed(() => isCNPJ.value ? '00.000.000/0001-00' : '000.000.000-00')
-const docMaxLength = computed(() => isCNPJ.value ? 18 : 14)
+const docMaxLength = computed(() => {
+  if (isEmpresa.value || isPrestador.value) return 18
+  return 14
+})
 
 const applyDocMask = (raw: string) => {
-  return (isEmpresa.value || isPrestador.value) ? maskCNPJ(raw) : maskCPF(raw)
+  const digits = raw.replace(/\D/g, '')
+  if (isEmpresa.value) return maskCNPJ(raw)
+  if (isPrestador.value) return digits.length > 11 ? maskCNPJ(raw) : maskCPF(raw)
+  return maskCPF(raw)
 }
 
 // Validações de dígito verificador
@@ -90,8 +99,14 @@ const validateDoc = () => {
   const digits = documento.value.replace(/\D/g, '')
   if (!digits) { docError.value = ''; return }
 
-  if (isEmpresa.value || isPrestador.value) {
+  if (isEmpresa.value) {
     docError.value = validarCNPJ(documento.value) ? '' : 'CNPJ inválido'
+  } else if (isPrestador.value) {
+    if (digits.length > 11) {
+      docError.value = validarCNPJ(documento.value) ? '' : 'CNPJ inválido'
+    } else {
+      docError.value = validarCPF(documento.value) ? '' : 'CPF inválido'
+    }
   } else {
     docError.value = validarCPF(documento.value) ? '' : 'CPF inválido'
   }
@@ -119,7 +134,11 @@ const handleSignUp = async () => {
     }
 
     // 2. Validar documento
-    const docValido = (isEmpresa.value || isPrestador.value) ? validarCNPJ(documento.value) : validarCPF(documento.value)
+    let docValido = false
+    const digits = documento.value.replace(/\D/g, '')
+    if (isEmpresa.value) docValido = validarCNPJ(documento.value)
+    else if (isPrestador.value) docValido = digits.length > 11 ? validarCNPJ(documento.value) : validarCPF(documento.value)
+    else docValido = validarCPF(documento.value)
     
     if (!docValido) {
       errorMsg.value = `${docLabel.value} inválido. Verifique os dados e tente novamente.`

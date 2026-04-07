@@ -19,10 +19,10 @@ const selectType = (type: AccountType) => {
 }
 
 onMounted(() => {
-  if (typeCookie.value) {
-    console.log('Redirecionando automaticamente para cadastro de:', typeCookie.value)
-    navigateTo('/cadastro/dados')
-  }
+  // Limpa o cookie de tipo de conta ao acessar a tela de seleção
+  // Isso garante que, se o usuário clicar em "voltar" no navegador, 
+  // a escolha anterior seja resetada para uma nova escolha.
+  typeCookie.value = null
 })
 
 const loginWithGoogle = () => {
