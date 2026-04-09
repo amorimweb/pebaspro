@@ -173,6 +173,10 @@ onMounted(async () => {
   }
 })
 
+const changeAccountType = () => {
+  form.value.tipo_conta = '' as any
+}
+
 const nextStep = () => step.value++
 const prevStep = () => step.value--
 
@@ -253,9 +257,34 @@ definePageMeta({
           <p>Confirme seus dados e adicione uma foto de perfil ou logo.</p>
         </div>
 
-        <!-- Perfil selecionado (read-only) -->
-        <div class="tipo-conta-readonly">
-          <span class="tipo-conta-label">Perfil selecionado</span>
+        <!-- Seleção de Perfil (se não estiver definido) -->
+        <div v-if="!form.tipo_conta" class="tipo-conta-selector step-fade">
+          <span class="tipo-conta-label">Escolha seu perfil</span>
+          <div class="tipos-grid">
+            <button 
+              v-for="type in profileTypes" 
+              :key="type.id"
+              class="tipo-card"
+              :class="{ active: form.tipo_conta === type.id }"
+              @click="form.tipo_conta = type.id as any"
+            >
+              <span class="tipo-icon">{{ type.icon }}</span>
+              <div>
+                <strong>{{ type.title }}</strong>
+                <small>{{ type.subtitle }}</small>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Perfil selecionado (read-only com opção de mudar) -->
+        <div v-else class="tipo-conta-readonly step-fade">
+          <div class="flex justify-between items-end mb-3">
+            <span class="tipo-conta-label mb-0">Perfil selecionado</span>
+            <button @click="changeAccountType" class="text-xs font-bold text-green-600 hover:underline">
+              Mudar perfil
+            </button>
+          </div>
           <div class="tipo-conta-badge">
             <span class="tipo-icon">
               {{ profileTypes.find(t => t.id === form.tipo_conta)?.icon || '👤' }}
@@ -264,7 +293,7 @@ definePageMeta({
               <strong>{{ profileTypes.find(t => t.id === form.tipo_conta)?.title || form.tipo_conta }}</strong>
               <small>{{ profileTypes.find(t => t.id === form.tipo_conta)?.subtitle }}</small>
             </div>
-            <span class="tipo-lock" title="Perfil definido no cadastro">🔒</span>
+            <span class="tipo-lock" title="Você pode mudar o perfil antes de concluir">🔓</span>
           </div>
         </div>
 
@@ -325,7 +354,7 @@ definePageMeta({
         </div>
 
         <div class="step-actions">
-          <button @click="nextStep" class="btn-primary">Continuar</button>
+          <button @click="nextStep" class="btn-primary" :disabled="!form.tipo_conta">Continuar</button>
         </div>
       </div>
 
