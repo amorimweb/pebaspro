@@ -52,7 +52,7 @@ useSeoMeta({
       <BannerHero />
       
       <!-- PERSONALIZAÇÃO PARA TALENTO (Perto do Topo) -->
-      <div v-if="authStore.profile?.tipo_conta === 'talento'" class="container mx-auto px-4 py-12 -mt-16 relative z-20">
+      <div v-if="authStore.profile?.tipo_conta === 'talento' && authStore.profile?.cadastro_completo" class="container mx-auto px-4 py-12 -mt-16 relative z-20">
         <div class="bg-white rounded-[40px] shadow-2xl shadow-slate-200/60 p-8 md:p-12 border border-slate-100">
            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
               <div>

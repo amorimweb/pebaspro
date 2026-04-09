@@ -10,7 +10,6 @@ definePageMeta({
 const typeCookie = useCookie<AccountType | null>('pebas_pending_type', { maxAge: 3600 })
 
 const supabase = useSupabaseClient()
-const showTypeSelection = ref(false)
 
 const selectType = (type: AccountType) => {
   console.log('Selecionando tipo:', type)
@@ -25,14 +24,7 @@ onMounted(() => {
   typeCookie.value = null
 })
 
-const loginWithGoogle = () => {
-  showTypeSelection.value = true
-}
-
-const confirmGoogleLogin = async (type: AccountType) => {
-  showTypeSelection.value = false
-  typeCookie.value = type
-  
+const loginWithGoogle = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -117,36 +109,6 @@ const profileTypes = [
       </div>
     </div>
 
-    <!-- Modal de Seleção de Perfil para Google -->
-    <Teleport to="body">
-      <div v-if="showTypeSelection" class="modal-overlay" @click="showTypeSelection = false">
-        <div class="modal-content" @click.stop>
-          <button class="close-modal" @click="showTypeSelection = false">&times;</button>
-          
-          <div class="modal-header">
-            <h2>Como você quer usar o PEBASPRO?</h2>
-            <p>Se você for um novo usuário, esse será o seu perfil inicial.</p>
-          </div>
-
-          <div class="types-grid-mini">
-            <button 
-              v-for="profile in profileTypes" 
-              :key="profile.id" 
-              class="type-card-mini"
-              @click="confirmGoogleLogin(profile.id)"
-            >
-              <div class="card-icon-mini" :style="{ backgroundColor: profile.color + '20', color: profile.color }">
-                {{ profile.icon }}
-              </div>
-              <div class="card-info-mini">
-                <h3>{{ profile.title }}</h3>
-                <p>{{ profile.subtitle }}</p>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
 

@@ -171,6 +171,15 @@ onMounted(async () => {
   if (!form.value.tipo_conta && typeCookie.value) {
     form.value.tipo_conta = typeCookie.value as any
   }
+  
+  // Se o cadastro não estiver completo, vamos forçar a escolha do perfil 
+  // para garantir que o usuário veja as opções, mesmo que o banco tenha um default.
+  if (!authStore.profile?.cadastro_completo) {
+     // Apenas resetamos se ele ainda não escolheu nada nesta sessão do form
+     if (!form.value.tipo_conta) {
+        form.value.tipo_conta = '' as any
+     }
+  }
 })
 
 const changeAccountType = () => {
@@ -253,8 +262,10 @@ definePageMeta({
       <div v-if="step === 1" class="step-fade">
         <div class="step-header">
           <span class="step-number">Etapa 1 de 3</span>
-          <h1>Falta pouco, {{ form.nome.split(' ')[0] }}! 👋</h1>
-          <p>Confirme seus dados e adicione uma foto de perfil ou logo.</p>
+          <h1 v-if="!form.tipo_conta">Escolha seu Perfil 🚀</h1>
+          <h1 v-else>Falta pouco, {{ form.nome.split(' ')[0] }}! 👋</h1>
+          <p v-if="!form.tipo_conta">Para começar, selecione como você pretende usar a plataforma.</p>
+          <p v-else>Confirme seus dados e adicione uma foto de perfil ou logo.</p>
         </div>
 
         <!-- Seleção de Perfil (se não estiver definido) -->

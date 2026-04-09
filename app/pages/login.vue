@@ -8,33 +8,6 @@ const password = ref('')
 const showPassword = ref(false)
 const loading = ref(false)
 const errorMsg = ref('')
-const showTypeSelection = ref(false)
-const typeCookie = useCookie<AccountType | null>('pebas_pending_type', { maxAge: 3600 })
-
-const profileTypes = [
-  {
-    id: 'talento' as AccountType,
-    title: 'Talento',
-    subtitle: 'Busco vagas de emprego',
-    icon: '🎯',
-    color: '#3b82f6'
-  },
-  {
-    id: 'prestador' as AccountType,
-    title: 'Prestador',
-    subtitle: 'Ofereço meus serviços',
-    icon: '🛠️',
-    color: '#10b981'
-  },
-  {
-    id: 'empresa' as AccountType,
-    title: 'Empresa',
-    subtitle: 'Quero contratar talentos',
-    icon: '🏢',
-    color: '#8b5cf6'
-  }
-]
-
 definePageMeta({
   layout: false,
   noPadding: true
@@ -87,14 +60,8 @@ const handleLogin = async () => {
   }
 }
 
-const loginWithGoogle = () => {
-  showTypeSelection.value = true
-}
-
-const confirmGoogleLogin = async (type: AccountType) => {
+const loginWithGoogle = async () => {
   loading.value = true
-  showTypeSelection.value = false
-  typeCookie.value = type
   
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -176,36 +143,6 @@ const confirmGoogleLogin = async (type: AccountType) => {
       </div>
     </div>
 
-    <!-- Modal de Seleção de Perfil para Google -->
-    <Teleport to="body">
-      <div v-if="showTypeSelection" class="modal-overlay" @click="showTypeSelection = false">
-        <div class="modal-content" @click.stop>
-          <button class="close-modal" @click="showTypeSelection = false">&times;</button>
-          
-          <div class="modal-header">
-            <h2>Como você quer usar o PEBASPRO?</h2>
-            <p>Se você for um novo usuário, esse será o seu perfil inicial.</p>
-          </div>
-
-          <div class="types-grid-mini">
-            <button 
-              v-for="profile in profileTypes" 
-              :key="profile.id" 
-              class="type-card-mini"
-              @click="confirmGoogleLogin(profile.id)"
-            >
-              <div class="card-icon-mini" :style="{ backgroundColor: profile.color + '20', color: profile.color }">
-                {{ profile.icon }}
-              </div>
-              <div class="card-info-mini">
-                <h3>{{ profile.title }}</h3>
-                <p>{{ profile.subtitle }}</p>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
 
