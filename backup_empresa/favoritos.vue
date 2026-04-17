@@ -4,7 +4,7 @@ import { useFavorites } from '~/composables/useFavorites'
 import type { Database } from '~/types/database.types'
 
 definePageMeta({
-  layout: 'empresa-master'
+  layout: 'dashboard'
 })
 
 const authStore = useAuthStore()

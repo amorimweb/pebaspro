@@ -74,9 +74,9 @@ const handleSignOut = async () => {
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
-      <div class="flex h-16 shrink-0 items-center px-6 bg-slate-950 border-b border-white/5">
-        <span class="text-xl font-bold tracking-tight">PEBASPRO <span class="text-green-500 font-medium">Master</span></span>
-      </div>
+      <NuxtLink to="/admin" class="flex h-16 shrink-0 items-center px-6 bg-slate-950 border-b border-white/5 hover:bg-slate-900 transition-colors">
+        <span class="text-xl font-bold tracking-tight text-white">PEBASPRO <span class="text-green-500 font-medium">Master</span></span>
+      </NuxtLink>
       
       <div class="flex flex-1 flex-col overflow-y-auto pt-4 pb-4 scrollbar-hide">
         <nav class="flex-1 space-y-1 px-3">
@@ -169,6 +169,12 @@ const handleSignOut = async () => {
           </button>
 
           <div class="h-6 w-px bg-gray-200" aria-hidden="true" />
+
+          <NuxtLink v-if="authStore.profile?.tipo_conta === 'empresa'" to="/painel/empresa" class="text-xs font-black uppercase tracking-widest text-[#1E88E5] hover:text-[#1787D4] transition-colors">
+            Painel Empresa
+          </NuxtLink>
+
+          <div v-if="authStore.profile?.tipo_conta === 'empresa'" class="h-6 w-px bg-gray-200" aria-hidden="true" />
 
           <NuxtLink to="/" class="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-green-600 transition-colors">
             Ver Site

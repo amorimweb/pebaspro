@@ -3,7 +3,7 @@ import type { Database } from '~/types'
 import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
-  layout: 'empresa-master'
+  layout: 'dashboard'
 })
 
 const user = useSupabaseUser()

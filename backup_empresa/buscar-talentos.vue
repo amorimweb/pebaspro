@@ -5,7 +5,7 @@ import type { Database } from '~/types/database.types'
 import { storeToRefs } from 'pinia'
 
 definePageMeta({
-  layout: 'empresa-master'
+  layout: 'dashboard'
 })
 
 const authStore = useAuthStore()

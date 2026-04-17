@@ -2,7 +2,7 @@
 import type { Database } from '~/types'
 
 definePageMeta({
-  layout: 'empresa-master'
+  layout: 'dashboard'
 })
 
 const route = useRoute()

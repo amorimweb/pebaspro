@@ -285,6 +285,10 @@ watch(isMobileMenuOpen, (isOpen) => {
                 </div>
                 
                 <div class="space-y-0.5">
+                  <NuxtLink v-if="profile?.tipo_conta === 'empresa'" to="/painel/empresa" @click="closeMenus" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-[#1E88E5] hover:bg-blue-50 rounded-xl transition-all">
+                    <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                    Painel da Empresa
+                  </NuxtLink>
                   <NuxtLink v-if="profile?.role === 'admin' || profile?.role === 'superadmin'" to="/admin" @click="closeMenus" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-all [&.router-link-active]:bg-amber-50 [&.router-link-active]:text-amber-700">
                     <svg class="w-5 h-5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
                     Administração

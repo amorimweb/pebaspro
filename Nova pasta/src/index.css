@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* PEBASPRO Official Color Palette */
+  --pb-green-main: #4CD964;
+  --pb-green-aqua: #31D3A4;
+  --pb-turquoise: #21C7C7;
+  --pb-blue-brand: #1E88E5;
+  --pb-blue-deep: #0D47A1;
+  
+  /* Neutral Colors - Brand Integrated */
+  --pb-white: #FFFFFF;
+  --pb-bg-main: #F4F7FA;
+  --pb-gray-light: #DCE4EA;
+  --pb-text-main: #16324F;
+  --pb-text-secondary: #5F7285;
+  
+  /* Layout & Spacing */
+  --pb-sidebar-width: 280px;
+  --pb-header-height: 80px;
+  --pb-border-radius: 12px;
+  --pb-padding-card: 24px;
+  --pb-shadow: 0 4px 20px rgba(13, 71, 161, 0.05);
+  --pb-shadow-hover: 0 10px 30px rgba(13, 71, 161, 0.1);
+  
+  /* Typography */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--pb-bg-main);
+  color: var(--pb-text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+/* ── PEBASPRO Brand Standards ────────────────────────────── */
+.pebaspro-text-brand {
+  background: linear-gradient(135deg, #1FAE66 0%, #1787D4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  font-weight: 900;
+  display: inline-block;
+}
+
+.pebaspro-text-white {
+  color: #FFFFFF;
+  font-weight: 900;
+  text-shadow: 0px 3px 6px rgba(0,0,0,0.25);
+  display: inline-block;
+}

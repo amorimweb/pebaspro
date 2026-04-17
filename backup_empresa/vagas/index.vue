@@ -5,7 +5,7 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
-  layout: 'empresa-master'
+  layout: 'dashboard'
 })
 
 const supabase = useSupabaseClient<Database>()

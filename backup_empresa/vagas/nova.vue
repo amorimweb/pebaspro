@@ -4,7 +4,7 @@ import type { Database } from '~/types/database.types'
 import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
-  layout: 'empresa-master'
+  layout: 'dashboard'
 })
 
 const authStore = useAuthStore()

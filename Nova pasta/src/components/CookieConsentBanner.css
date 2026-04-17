@@ -1,0 +1,122 @@
+.cookie-banner-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: var(--pb-bg-surface, #ffffff);
+  border-top: 1px solid var(--pb-gray-light, #E2E8F0);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+  z-index: 9999;
+  padding: 16px 0;
+}
+
+.cookie-banner-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  position: relative;
+}
+
+.cookie-text-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.cookie-icon-wrapper {
+  background: var(--pb-green-light, #ecfdf3);
+  color: var(--pb-green-primary, #10b981);
+  padding: 10px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cookie-title {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pb-color-text, #1e293b);
+}
+
+.cookie-description {
+  margin: 0;
+  font-size: 13px;
+  color: var(--pb-gray-text, #64748b);
+  line-height: 1.5;
+}
+
+.cookie-link {
+  color: var(--pb-blue-brand, #3b82f6);
+  text-decoration: underline;
+  padding: 0;
+  margin: 0;
+  font-size: inherit;
+  font-weight: 500;
+  display: inline;
+}
+
+.cookie-link:hover {
+  text-decoration: none;
+  background: none;
+  color: var(--pb-blue-deep, #1e3a8a);
+}
+
+.cookie-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.btn-cookie-accept {
+  background: var(--pb-green-primary, #10b981);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-cookie-accept:hover {
+  background: #0ea5e9;
+}
+
+.cookie-close-btn {
+  position: absolute;
+  top: 0;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--pb-gray-text, #64748b);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cookie-close-btn:hover {
+  color: var(--pb-color-text, #1e293b);
+}
+
+@media (max-width: 900px) {
+  .cookie-banner-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .cookie-actions {
+    justify-content: flex-end;
+  }
+}
