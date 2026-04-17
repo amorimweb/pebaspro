@@ -6,7 +6,14 @@ export default defineEventHandler(async (event) => {
     const user = await serverSupabaseUser(event)
 
     if (!user) {
-        throw createError({ statusCode: 401, message: 'Não autorizado' })
+        throw createError({ statusCode: 401, message: 'Usuário não autenticado no servidor' })
+    }
+
+    // Validação de UUID para evitar erro 22P02 no Postgres
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidRegex.test(user.id)) {
+        console.error('SERVER ERROR: Invalid User UUID in session:', user.id)
+        throw createError({ statusCode: 400, message: 'Identificador de usuário inválido na sessão' })
     }
 
     const { data, error } = await supabase
@@ -17,8 +24,8 @@ export default defineEventHandler(async (event) => {
         .limit(50)
 
     if (error) {
-        console.error('API Notificacoes Error:', error)
-        throw createError({ statusCode: 400, message: 'Erro ao carregar notificações: ' + error.message })
+        console.error('DB ERROR [notificacoes]:', error)
+        throw createError({ statusCode: 500, message: 'Erro ao carregar notificações do banco de dados' })
     }
 
     return data

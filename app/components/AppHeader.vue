@@ -277,7 +277,7 @@ watch(isMobileMenuOpen, (isOpen) => {
             </button>
             <!-- Dropdown Card -->
             <Transition name="dropdown">
-              <div v-if="isUserDropdownOpen" class="absolute right-0 mt-3 w-72 bg-white rounded-[24px] shadow-2xl shadow-slate-200/50 border border-slate-100 p-2 overflow-hidden ring-1 ring-black/5">
+              <div v-if="isUserDropdownOpen" class="absolute right-0 mt-3 w-72 bg-white rounded-[24px] shadow-2xl shadow-slate-200/50 border border-slate-100 p-2 overflow-hidden ring-1 ring-black/5 text-slate-900">
                 <div class="px-4 py-4 mb-2 bg-slate-50/50 rounded-2xl">
                   <p class="text-xs font-black text-green-600 uppercase tracking-widest mb-1">{{ profile?.tipo_conta }}</p>
                   <p class="text-sm font-black text-slate-900 truncate">{{ profile?.nome }}</p>
@@ -285,15 +285,15 @@ watch(isMobileMenuOpen, (isOpen) => {
                 </div>
                 
                 <div class="space-y-0.5">
-                  <NuxtLink v-if="profile?.role === 'admin' || profile?.role === 'superadmin'" to="/admin" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-all">
+                  <NuxtLink v-if="profile?.role === 'admin' || profile?.role === 'superadmin'" to="/admin" @click="closeMenus" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-all [&.router-link-active]:bg-amber-50 [&.router-link-active]:text-amber-700">
                     <svg class="w-5 h-5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
                     Administração
                   </NuxtLink>
-                  <NuxtLink to="/perfil" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-green-50 hover:text-green-700 rounded-xl transition-all">
+                  <NuxtLink to="/perfil" @click="closeMenus" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-green-50 hover:text-green-700 rounded-xl transition-all [&.router-link-active]:bg-green-50 [&.router-link-active]:text-green-700">
                     <svg class="w-5 h-5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                     Meu Perfil
                   </NuxtLink>
-                  <NuxtLink :to="profile?.tipo_conta === 'empresa' ? '/painel/empresa/configuracoes' : '/perfil'" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-green-50 hover:text-green-700 rounded-xl transition-all">
+                  <NuxtLink :to="profile?.tipo_conta === 'empresa' ? '/painel/empresa/configuracoes' : '/perfil'" @click="closeMenus" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-green-50 hover:text-green-700 rounded-xl transition-all [&.router-link-active]:bg-green-50 [&.router-link-active]:text-green-700">
                     <svg class="w-5 h-5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     Configurações
                   </NuxtLink>
@@ -414,20 +414,20 @@ watch(isMobileMenuOpen, (isOpen) => {
                <div v-for="i in 6" :key="i" class="h-14 bg-slate-50 rounded-2xl animate-pulse"></div>
             </template>
             <template v-else>
-               <NuxtLink 
-                v-for="item in activeMenu" 
-                :key="item.label"
-                :to="item.to"
-                @click="item.onClick?.()"
-                :class="[
-                  'flex items-center px-6 py-4 text-lg font-black rounded-2xl transition-all uppercase tracking-tight',
-                  item.isCTA 
-                    ? 'bg-green-600 text-white shadow-lg shadow-green-600/20 my-4' 
-                    : 'text-slate-700 hover:bg-green-50 hover:text-green-600'
-                ]"
-              >
-                {{ item.label }}
-              </NuxtLink>
+                 <NuxtLink 
+                  v-for="item in activeMenu" 
+                  :key="item.label"
+                  :to="item.to"
+                  @click="item.onClick?.()"
+                  :class="[
+                    'flex items-center px-6 py-4 text-lg font-black rounded-2xl transition-all uppercase tracking-tight',
+                    item.isCTA 
+                      ? 'bg-green-600 text-white shadow-lg shadow-green-600/20 my-4' 
+                      : 'text-slate-700 hover:bg-green-50 hover:text-green-600 [&.router-link-active]:bg-green-50 [&.router-link-active]:text-green-600'
+                  ]"
+                >
+                  {{ item.label }}
+                </NuxtLink>
             </template>
 
             <div class="h-px bg-slate-100 my-6"></div>
@@ -440,8 +440,8 @@ watch(isMobileMenuOpen, (isOpen) => {
                </div>
             </template>
             <template v-else>
-               <NuxtLink v-if="profile?.role === 'admin' || profile?.role === 'superadmin'" to="/admin" class="flex items-center px-6 py-4 text-lg font-black text-amber-600 hover:bg-amber-50 rounded-2xl uppercase tracking-tight">Administração</NuxtLink>
-               <NuxtLink :to="profile?.tipo_conta === 'empresa' ? '/painel/empresa/configuracoes' : '/perfil'" class="flex items-center px-6 py-4 text-lg font-black text-slate-700 hover:bg-slate-50 rounded-2xl uppercase tracking-tight">Configurações</NuxtLink>
+               <NuxtLink v-if="profile?.role === 'admin' || profile?.role === 'superadmin'" to="/admin" @click="closeMenus" class="flex items-center px-6 py-4 text-lg font-black text-amber-600 hover:bg-amber-50 rounded-2xl uppercase tracking-tight">Administração</NuxtLink>
+               <NuxtLink :to="profile?.tipo_conta === 'empresa' ? '/painel/empresa/configuracoes' : '/perfil'" @click="closeMenus" class="flex items-center px-6 py-4 text-lg font-black text-slate-700 hover:bg-slate-50 rounded-2xl uppercase tracking-tight">Configurações</NuxtLink>
                <button @click="handleLogout" class="flex items-center w-full px-6 py-4 text-lg font-black text-red-500 hover:bg-red-50 rounded-2xl uppercase tracking-tight">Encerrar Sessão</button>
             </template>
           </div>
@@ -473,7 +473,8 @@ watch(isMobileMenuOpen, (isOpen) => {
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
 /* Nuxt Link Active State */
-.router-link-active:not(.is-cta) {
+/* Apenas links principais do header ficam brancos quando ativos */
+nav .router-link-active:not(.is-cta) {
     color: #ffffff;
 }
 
