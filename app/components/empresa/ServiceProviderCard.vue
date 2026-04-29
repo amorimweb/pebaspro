@@ -16,43 +16,43 @@ const { company } = useEmpresaDashboard()
     <div class="absolute inset-0 bg-gradient-to-r from-[#0D2E5C] to-[#1787D4] rounded-[32px]"></div>
     <div class="absolute -right-20 -top-20 w-64 h-64 bg-white/5 rounded-full blur-3xl transition-transform group-hover:scale-125 duration-1000"></div>
     
-    <div class="relative p-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+    <div class="relative p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div class="max-w-xl">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#1FAE66]">
-            <CheckCircle2 size="24" />
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-[#1FAE66]">
+            <CheckCircle2 size="18" />
           </div>
-          <span class="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">Expanda sua Operação</span>
+          <span class="text-[8px] font-black text-white/60 uppercase tracking-[0.15em]">Expanda sua Operação</span>
         </div>
         
-        <h2 class="text-3xl font-black text-white tracking-tight leading-tight">
+        <h2 class="text-lg font-black text-white tracking-tight leading-snug">
           Transforme sua Empresa em um <span class="text-[#1FAE66]">Prestador de Serviços</span>
         </h2>
-        <p class="text-white/60 font-medium mt-4 text-sm leading-relaxed">
-          Ative seu perfil de prestador para oferecer os serviços da sua empresa diretamente para outras mineradoras e corporações na PEBASPRO. Use os mesmos dados e fature mais.
+        <p class="text-white/60 font-medium mt-2 text-xs leading-tight">
+          Ative seu perfil de prestador para oferecer os serviços da sua empresa diretamente na PEBASPRO.
         </p>
 
-        <div class="flex flex-wrap items-center gap-6 mt-8">
-          <div class="flex items-center gap-2 text-white/80">
-            <div class="w-1.5 h-1.5 rounded-full bg-[#1FAE66]"></div>
-            <span class="text-[10px] font-bold uppercase tracking-widest">Sem custos extras</span>
+        <div class="flex flex-wrap items-center gap-3 mt-3">
+          <div class="flex items-center gap-1.5 text-white/80">
+            <div class="w-1 h-1 rounded-full bg-[#1FAE66]"></div>
+            <span class="text-[8px] font-bold uppercase tracking-tighter">Sem custos</span>
           </div>
-          <div class="flex items-center gap-2 text-white/80">
-            <div class="w-1.5 h-1.5 rounded-full bg-[#1FAE66]"></div>
-            <span class="text-[10px] font-bold uppercase tracking-widest">Mesma conta</span>
+          <div class="flex items-center gap-1.5 text-white/80">
+            <div class="w-1 h-1 rounded-full bg-[#1FAE66]"></div>
+            <span class="text-[8px] font-bold uppercase tracking-tighter">Mesma conta</span>
           </div>
-          <div class="flex items-center gap-2 text-white/80">
-            <div class="w-1.5 h-1.5 rounded-full bg-[#1FAE66]"></div>
-            <span class="text-[10px] font-bold uppercase tracking-widest">Leads Qualificados</span>
+          <div class="flex items-center gap-1.5 text-white/80">
+            <div class="w-1 h-1 rounded-full bg-[#1FAE66]"></div>
+            <span class="text-[8px] font-bold uppercase tracking-tighter">Leads</span>
           </div>
         </div>
       </div>
 
-      <div class="shrink-0 flex flex-col items-center gap-4">
-        <button class="px-10 py-5 bg-[#1FAE66] text-[#0D2E5C] rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-green-900/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
-          Ativar Agora <ArrowRight size="16" />
+      <div class="shrink-0 flex flex-col items-center gap-2">
+        <button class="px-6 py-2 bg-[#1FAE66] text-[#0D2E5C] rounded-xl font-black text-[10px] uppercase tracking-tight shadow-lg shadow-green-900/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+          Ativar <ArrowRight size="12" />
         </button>
-        <span class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Disponível para plano Corporativo</span>
+        <span class="text-[7px] font-black text-white/30 uppercase tracking-tighter">Plano Corporativo</span>
       </div>
     </div>
   </div>

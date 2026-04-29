@@ -93,32 +93,16 @@ watch(() => authStore.profile, (newProfile) => {
 <template>
   <div class="space-y-8 animate-in fade-in duration-1000">
     <!-- Header com os KPIs reais do backup -->
-    <EmpresaDashboardHeader />
+    <DashboardHeader />
 
     <!-- Card Estratégico de Prestador -->
-    <EmpresaServiceProviderCard />
+    <ServiceProviderCard />
 
-    <!-- Grid Principal -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      <!-- Coluna Central (Pipeline e Relatórios) -->
-      <div class="lg:col-span-8 flex flex-col gap-8">
-        <div class="flex-1">
-          <EmpresaRecruitmentPipeline />
-        </div>
-        <div class="flex-1">
-          <EmpresaOperationalReports :recent-jobs="recentJobs" :loading="loading" />
-        </div>
-      </div>
-
-      <!-- Coluna Lateral (Compliance e Admissão Digital) -->
-      <div class="lg:col-span-4 flex flex-col gap-8">
-        <div class="flex-1">
-          <EmpresaCompliancePanel />
-        </div>
-        <div class="flex-1">
-          <EmpresaDigitalAdmission />
-        </div>
-      </div>
+    <!-- Grid Principal - Cada componente em uma linha -->
+    <div class="grid grid-cols-1 gap-8">
+      <DigitalAdmission />
+      <RecruitmentPipeline />
+      <OperationalReports :recent-jobs="recentJobs" :loading="loading" />
     </div>
   </div>
 </template>

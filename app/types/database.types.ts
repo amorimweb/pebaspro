@@ -9,6 +9,178 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      candidaturas: {
+        Row: {
+          id: string
+          vaga_id: string
+          talento_id: string
+          status: string        // Pendente | Aprovado | Reprovado | Contratado
+          mensagem: string | null
+          created_at: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          vaga_id: string
+          talento_id: string
+          status?: string
+          mensagem?: string | null
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          vaga_id?: string
+          talento_id?: string
+          status?: string
+          mensagem?: string | null
+          created_at?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidaturas_vaga_id_fkey"
+            columns: ["vaga_id"]
+            isOneToOne: false
+            referencedRelation: "vagas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidaturas_talento_id_fkey"
+            columns: ["talento_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      admissoes: {
+        Row: {
+          id: string
+          empresa_id: string
+          talento_id: string
+          vaga_id: string
+          candidatura_id: string | null
+          cargo: string
+          salario: string | null
+          regime: string          // CLT | PJ | Temporário | Estágio
+          jornada: string | null
+          data_inicio: string | null
+          status: string          // Documentação | EmConferência | eSocial | Concluído
+          checklist: Record<string, boolean>
+          observacoes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          empresa_id: string
+          talento_id: string
+          vaga_id: string
+          candidatura_id?: string | null
+          cargo: string
+          salario?: string | null
+          regime?: string
+          jornada?: string | null
+          data_inicio?: string | null
+          status?: string
+          checklist?: Record<string, boolean>
+          observacoes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string
+          talento_id?: string
+          vaga_id?: string
+          candidatura_id?: string | null
+          cargo?: string
+          salario?: string | null
+          regime?: string
+          jornada?: string | null
+          data_inicio?: string | null
+          status?: string
+          checklist?: Record<string, boolean>
+          observacoes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admissoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admissoes_talento_id_fkey"
+            columns: ["talento_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admissoes_vaga_id_fkey"
+            columns: ["vaga_id"]
+            isOneToOne: false
+            referencedRelation: "vagas"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      esocial_eventos: {
+        Row: {
+          id: string
+          empresa_id: string
+          admissao_id: string | null
+          evento_id: string       // S-2200, S-2210, etc.
+          titulo: string
+          status: string          // Pendente | Processando | Transmitido | Erro
+          protocolo: string | null
+          responsavel: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          empresa_id: string
+          admissao_id?: string | null
+          evento_id: string
+          titulo: string
+          status?: string
+          protocolo?: string | null
+          responsavel?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string
+          admissao_id?: string | null
+          evento_id?: string
+          titulo?: string
+          status?: string
+          protocolo?: string | null
+          responsavel?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esocial_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "esocial_admissao_id_fkey"
+            columns: ["admissao_id"]
+            isOneToOne: false
+            referencedRelation: "admissoes"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       categorias: {
         Row: {
           id: string
@@ -744,3 +916,6 @@ export type Usuario = Tables<"usuarios"> & {
 }
 export type Vaga = Tables<"vagas">
 export type Curriculo = Tables<"curriculos">
+export type Candidatura = Tables<"candidaturas">
+export type Admissao = Tables<"admissoes">
+export type EsocialEvento = Tables<"esocial_eventos">

@@ -17,14 +17,13 @@ const candidates = [
   { id: 6, name: 'Patrícia Mendes', role: 'Gerente de Projetos', location: 'Parauapebas', score: 98, status: 'Contratação', pending: 'Exame de Admissão', category: 'Engenharia' },
 ]
 
-const stages = ['Triagem', 'Entrevista', 'Documentação', 'Admissão', 'Contratação']
+const stages = ['Triagem', 'Entrevista', 'Documentação', 'Contratação']
 
 const getStatusColor = (status: string) => {
   const map: Record<string, string> = {
     'Triagem': 'bg-blue-100 text-blue-600',
     'Entrevista': 'bg-amber-100 text-amber-600',
     'Documentação': 'bg-purple-100 text-purple-600',
-    'Admissão': 'bg-indigo-100 text-indigo-600',
     'Contratação': 'bg-green-100 text-green-600',
   }
   return map[status] || 'bg-slate-100 text-slate-600'

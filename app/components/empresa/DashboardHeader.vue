@@ -10,8 +10,6 @@ import {
   Send 
 } from 'lucide-vue-next'
 
-const navigate = useNavigate()
-
 const kpis = [
   { 
     icon: Briefcase, 
@@ -40,24 +38,7 @@ const kpis = [
     color: 'text-indigo-600 bg-indigo-50',
     path: '/painel/empresa/admissao'
   },
-  { 
-    icon: AlertTriangle, 
-    label: 'Pendências SST', 
-    value: '05', 
-    trend: 'down', 
-    trendValue: '20%', 
-    color: 'text-red-600 bg-red-50',
-    path: '/painel/empresa/compliance'
-  },
-  { 
-    icon: Send, 
-    label: 'Eventos eSocial', 
-    value: '03', 
-    trend: 'up', 
-    trendValue: '2%', 
-    color: 'text-teal-600 bg-teal-50',
-    path: '/painel/empresa/esocial'
-  },
+  
   { 
     icon: Clock, 
     label: 'Média Contratação', 
@@ -87,8 +68,8 @@ const kpis = [
       </div>
     </div>
 
-    <!-- KPIs Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
+    <!-- KPIs Grid - 2 linhas -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       <NuxtLink 
         v-for="kpi in kpis" 
         :key="kpi.label"

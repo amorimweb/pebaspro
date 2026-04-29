@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import { 
-  UserPlus, 
-  ChevronRight, 
-  CheckCircle2, 
-  Clock, 
-  FileText,
-  Send
-} from 'lucide-vue-next'
+import { UserPlus, ChevronRight, CheckCircle2, Clock } from 'lucide-vue-next'
 
 const admissions = [
   { id: 7, name: 'Fernanda Rocha', role: 'Auxiliar de Almoxarifado', progress: 65, status: 'Em Conferência', pending: 'Aguardando ASO' },
@@ -18,6 +11,12 @@ const getStatusColor = (status: string) => {
   if (status === 'eSocial') return 'text-teal-600'
   if (status === 'Documentação') return 'text-amber-600'
   return 'text-indigo-600'
+}
+
+const getStepStatus = (progress: number, threshold: number) => {
+  if (progress >= threshold) return 'completed'
+  if (progress >= threshold - 20) return 'active'
+  return ''
 }
 </script>
 
@@ -33,35 +32,50 @@ const getStatusColor = (status: string) => {
       </div>
     </div>
 
-    <div class="space-y-6 flex-1">
-      <div v-for="adm in admissions" :key="adm.id" class="group cursor-pointer">
-        <div class="flex items-center justify-between mb-2">
-           <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center font-black text-[10px] text-slate-400 border border-slate-100 group-hover:bg-teal-50 group-hover:text-teal-600 transition-colors">
-                {{ adm.name.charAt(0) }}
-              </div>
-              <div>
-                <p class="text-sm font-black text-slate-900 leading-tight">{{ adm.name }}</p>
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{{ adm.role }}</p>
-              </div>
-           </div>
-           <div class="text-right">
-              <span class="text-[10px] font-black" :class="getStatusColor(adm.status)">{{ adm.progress }}%</span>
-           </div>
-        </div>
-        
-        <div class="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden mb-2">
-          <div 
-            class="h-full bg-teal-500 rounded-full transition-all duration-1000" 
-            :style="{ width: adm.progress + '%' }"
-          />
-        </div>
+    <div class="flex flex-col gap-4 flex-1">
+      <div class="grid grid-cols-[2fr_2.5fr_1.2fr_0.8fr] gap-4 px-4 py-3 rounded-3xl bg-slate-50 text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">
+        <span>Colaborador</span>
+        <span>Etapas</span>
+        <span>Progresso</span>
+        <span class="text-right">Ação</span>
+      </div>
 
-        <div class="flex items-center justify-between">
-           <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
-             <Clock size="10" /> {{ adm.pending }}
-           </span>
-           <span class="text-[9px] font-black uppercase text-slate-600 tracking-widest">{{ adm.status }}</span>
+      <div class="space-y-4">
+        <div v-for="adm in admissions" :key="adm.id" class="group rounded-[28px] border border-slate-100 bg-slate-50 p-4">
+          <div class="grid grid-cols-[2fr_2.5fr_1.2fr_0.8fr] items-center gap-4">
+            <div>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-black text-slate-500">
+                  {{ adm.name.charAt(0) }}
+                </div>
+                <div>
+                  <p class="text-sm font-black text-slate-900 leading-tight">{{ adm.name }}</p>
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{{ adm.role }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <span :class="['rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-widest', getStepStatus(adm.progress, 20) === 'completed' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : getStepStatus(adm.progress, 20) === 'active' ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-slate-100 text-slate-500 border-slate-200']">Matriz</span>
+              <span :class="['rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-widest', getStepStatus(adm.progress, 40) === 'completed' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : getStepStatus(adm.progress, 40) === 'active' ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-slate-100 text-slate-500 border-slate-200']">Exames</span>
+              <span :class="['rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-widest', getStepStatus(adm.progress, 60) === 'completed' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : getStepStatus(adm.progress, 60) === 'active' ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-slate-100 text-slate-500 border-slate-200']">Docs</span>
+              <span :class="['rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-widest', getStepStatus(adm.progress, 80) === 'completed' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : getStepStatus(adm.progress, 80) === 'active' ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-slate-100 text-slate-500 border-slate-200']">eSocial</span>
+              <span :class="['rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-widest', adm.progress >= 100 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : adm.progress > 80 ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-slate-100 text-slate-500 border-slate-200']">Liberação</span>
+            </div>
+
+            <div>
+              <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
+                <div :class="['h-full rounded-full bg-teal-500 transition-all duration-1000']" :style="{ width: adm.progress + '%' }" />
+              </div>
+              <p class="mt-2 text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">{{ adm.progress }}%</p>
+            </div>
+
+            <div class="text-right">
+              <button class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 hover:bg-slate-100 transition-all">
+                {{ adm.progress >= 100 ? 'Finalizado' : 'Avançar' }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

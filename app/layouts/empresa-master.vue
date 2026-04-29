@@ -17,7 +17,8 @@ import {
   X,
   LogOut,
   ExternalLink,
-  ChevronDown
+  ChevronDown,
+  MessageSquare
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
@@ -28,12 +29,11 @@ const route = useRoute()
 
 const ALL_MENU_ITEMS = [
   { id: 'dashboard',   icon: LayoutDashboard, label: 'Visão Geral',      path: '/painel/empresa' },
+  { id: 'mensagens',   icon: MessageSquare,   label: 'Mensagens',        path: '/painel/empresa/mensagens' },
   { id: 'recrutamento',icon: Briefcase,       label: 'Recrutamento',     path: '/painel/empresa/vagas' },
   { id: 'talentos',    icon: Search,          label: 'Banco de Talentos',path: '/painel/empresa/buscar-talentos' },
   { id: 'admissao',    icon: UserPlus,        label: 'Admissão Digital', path: '/painel/empresa/admissao' },
   { id: 'documentos',  icon: FileText,        label: 'Documentos',       path: '/painel/empresa/documentos' },
-  { id: 'compliance',  icon: ShieldCheck,     label: 'Compliance SST',   path: '/painel/empresa/compliance' },
-  { id: 'esocial',     icon: AlertCircle,     label: 'eSocial & Alertas',path: '/painel/empresa/esocial' },
   { id: 'relatorios',  icon: BarChart3,       label: 'Relatórios',       path: '/painel/empresa/relatorios' },
   { id: 'configuracoes',icon: Settings,        label: 'Configurações',    path: '/painel/empresa/configuracoes' },
 ]
@@ -46,9 +46,9 @@ const MODE_LABELS = {
 
 // Mapeamento de módulos por modo (simplificado para demonstração inicial)
 const modeModules = {
-  essencial:    ['dashboard', 'recrutamento', 'talentos', 'admissao', 'documentos', 'configuracoes'],
-  operacional:  ['dashboard', 'recrutamento', 'talentos', 'admissao', 'documentos', 'relatorios', 'configuracoes'],
-  corporativo:  ['dashboard', 'recrutamento', 'talentos', 'admissao', 'documentos', 'compliance', 'esocial', 'relatorios', 'configuracoes'],
+  essencial:    ['dashboard', 'mensagens', 'recrutamento', 'talentos', 'admissao', 'documentos', 'configuracoes'],
+  operacional:  ['dashboard', 'mensagens', 'recrutamento', 'talentos', 'admissao', 'documentos', 'relatorios', 'configuracoes'],
+  corporativo:  ['dashboard', 'mensagens', 'recrutamento', 'talentos', 'admissao', 'documentos', 'relatorios', 'configuracoes'],
 }
 
 const menuItems = computed(() => {
@@ -191,7 +191,7 @@ const isActive = (path: string) => {
             >
               <div class="flex flex-col items-end hidden sm:flex">
                 <span class="text-sm font-bold tracking-tight">{{ authStore.profile?.nome || 'Empresa Host' }}</span>
-                <span class="text-[9px] font-black text-[#1FAE66] uppercase tracking-widest line-clamp-1">Account Administrator</span>
+                <span class="text-[9px] font-black text-[#1FAE66] uppercase tracking-widest line-clamp-1">Conta administrador</span>
               </div>
               <div class="relative">
                 <div class="w-11 h-11 rounded-[16px] bg-[#1E88E5]/10 flex items-center justify-center font-black text-xs text-[#1E88E5] border border-white shadow-sm ring-4 ring-transparent group-hover:ring-[#1E88E5]/5 transition-all">

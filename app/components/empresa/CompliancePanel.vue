@@ -7,6 +7,7 @@ import {
   HeartPulse,
   Flame
 } from 'lucide-vue-next'
+import { computed } from 'vue'
 
 const alerts = [
   { id: 101, title: 'ASO Vencendo (Ricardo S.)', date: 'Vence em 2 dias', status: 'crítico', type: 'Saúde Ocupacional', icon: HeartPulse },
@@ -20,16 +21,27 @@ const getStatusStyles = (status: string) => {
     ? 'text-red-600 bg-red-50 border-red-100' 
     : 'text-amber-600 bg-amber-50 border-amber-100'
 }
+
+const currentScore = computed(() => {
+  const base = 82
+  return Math.min(100, base + (6 - alerts.length) * 3)
+})
+
+const scoreLabel = computed(() => {
+  if (currentScore.value > 90) return 'Nível Excelente'
+  if (currentScore.value > 80) return 'Nível Regular'
+  return 'Nível Crítico'
+})
 </script>
 
 <template>
   <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 flex flex-col h-full">
     <div class="flex items-center justify-between mb-8">
       <div>
-        <h3 class="text-xl font-black text-slate-900 tracking-tight">Compliance SST</h3>
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Gestão de Saúde e Segurança do Trabalho</p>
+        <h3 class="text-xl font-black text-slate-900 tracking-tight">Compliance SST + eSocial</h3>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Gestão de conformidade ativa</p>
       </div>
-      <div class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center">
+      <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
         <AlertTriangle size="20" />
       </div>
     </div>
@@ -55,6 +67,17 @@ const getStatusStyles = (status: string) => {
         </div>
         <ChevronRight size="14" class="text-slate-300 group-hover:text-slate-600 group-hover:translate-x-1 transition-all" />
       </div>
+    </div>
+
+    <div class="mt-8 rounded-[24px] border border-slate-100 bg-slate-50 p-6">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm font-black text-slate-900">Índice de Conformidade</span>
+        <span class="text-sm font-black text-emerald-600">{{ currentScore }}%</span>
+      </div>
+      <div class="h-3 w-full overflow-hidden rounded-full bg-slate-200">
+        <div class="h-full rounded-full bg-emerald-500 transition-all duration-1000" :style="{ width: currentScore + '%' }" />
+      </div>
+      <p class="mt-3 text-xs font-black uppercase tracking-[0.22em] text-slate-500">{{ scoreLabel }}</p>
     </div>
 
     <button class="mt-8 py-4 bg-[#0D2E5C] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#1787D4] transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/10">
