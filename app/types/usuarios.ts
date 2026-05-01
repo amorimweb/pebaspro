@@ -24,6 +24,8 @@ export interface CreateUsuarioPayload {
     objetivo_profissional?: string | null
     latitude?: number | null
     longitude?: number | null
+    cidade?: string | null
+    estado?: string | null
     role?: string
 }
 
@@ -50,5 +52,7 @@ export interface UpdateUsuarioPayload {
     objetivo_profissional?: string | null
     latitude?: number | null
     longitude?: number | null
+    cidade?: string | null
+    estado?: string | null
     role?: string
 }

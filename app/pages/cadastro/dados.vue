@@ -7,10 +7,17 @@ const confirmPassword = ref('')
 const nome = ref('')
 const documento = ref('')
 const telefone = ref('')
+const cidade = ref('')
+const estado = ref('')
 const showPassword = ref(false)
 const loading = ref(false)
 const errorMsg = ref('')
 const successMsg = ref('')
+
+const ESTADOS_BR = [
+  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG',
+  'PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
+]
 
 // Máscaras
 const maskTelefone = (v: string) => {
@@ -133,7 +140,14 @@ const handleSignUp = async () => {
       return
     }
 
-    // 2. Validar documento
+    // 2. Validar cidade e estado
+    if (!cidade.value.trim() || !estado.value) {
+      errorMsg.value = 'Preencha sua cidade e estado.'
+      loading.value = false
+      return
+    }
+
+    // 3. Validar documento
     let docValido = false
     const digits = documento.value.replace(/\D/g, '')
     if (isEmpresa.value) docValido = validarCNPJ(documento.value)
@@ -173,6 +187,8 @@ const handleSignUp = async () => {
           email: email.value,
           documento: documento.value,
           telefone: telefone.value,
+          cidade: cidade.value.toUpperCase(),
+          estado: estado.value,
           tipo_conta: chosenType.value as any
       })
 
@@ -258,6 +274,28 @@ const goBack = () => {
               required 
               maxlength="15"
             />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cidade">Cidade</label>
+            <input
+              :value="cidade"
+              @input="cidade = ($event.target as HTMLInputElement).value.toUpperCase()"
+              id="cidade"
+              type="text"
+              placeholder="SUA CIDADE"
+              required
+              style="text-transform: uppercase;"
+            />
+          </div>
+          <div class="form-group">
+            <label for="estado">Estado</label>
+            <select v-model="estado" id="estado" required class="select-field">
+              <option value="" disabled>Selecione</option>
+              <option v-for="uf in ESTADOS_BR" :key="uf" :value="uf">{{ uf }}</option>
+            </select>
           </div>
         </div>
 
@@ -441,6 +479,23 @@ const goBack = () => {
 }
 
 .form-group input:focus {
+  outline: none;
+  border-color: #268C52;
+}
+
+.select-field {
+  height: 52px;
+  padding: 0 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: white;
+  color: #0f172a;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.select-field:focus {
   outline: none;
   border-color: #268C52;
 }

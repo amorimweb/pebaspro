@@ -25,7 +25,7 @@ export const useMensagens = (participantIdSource?: ParticipantIdSource) => {
   // ─── Fetch Conversations ───────────────────────────────────────────────────
   const fetchConversations = async () => {
     const participantId = getParticipantId()
-    if (!participantId) return
+if (!participantId) return
 
     loading.value = true
     try {

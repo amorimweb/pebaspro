@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import {
   MessageSquare, Send, CheckCheck,
-  Search, Paperclip, FileText,
+  Search, Paperclip, FileText, Phone,
   CheckCircle2, AlertCircle, ArrowLeft,
-  Briefcase, Zap, Download, X
+  Zap, Download
 } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'empresa-master' })
@@ -328,7 +328,7 @@ const formatDate = (date: string) => {
       </aside>
 
       <!-- Chat Panel -->
-      <main v-if="activeConversationId" class="flex-1 flex flex-col bg-white relative z-10" :class="{ 'fixed inset-0 h-full w-full': activeConversationId && false }">
+      <main v-if="activeConversationId" class="flex-1 min-w-0 flex flex-col bg-white overflow-hidden" :class="{ 'fixed inset-0 h-full w-full': activeConversationId && false }">
         <!-- Header -->
         <header class="p-6 border-b border-slate-50 flex items-center justify-between bg-white/80 backdrop-blur-md">
           <div class="flex items-center gap-4">
@@ -404,7 +404,7 @@ const formatDate = (date: string) => {
         </div>
 
         <!-- Messages Area -->
-        <div class="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50/20 custom-scrollbar" ref="chatContainer">
+        <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 space-y-6 bg-slate-50/20 custom-scrollbar" ref="chatContainer">
           <div v-if="loadingMessages" class="flex items-center justify-center h-full">
              <div class="w-6 h-6 border-2 border-slate-100 border-t-green-600 rounded-full animate-spin" />
           </div>
@@ -417,7 +417,7 @@ const formatDate = (date: string) => {
           <div
             v-for="msg in orderedMessages"
             :key="msg.id"
-            class="flex flex-col"
+            class="flex flex-col w-full"
             :class="msg.remetente_id === participantId ? 'items-end' : 'items-start'"
           >
             <!-- Document message -->

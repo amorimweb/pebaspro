@@ -5,6 +5,9 @@ export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
   if (!user) throw createError({ statusCode: 401, statusMessage: 'Não autorizado' })
 
+  const userId = user.id || (user as any).sub
+  if (!userId) throw createError({ statusCode: 401, statusMessage: 'ID do usuário não encontrado' })
+
   const formData = await readFormData(event)
   const file       = formData.get('file')       as File
   const conversaId = formData.get('conversa_id') as string
@@ -61,7 +64,7 @@ export default defineEventHandler(async (event) => {
       tipo,
       url,
       tamanho_bytes: file.size,
-      enviado_por:   user.id,
+      enviado_por:   userId,
     })
     .select()
     .single()
@@ -71,7 +74,7 @@ export default defineEventHandler(async (event) => {
   if (conversaId) {
     await supabase.from('mensagens').insert({
       conversa_id:  conversaId,
-      remetente_id: user.id,
+      remetente_id: userId,
       conteudo:     `📄 ${file.name}`,
       tipo:         'documento',
       documento_id: doc.id,
