@@ -1,6 +1,5 @@
 import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
-import { sendPushToUser } from '~/server/utils/sendPush'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)

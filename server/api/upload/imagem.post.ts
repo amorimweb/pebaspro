@@ -1,6 +1,5 @@
 import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
-import { sendPushToUser } from '~/server/utils/sendPush'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_BYTES = 5 * 1024 * 1024

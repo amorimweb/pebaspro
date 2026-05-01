@@ -1,5 +1,4 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
-import { sendPushToUser } from '~/server/utils/sendPush'
 
 const STATUS_LABELS: Record<string, string> = {
   Visualizada: 'Empresa visualizou sua candidatura',
