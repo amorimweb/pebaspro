@@ -10,35 +10,43 @@ import {
   Send 
 } from 'lucide-vue-next'
 
-const kpis = [
+const props = defineProps<{
+  stats: {
+    activeJobs: number
+    totalCandidates: number
+    activeAdmissions: number
+    views: number
+  }
+}>()
+
+const kpis = computed(() => [
   { 
     icon: Briefcase, 
     label: 'Vagas Abertas', 
-    value: '24', 
+    value: props.stats.activeJobs.toString(), 
     trend: 'up', 
-    trendValue: '12%', 
+    trendValue: '---', 
     color: 'text-green-600 bg-green-50',
     path: '/painel/empresa/vagas'
   },
   { 
     icon: Users, 
     label: 'Candidatos Ativos', 
-    value: '158', 
+    value: props.stats.totalCandidates.toString(), 
     trend: 'up', 
-    trendValue: '8%', 
+    trendValue: '---', 
     color: 'text-green-600 bg-green-50',
     path: '/painel/empresa/buscar-talentos'
   },
   { 
     icon: FileCheck, 
     label: 'Admissões / Onboarding', 
-    value: '12', 
-    trend: 'down', 
-    trendValue: '4%', 
+    value: props.stats.activeAdmissions.toString(), 
+    trend: 'up', 
+    trendValue: '---', 
     color: 'text-emerald-600 bg-emerald-50',
     path: '/painel/empresa/admissao'
   },
-  
   { 
     icon: Clock, 
     label: 'Média Contratação', 
@@ -48,7 +56,7 @@ const kpis = [
     color: 'text-slate-600 bg-slate-50',
     path: '/painel/empresa/relatorios'
   },
-]
+])
 </script>
 
 <template>

@@ -1,9 +1,12 @@
 import type { Database } from '~/types'
 
-export const useMensagens = () => {
+type ParticipantIdSource = string | null | undefined | { value: string | null | undefined }
+
+export const useMensagens = (participantIdSource?: ParticipantIdSource) => {
   const supabase = useSupabaseClient<Database>()
   const user = useSupabaseUser()
-  
+  const authStore = useAuthStore()
+
   const loading = ref(false)
   const loadingMessages = ref(false)
   const error = ref<string | null>(null)
@@ -11,31 +14,54 @@ export const useMensagens = () => {
   const messages = ref<any[]>([])
   const activeConversationId = ref<string | null>(null)
 
+  const getParticipantId = () => {
+    const explicitId = typeof participantIdSource === 'object'
+      ? participantIdSource?.value
+      : participantIdSource
+
+    return explicitId || authStore.profile?.id || user.value?.id || null
+  }
+
   // ─── Fetch Conversations ───────────────────────────────────────────────────
   const fetchConversations = async () => {
-    if (!user.value) return
+    const participantId = getParticipantId()
+    if (!participantId) return
+
     loading.value = true
     try {
       const { data, error: err } = await supabase
         .from('conversas')
-        .select(`
-          *,
-          p1:participante1_id(id, nome, foto, tipo_conta),
-          p2:participante2_id(id, nome, foto, tipo_conta),
-          vaga:vaga_id(id, titulo)
-        `)
-        .or(`participante1_id.eq.${user.value.id},participante2_id.eq.${user.value.id}`)
+        .select('*')
+        .or(`participante1_id.eq.${participantId},participante2_id.eq.${participantId}`)
         .order('updated_at', { ascending: false })
 
       if (err) throw err
 
+      if (!data || data.length === 0) {
+        conversations.value = []
+        return
+      }
+
+      const otherIds = [...new Set(
+        data.map((c: any) =>
+          c.participante1_id === participantId ? c.participante2_id : c.participante1_id
+        )
+      )]
+
+      const { data: users } = await supabase
+        .from('usuarios')
+        .select('id, nome, foto, tipo_conta')
+        .in('id', otherIds)
+
+      const usersMap = Object.fromEntries((users || []).map((u: any) => [u.id, u]))
+
       conversations.value = data.map((c: any) => {
-        const isSelfP1 = c.participante1_id === user.value?.id
-        const other = isSelfP1 ? c.p2 : c.p1
-        return { ...c, otherUser: other }
+        const otherId = c.participante1_id === participantId ? c.participante2_id : c.participante1_id
+        return { ...c, otherUser: usersMap[otherId] || null }
       })
     } catch (e: any) {
       error.value = e.message
+      console.error('Erro ao buscar conversas:', e)
     } finally {
       loading.value = false
     }
@@ -50,7 +76,7 @@ export const useMensagens = () => {
         .select('*')
         .eq('conversa_id', conversationId)
         .order('created_at', { ascending: true })
-      
+
       if (err) throw err
       messages.value = data || []
     } catch (e: any) {
@@ -62,13 +88,14 @@ export const useMensagens = () => {
 
   // ─── Send Message ──────────────────────────────────────────────────────────
   const sendMessage = async (conversationId: string, content: string) => {
-    if (!user.value || !content.trim()) return
+    const participantId = getParticipantId()
+    if (!participantId || !content.trim()) return
     try {
       const { error: err } = await supabase
         .from('mensagens')
         .insert({
           conversa_id: conversationId,
-          remetente_id: user.value.id,
+          remetente_id: participantId,
           conteudo: content.trim()
         })
       if (err) throw err
@@ -86,7 +113,7 @@ export const useMensagens = () => {
         .update({ status_contratacao: status })
         .eq('id', conversationId)
       if (err) throw err
-      
+
       const idx = conversations.value.findIndex(c => c.id === conversationId)
       if (idx !== -1) conversations.value[idx].status_contratacao = status
     } catch (e: any) {
@@ -98,22 +125,25 @@ export const useMensagens = () => {
   // ─── Realtime Subscriptions ────────────────────────────────────────────────
   const subscribeToMessages = (conversationId: string, callback: (msg: any) => void) => {
     const channel = supabase.channel(`obs:mensagens:${conversationId}`)
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'mensagens', 
-        filter: `conversa_id=eq.${conversationId}` 
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'mensagens',
+        filter: `conversa_id=eq.${conversationId}`
       }, payload => callback(payload.new))
       .subscribe()
-    
+
     return () => supabase.removeChannel(channel)
   }
 
   const subscribeToConversations = (callback: () => void) => {
-    const channel = supabase.channel('obs:conversas')
+    const participantId = getParticipantId()
+    if (!participantId) return () => {}
+
+    const channel = supabase.channel(`obs:conversas:${participantId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'conversas' }, () => callback())
       .subscribe()
-    
+
     return () => supabase.removeChannel(channel)
   }
 

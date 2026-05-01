@@ -117,25 +117,25 @@ const modes = [
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-      <!-- Sidebar Navigation -->
-      <nav class="lg:col-span-1 space-y-1">
+      <!-- Sidebar Navigation: scroll horizontal no mobile, vertical no desktop -->
+      <nav class="lg:col-span-1 flex lg:flex-col overflow-x-auto gap-1 pb-2 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
         <button
           v-for="tab in tabs"
           :key="tab.id"
           @click="activeTab = tab.id"
           :class="[
             activeTab === tab.id ? 'bg-green-600/10 text-green-600 shadow-sm' : 'text-slate-500 hover:bg-white hover:text-slate-900',
-            'w-full flex items-center gap-3 px-6 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all'
+            'shrink-0 lg:w-full flex items-center gap-3 px-4 py-3 lg:px-6 lg:py-4 rounded-2xl text-xs lg:text-sm font-black uppercase tracking-widest transition-all whitespace-nowrap'
           ]"
         >
-          <component :is="tab.icon" size="18" />
+          <component :is="tab.icon" size="16" />
           {{ tab.label }}
         </button>
       </nav>
 
       <!-- Main Content Area -->
       <div class="lg:col-span-3">
-        <div class="bg-white rounded-[40px] border border-slate-100 shadow-sm p-10">
+        <div class="bg-white rounded-[24px] lg:rounded-[40px] border border-slate-100 shadow-sm p-5 md:p-8 lg:p-10">
           
           <!-- TAB: GERAL -->
           <div v-if="activeTab === 'geral'" class="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">

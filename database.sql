@@ -13,13 +13,17 @@ create table public.conversas (
   id uuid not null default gen_random_uuid (),
   participante1_id uuid not null,
   participante2_id uuid not null,
+  vaga_id uuid null,
   ultima_mensagem text null,
+  tipo_contato text null default 'chat'::text,
+  status_contratacao text null default 'interessado'::text,
   updated_at timestamp with time zone not null default now(),
   created_at timestamp with time zone not null default now(),
   constraint conversas_pkey primary key (id),
   constraint conversas_participantes_unique unique (participante1_id, participante2_id),
   constraint conversas_participante1_id_fkey foreign KEY (participante1_id) references usuarios (id) on delete CASCADE,
-  constraint conversas_participante2_id_fkey foreign KEY (participante2_id) references usuarios (id) on delete CASCADE
+  constraint conversas_participante2_id_fkey foreign KEY (participante2_id) references usuarios (id) on delete CASCADE,
+  constraint conversas_vaga_id_fkey foreign KEY (vaga_id) references vagas (id) on delete SET NULL
 ) TABLESPACE pg_default;
 
 create table public.mensagens (
@@ -157,9 +161,18 @@ create table public.vagas (
   latitude double precision null,
   longitude double precision null,
   nivel_experiencia text null,
+  email text null,
+  tipo_contato text null default 'whatsapp'::text,
   constraint vagas_pkey primary key (id),
   constraint vagas_categoria_id_fkey foreign KEY (categoria_id) references categorias (id),
-  constraint vagas_empresa_id_fkey foreign KEY (empresa_id) references usuarios (id) on delete CASCADE
+  constraint vagas_empresa_id_fkey foreign KEY (empresa_id) references usuarios (id) on delete CASCADE,
+  constraint vagas_tipo_contato_check check (
+    (
+      tipo_contato = any (
+        array['whatsapp'::text, 'email'::text, 'ambos'::text]
+      )
+    )
+  )
 ) TABLESPACE pg_default;
 
 create index IF not exists idx_vagas_location on public.vagas using btree (latitude, longitude) TABLESPACE pg_default;

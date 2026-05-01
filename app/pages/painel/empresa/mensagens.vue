@@ -8,16 +8,19 @@ import {
 
 definePageMeta({ layout: 'empresa-master' })
 
-const { 
-  loading, loadingMessages, conversations, messages, activeConversationId,
-  fetchConversations, fetchMessages, sendMessage, updateStatus,
-  subscribeToMessages, subscribeToConversations
-} = useMensagens()
-
-const { atualizarStatusCandidatura } = useAdmissao()
 const authStore = useAuthStore()
 const user = useSupabaseUser()
 const supabase = useSupabaseClient()
+const route = useRoute()
+const participantId = computed(() => authStore.profile?.id || user.value?.id || null)
+
+const {
+  loading, loadingMessages, conversations, messages, activeConversationId,
+  fetchConversations, fetchMessages, sendMessage, updateStatus,
+  subscribeToMessages, subscribeToConversations
+} = useMensagens(participantId)
+
+const { atualizarStatusCandidatura } = useAdmissao()
 
 // State
 const newMessage = ref('')
@@ -47,10 +50,30 @@ const orderedMessages = computed(() => {
   )
 })
 
-// Lifecycle
-onMounted(async () => {
+// Init — carregar conversas e tratar query param ?conversa=
+const initMensagens = async () => {
   await fetchConversations()
-  unsubscribeConversations = subscribeToConversations(() => fetchConversations())
+  if (!unsubscribeConversations) {
+    unsubscribeConversations = subscribeToConversations(() => fetchConversations())
+  }
+  const conversaId = (route.query.conversa || route.query.id) as string
+  if (conversaId) {
+    await selectConversation(conversaId)
+  }
+}
+
+// Lifecycle — aguarda user.id estar pronto (auth pode ter objeto parcial sem id)
+onMounted(() => {
+  if (participantId.value) {
+    initMensagens()
+  } else {
+    const stop = watch(
+      () => participantId.value,
+      (id) => {
+        if (id) { stop(); initMensagens() }
+      }
+    )
+  }
 })
 
 onUnmounted(() => {
@@ -162,7 +185,7 @@ const formatDate = (date: string) => {
 </script>
 
 <template>
-  <div class="h-[calc(100vh-14rem)] min-h-[600px] flex flex-col animate-in">
+  <div class="h-[calc(100vh-5rem)] md:h-[calc(100vh-9rem)] flex flex-col animate-in">
     
     <!-- Toast -->
     <Transition name="slide-up">
@@ -296,14 +319,12 @@ const formatDate = (date: string) => {
         </header>
 
         <!-- CRM Status Bar -->
-        <div class="px-6 py-3 bg-[#0D2E5C]/5 border-b border-slate-100 flex flex-nowrap items-center justify-between gap-4 overflow-x-auto scrollbar-hide">
-          <div class="flex items-center gap-3 shrink-0">
-            <div class="flex items-center gap-2">
-              <Zap class="text-amber-500" :size="14" />
-              <span class="text-[10px] font-black uppercase tracking-widest text-green-900/60">Status:</span>
-            </div>
-            <div 
-              class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm border border-white transition-all transform"
+        <div class="px-4 py-3 bg-[#0D2E5C]/5 border-b border-slate-100 flex flex-wrap items-center gap-2">
+          <div class="flex items-center gap-2 shrink-0">
+            <Zap class="text-amber-500 shrink-0" :size="13" />
+            <span class="text-[10px] font-black uppercase tracking-widest text-green-900/60 whitespace-nowrap">Status:</span>
+            <div
+              class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-white transition-all"
               :class="{
                   'bg-green-600 text-white': activeConv?.status_contratacao === 'interessado' || !activeConv?.status_contratacao,
                   'bg-orange-500 text-white': activeConv?.status_contratacao === 'negociando',
@@ -314,26 +335,19 @@ const formatDate = (date: string) => {
               {{ activeConv?.status_contratacao || 'interessado' }}
             </div>
           </div>
-          
-          <div class="flex gap-2">
-            <button 
+
+          <div class="flex flex-wrap gap-2 ml-auto">
+            <button
               v-if="activeConv?.status_contratacao !== 'contratado'"
               @click="handleUpdateStatus('contratado')"
-              class="flex items-center gap-1.5 px-4 py-2 bg-[#1FAE66] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#17974d] transition-all shadow-lg shadow-green-500/20 active:scale-95"
+              class="flex items-center gap-1 px-3 py-1.5 bg-[#1FAE66] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#17974d] transition-all shadow-md shadow-green-500/20 active:scale-95 whitespace-nowrap"
             >
-              <CheckCircle2 :size="12" /> Contratei!
+              <CheckCircle2 :size="11" /> Contratei!
             </button>
-            <button 
-              v-if="activeConv?.status_contratacao === 'interessado' || !activeConv?.status_contratacao"
-              @click="handleUpdateStatus('negociando')"
-              class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
-            >
-              Negociar
-            </button>
-            <button 
+            <button
               v-if="activeConv?.status_contratacao !== 'recusado' && activeConv?.status_contratacao !== 'contratado'"
               @click="handleUpdateStatus('recusado')"
-              class="px-4 py-2 bg-white text-slate-400 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-slate-600 transition-all active:scale-95"
+              class="px-3 py-1.5 bg-white text-slate-400 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-slate-600 transition-all active:scale-95 whitespace-nowrap"
             >
               Sem Interesse
             </button>
@@ -355,11 +369,11 @@ const formatDate = (date: string) => {
             v-for="msg in orderedMessages" 
             :key="msg.id" 
             class="flex flex-col"
-            :class="msg.remetente_id === user?.id ? 'items-end' : 'items-start'"
+            :class="msg.remetente_id === participantId ? 'items-end' : 'items-start'"
           >
             <div 
               class="max-w-[75%] px-5 py-4 shadow-sm"
-              :class="msg.remetente_id === user?.id 
+              :class="msg.remetente_id === participantId 
                 ? 'bg-[#1FAE66] text-white rounded-[24px] rounded-tr-none' 
                 : 'bg-white text-slate-700 rounded-[24px] rounded-tl-none border border-slate-50'"
             >
@@ -369,7 +383,7 @@ const formatDate = (date: string) => {
                <span class="text-[9px] font-black uppercase tracking-widest text-slate-300">
                 {{ formatTime(msg.created_at) }}
                </span>
-               <CheckCheck v-if="msg.remetente_id === user?.id" class="text-[#1FAE66]" :size="12" />
+               <CheckCheck v-if="msg.remetente_id === participantId" class="text-[#1FAE66]" :size="12" />
             </div>
           </div>
         </div>

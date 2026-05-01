@@ -239,7 +239,7 @@ const iniciais = (nome: string | null) =>
           <div
             v-for="cand in vaga.candidaturas"
             :key="cand.id"
-            class="flex items-center justify-between px-6 py-4 hover:bg-slate-50/60 transition-colors"
+            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-4 hover:bg-slate-50/60 transition-colors"
             :class="{ 'opacity-50 grayscale-[0.5]': cand.status === 'Reprovado' }"
           >
             <div class="flex items-center gap-4">
@@ -456,7 +456,8 @@ const iniciais = (nome: string | null) =>
       </div>
 
       <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden">
-        <table class="w-full">
+        <div class="overflow-x-auto">
+        <table class="w-full min-w-[540px]">
           <thead>
             <tr class="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
               <th class="px-6 py-4 text-left">Colaborador</th>
@@ -491,6 +492,7 @@ const iniciais = (nome: string | null) =>
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 

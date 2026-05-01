@@ -5,16 +5,23 @@ import {
   Activity, 
   ShieldAlert,
   HeartPulse,
-  Flame
+  Flame,
+  UserPlus
 } from 'lucide-vue-next'
 import { computed } from 'vue'
 
-const alerts = [
-  { id: 101, title: 'ASO Vencendo (Ricardo S.)', date: 'Vence em 2 dias', status: 'crítico', type: 'Saúde Ocupacional', icon: HeartPulse },
-  { id: 102, title: 'Treinamento NR-10 Pendente', date: 'Hoje', status: 'crítico', type: 'Segurança', icon: Flame },
-  { id: 103, title: 'Exame Periódico (Ana B.)', date: 'Vence em 15 dias', status: 'atenção', type: 'Saúde', icon: Activity },
-  { id: 104, title: 'Função com Risco s/ Revisão', date: 'Vence em 30 dias', status: 'atenção', type: 'SST', icon: ShieldAlert },
-]
+const props = defineProps<{
+  alerts?: any[]
+  loading?: boolean
+}>()
+
+const iconMap: Record<string, any> = {
+  Activity,
+  ShieldAlert,
+  HeartPulse,
+  Flame,
+  UserPlus
+}
 
 const getStatusStyles = (status: string) => {
   return status === 'crítico' 
@@ -23,8 +30,8 @@ const getStatusStyles = (status: string) => {
 }
 
 const currentScore = computed(() => {
-  const base = 82
-  return Math.min(100, base + (6 - alerts.length) * 3)
+  const base = 100
+  return Math.max(0, base - ((props.alerts?.length || 0) * 5))
 })
 
 const scoreLabel = computed(() => {
@@ -46,7 +53,19 @@ const scoreLabel = computed(() => {
       </div>
     </div>
 
-    <div class="space-y-4 flex-1">
+    <div v-if="loading" class="flex flex-col items-center justify-center py-10 text-slate-400 gap-3 flex-1">
+      <div class="w-6 h-6 border-2 border-slate-200 border-t-green-600 rounded-full animate-spin" />
+      <span class="text-[10px] font-black uppercase tracking-widest">Analisando conformidade...</span>
+    </div>
+
+    <div v-else-if="!alerts || alerts.length === 0" class="flex-1 flex flex-col items-center justify-center py-10 text-slate-300">
+      <div class="w-12 h-12 rounded-full bg-green-50 text-green-500 flex items-center justify-center mb-4">
+        <Activity :size="24" />
+      </div>
+      <p class="text-xs font-bold uppercase tracking-widest">Nenhuma inconformidade detectada</p>
+    </div>
+
+    <div v-else class="space-y-4 flex-1">
       <div 
         v-for="a in alerts" 
         :key="a.id"
@@ -54,7 +73,7 @@ const scoreLabel = computed(() => {
       >
         <div class="flex items-center gap-4">
           <div :class="[getStatusStyles(a.status), 'w-10 h-10 rounded-xl flex items-center justify-center border transition-transform group-hover:scale-110']">
-            <component :is="a.icon" size="18" />
+            <component :is="iconMap[a.icon] || Activity" size="18" />
           </div>
           <div>
             <p class="text-sm font-black text-slate-900 leading-tight">{{ a.title }}</p>

@@ -331,13 +331,7 @@ const subscribeToConversations = () => {
                   >
                     Contratei! ✅
                   </button>
-                  <button 
-                    v-if="selectedConversation?.status_contratacao === 'interessado' || !selectedConversation?.status_contratacao"
-                    @click="updateStatus('negociando')"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-95"
-                  >
-                    Negociar
-                  </button>
+                  
                   <button 
                     v-if="selectedConversation?.status_contratacao !== 'recusado' && selectedConversation?.status_contratacao !== 'contratado'"
                     @click="updateStatus('recusado')"

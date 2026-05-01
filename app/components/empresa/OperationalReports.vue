@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import { Filter, Download } from 'lucide-vue-next'
 
-const chartData = [
-  { name: 'Operacional', value: 45, color: 'bg-emerald-500' },
-  { name: 'Técnico', value: 30, color: 'bg-green-500' },
-  { name: 'Engenharia', value: 15, color: 'bg-green-700' },
-  { name: 'ADM', value: 25, color: 'bg-teal-500' },
-  { name: 'Logística', value: 20, color: 'bg-emerald-800' },
-]
+const props = defineProps<{
+  categoryStats?: { name: string; value: number; color: string }[]
+  statsOverview?: {
+    activeJobs: number
+    totalCandidates: number
+    activeAdmissions: number
+    views: number
+  }
+  loading?: boolean
+}>()
 
-const stats = [
-  { label: 'Taxa de Conversão', value: '28.4%', subtext: '+2.1% este mês' },
-  { label: 'Admissões Finalizadas', value: '142', subtext: 'Meta anual: 200' },
-  { label: 'Candidatos em Processo', value: '582', subtext: 'Ativos em todos os fluxos' },
-  { label: 'Documentos Pendentes', value: '12', subtext: 'Ação necessária imediata' },
-  { label: 'Colaboradores Aptos', value: '3.2k', subtext: 'Base PEBASPRO' },
-  { label: 'Bloqueios SST', value: '02', subtext: 'Monitoramento ativo' },
-]
+const stats = computed(() => [
+  { label: 'Candidatos em Processo', value: props.statsOverview?.totalCandidates.toString() || '0', subtext: 'Ativos em todos os fluxos' },
+  { label: 'Admissões Ativas', value: props.statsOverview?.activeAdmissions.toString() || '0', subtext: 'Meta mensal: 10' },
+  { label: 'Vagas Abertas', value: props.statsOverview?.activeJobs.toString() || '0', subtext: 'Disponíveis no portal' },
+  { label: 'Visualizações', value: props.statsOverview?.views.toString() || '0', subtext: 'Perfil da empresa' },
+])
 </script>
 
 <template>
@@ -36,16 +37,24 @@ const stats = [
       </div>
     </div>
 
-    <div class="grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
+    <div v-if="loading" class="flex flex-col items-center justify-center py-10 text-slate-400 gap-3">
+      <div class="w-6 h-6 border-2 border-slate-200 border-t-green-600 rounded-full animate-spin" />
+      <span class="text-[10px] font-black uppercase tracking-widest">Calculando estatísticas...</span>
+    </div>
+
+    <div v-else class="grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
       <div class="rounded-[32px] bg-slate-50 p-6">
         <div class="flex items-center justify-between mb-6">
           <div>
             <h4 class="text-sm font-black text-slate-900">Vagas por Setor</h4>
           </div>
-          <span class="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Últimos 30 dias</span>
+          <span class="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Geral</span>
         </div>
-        <div class="space-y-5">
-          <div v-for="entry in chartData" :key="entry.name" class="space-y-2">
+        <div v-if="!categoryStats || categoryStats.length === 0" class="py-10 text-center text-slate-400">
+           <p class="text-xs font-bold uppercase tracking-widest">Nenhum dado disponível</p>
+        </div>
+        <div v-else class="space-y-5">
+          <div v-for="entry in categoryStats" :key="entry.name" class="space-y-2">
             <div class="flex items-center justify-between text-sm font-bold text-slate-600">
               <span>{{ entry.name }}</span>
               <span>{{ entry.value }}%</span>
@@ -62,7 +71,7 @@ const stats = [
           <span class="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">{{ stat.label }}</span>
           <div class="mt-3 flex items-center justify-between gap-4">
             <h4 class="text-2xl font-black text-slate-900">{{ stat.value }}</h4>
-            <span class="text-sm font-bold text-slate-500">{{ stat.subtext }}</span>
+            <span class="text-sm font-bold text-slate-500 line-clamp-1">{{ stat.subtext }}</span>
           </div>
         </div>
       </div>

@@ -164,7 +164,7 @@ const openChat = async (candidate: any) => {
 
         // Navega para o chat interno
         console.log('[openChat] Navegando para conversa:', conversaId)
-        navigateTo(`/mensagens?conversa=${conversaId}`)
+        navigateTo(`/painel/empresa/mensagens?conversa=${conversaId}`)
         
     } catch (e) {
         console.error('Erro ao abrir chat:', e)
@@ -204,7 +204,7 @@ const getAvatarInitial = (name?: string | null) => {
 </script>
 
 <template>
-  <div class="h-[calc(100vh-80px)] overflow-hidden bg-slate-50 flex flex-col md:flex-row">
+  <div class="h-[calc(100vh-5rem)] md:h-[calc(100vh-7rem)] overflow-hidden bg-slate-50 flex flex-col md:flex-row">
     
     <!-- LEFT COLUMN: Filters & List -->
     <aside 
@@ -339,58 +339,60 @@ const getAvatarInitial = (name?: string | null) => {
             </div>
 
             <!-- Profile Content -->
-            <div class="p-6 md:p-10 max-w-4xl mx-auto">
+            <div class="p-4 md:p-8 max-w-4xl mx-auto">
                 
                 <!-- Profile Header -->
-                <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 mb-8 flex flex-col md:flex-row items-center md:items-start gap-8 text-center md:text-left">
-                    <div class="relative group">
-                         <img 
-                            v-if="selectedCandidate.foto" 
-                            :src="selectedCandidate.foto" 
-                            class="w-32 h-32 rounded-3xl object-cover shadow-lg ring-4 ring-white"
+                <div class="bg-white rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-sm border border-slate-100 mb-6 md:mb-8 flex flex-col sm:flex-row items-start gap-4 md:gap-8">
+                    <div class="relative group shrink-0 self-center sm:self-start">
+                         <img
+                            v-if="selectedCandidate.foto"
+                            :src="selectedCandidate.foto"
+                            class="w-20 h-20 md:w-32 md:h-32 rounded-2xl md:rounded-3xl object-cover shadow-lg ring-4 ring-white"
                         />
-                         <div v-else class="w-32 h-32 rounded-3xl bg-slate-100 flex items-center justify-center text-4xl font-bold text-slate-300 shadow-lg ring-4 ring-white">
+                         <div v-else class="w-20 h-20 md:w-32 md:h-32 rounded-2xl md:rounded-3xl bg-slate-100 flex items-center justify-center text-2xl md:text-4xl font-bold text-slate-300 shadow-lg ring-4 ring-white">
                             {{ getAvatarInitial(selectedCandidate.nome) }}
                         </div>
                     </div>
-                    
-                    <div class="flex-1">
-                        <div class="flex flex-col md:flex-row justify-between items-center md:items-start mb-4">
-                            <div>
-                                <h1 class="text-3xl font-black text-slate-900 mb-2">{{ selectedCandidate.nome }}</h1>
-                                <p class="text-lg text-green-600 font-bold mb-1">{{ selectedCandidate.profissao }}</p>
-                                <p class="text-slate-500 flex items-center justify-center md:justify-start gap-1">
+
+                    <div class="flex-1 min-w-0">
+                        <!-- Nome + botões na mesma linha, quebra se necessário -->
+                        <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+                            <div class="min-w-0">
+                                <h1 class="text-lg md:text-2xl font-black text-slate-900 leading-tight truncate">{{ selectedCandidate.nome }}</h1>
+                                <p class="text-sm md:text-base text-green-600 font-bold mt-0.5">{{ selectedCandidate.profissao }}</p>
+                                <p class="text-sm text-slate-500 flex items-center gap-1 mt-0.5 flex-wrap">
                                     📍 {{ selectedCandidate.regiao || 'Na região' }}
-                                    <span v-if="authStore.profile?.latitude && selectedCandidate.latitude" class="bg-green-50 text-green-700 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ml-2">
-                                        A {{ getDistance(authStore.profile.latitude, authStore.profile.longitude!, selectedCandidate.latitude, selectedCandidate.longitude).toFixed(1) }} km de você
+                                    <span v-if="authStore.profile?.latitude && selectedCandidate.latitude" class="bg-green-50 text-green-700 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                        A {{ getDistance(authStore.profile.latitude, authStore.profile.longitude!, selectedCandidate.latitude, selectedCandidate.longitude).toFixed(1) }} km
                                     </span>
                                 </p>
                             </div>
                             <!-- Actions -->
-                            <div class="flex gap-3 mt-4 md:mt-0">
-                                <button 
+                            <div class="flex gap-2 shrink-0">
+                                <button
                                     @click="openChat(selectedCandidate)"
-                                    class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg shadow-green-600/20 active:scale-95 transition-all flex items-center gap-2"
+                                    class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-green-600/20 active:scale-95 transition-all whitespace-nowrap"
                                 >
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                                    Enviar Mensagem
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                    <span class="hidden sm:inline">Enviar Mensagem</span>
+                                    <span class="sm:hidden">Contato</span>
                                 </button>
-                                <button 
+                                <button
                                     @click="handleToggleFavorite(selectedCandidate.id)"
-                                    class="p-3 rounded-xl transition-all active:scale-95"
+                                    class="p-2 rounded-xl transition-all active:scale-95 shrink-0"
                                     :class="favoritedIds.includes(selectedCandidate.id) ? 'bg-yellow-50 text-yellow-500 border border-yellow-200' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'"
                                     :title="favoritedIds.includes(selectedCandidate.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'"
                                 >
-                                    <svg class="w-6 h-6" :fill="favoritedIds.includes(selectedCandidate.id) ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5" :fill="favoritedIds.includes(selectedCandidate.id) ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.382-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
                                     </svg>
                                 </button>
                             </div>
                         </div>
-                        
+
                         <!-- Objective / Bio -->
-                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100/50">
-                            <p class="text-slate-600 leading-relaxed text-sm md:text-base">
+                        <div class="bg-slate-50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-100/50">
+                            <p class="text-slate-600 leading-relaxed text-sm">
                                 {{ selectedCandidate.biografia || selectedCandidate.objetivo_profissional || 'Este candidato ainda não adicionou uma biografia.' }}
                             </p>
                         </div>

@@ -153,7 +153,7 @@ const isActive = (path: string) => {
     <!-- Main Section -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
       <!-- Header -->
-      <header class="h-20 shrink-0 bg-white border-b border-[#DCE4EA] px-8 flex items-center justify-between sticky top-0 z-40">
+      <header class="h-16 md:h-20 shrink-0 bg-white border-b border-[#DCE4EA] px-4 md:px-8 flex items-center justify-between sticky top-0 z-40">
         <div class="flex items-center gap-6 flex-1">
           <button @click="sidebarOpen = true" class="lg:hidden p-2 text-slate-400 hover:text-slate-600">
             <Menu size="24" />
@@ -224,7 +224,7 @@ const isActive = (path: string) => {
       </header>
 
       <!-- Tab View / Main Body -->
-      <main class="flex-1 overflow-y-auto bg-[#F4F7FA] scroll-smooth p-8 scrollbar-hide">
+      <main class="flex-1 overflow-y-auto bg-[#F4F7FA] scroll-smooth p-4 md:p-8 scrollbar-hide">
         <slot />
       </main>
     </div>

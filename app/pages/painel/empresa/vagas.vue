@@ -216,16 +216,16 @@ const formatData = (dt: string | null) =>
           Publique, gerencie e acompanhe candidatos em tempo real.
         </p>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 self-start sm:self-auto">
         <button
-          class="p-3 bg-white border border-slate-200 text-slate-400 rounded-2xl hover:text-[#1E88E5] hover:border-[#1E88E5]/30 transition-all shadow-sm"
+          class="p-3 bg-white border border-slate-200 text-slate-400 rounded-2xl hover:text-[#1E88E5] hover:border-[#1E88E5]/30 transition-all shadow-sm shrink-0"
           :class="{ 'animate-spin': loading }"
           @click="fetchVagas"
         >
           <RefreshCw :size="16" />
         </button>
         <button
-          class="flex items-center gap-2 px-8 py-3 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-900/20"
+          class="flex items-center gap-2 px-5 sm:px-8 py-3 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-900/20"
           @click="isFormOpen = !isFormOpen"
         >
           <Plus :size="18" /> Nova Vaga
@@ -385,7 +385,7 @@ const formatData = (dt: string | null) =>
     <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm overflow-hidden">
 
       <!-- Toolbar -->
-      <div class="flex flex-wrap items-center gap-3 px-6 py-4 border-b border-slate-100">
+      <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 px-4 sm:px-6 py-4 border-b border-slate-100">
         <!-- Filtro de status -->
         <div class="flex rounded-xl border border-slate-200 overflow-hidden text-xs font-bold">
           <button
@@ -402,13 +402,13 @@ const formatData = (dt: string | null) =>
         <div class="flex-1" />
 
         <!-- Busca -->
-        <div class="relative">
+        <div class="relative w-full sm:w-52">
           <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" :size="14" />
           <input
             v-model="searchTerm"
             type="text"
             placeholder="Buscar vagas..."
-            class="pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium outline-none focus:ring-2 focus:ring-green-600/10 focus:bg-white transition-all w-52"
+            class="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium outline-none focus:ring-2 focus:ring-green-600/10 focus:bg-white transition-all"
           />
         </div>
 
@@ -425,7 +425,7 @@ const formatData = (dt: string | null) =>
 
       <!-- Tabela -->
       <div v-else class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full min-w-[700px]">
           <thead>
             <tr class="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
               <th class="px-6 py-4 text-left">Vaga</th>
