@@ -23,5 +23,12 @@ export default defineNuxtConfig({
   ],
   supabase: {
     redirect: false
+  },
+  runtimeConfig: {
+    r2AccountId: process.env.CLOUDFLARE_R2_ACCOUNT_ID || '',
+    r2AccessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || '',
+    r2SecretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY || '',
+    r2BucketName: process.env.CLOUDFLARE_R2_BUCKET_NAME || '',
+    r2PublicUrl: process.env.CLOUDFLARE_R2_PUBLIC_URL || '',
   }
 })

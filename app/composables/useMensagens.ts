@@ -73,7 +73,7 @@ export const useMensagens = (participantIdSource?: ParticipantIdSource) => {
     try {
       const { data, error: err } = await supabase
         .from('mensagens')
-        .select('*')
+        .select('*, documento:documento_id(id, nome, url, tamanho_bytes, tipo, status)')
         .eq('conversa_id', conversationId)
         .order('created_at', { ascending: true })
 

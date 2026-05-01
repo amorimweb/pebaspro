@@ -1,41 +1,65 @@
 <script setup lang="ts">
 import { FileText, Upload, CheckCircle, XCircle, Clock, Download, MoreVertical } from 'lucide-vue-next'
 
-definePageMeta({
-  layout: 'empresa-master'
-})
+definePageMeta({ layout: 'empresa-master' })
 
-interface Doc {
-  id: number
-  name: string
-  type: string
-  candidate: string
-  status: 'Aprovado' | 'Pendente' | 'Atenção'
-  date: string
-}
+const supabase = useSupabaseClient()
+const authStore = useAuthStore()
+const user = useSupabaseUser()
+const empresaId = computed(() => authStore.profile?.id || user.value?.id)
 
 const tabs = ['Todos', 'Pendente', 'Aprovado', 'Atenção']
 const activeTab = ref('Todos')
+const docs = ref<any[]>([])
+const loading = ref(false)
 
-const docs: Doc[] = [
-  { id: 1, name: 'RG_Ricardo_Santos.pdf',    type: 'Identidade',   candidate: 'Ricardo Santos',     status: 'Aprovado', date: '10/04/2026' },
-  { id: 2, name: 'CPF_Ricardo_Santos.pdf',   type: 'Identidade',   candidate: 'Ricardo Santos',     status: 'Pendente', date: '09/04/2026' },
-  { id: 3, name: 'ASO_Ana_Souza.pdf',        type: 'Saúde',        candidate: 'Ana Beatriz Souza',  status: 'Aprovado', date: '08/04/2026' },
-  { id: 4, name: 'NR10_Certificado.pdf',     type: 'Treinamento',  candidate: 'Carlos Eduardo',     status: 'Atenção',  date: '07/04/2026' },
-  { id: 5, name: 'Contrato_Operador.pdf',    type: 'Contratual',   candidate: 'Ricardo Santos',     status: 'Aprovado', date: '06/04/2026' },
-  { id: 6, name: 'Diploma_Engenharia.pdf',   type: 'Escolaridade', candidate: 'Ana Beatriz Souza',  status: 'Pendente', date: '05/04/2026' },
-]
+const fetchDocs = async () => {
+  if (!empresaId.value) return
+  loading.value = true
+  try {
+    const { data } = await supabase
+      .from('documentos')
+      .select('*')
+      .or(`empresa_id.eq.${empresaId.value},enviado_por.eq.${empresaId.value}`)
+      .order('created_at', { ascending: false })
+    docs.value = data || []
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  if (empresaId.value) fetchDocs()
+  else {
+    const stop = watch(() => empresaId.value, (id) => { if (id) { stop(); fetchDocs() } })
+  }
+})
 
 const filteredDocs = computed(() =>
-  activeTab.value === 'Todos' ? docs : docs.filter(d => d.status === activeTab.value)
+  activeTab.value === 'Todos' ? docs.value : docs.value.filter(d => d.status === activeTab.value)
 )
 
-const statusConfig: Record<string, { color: string; bg: string; text: string }> = {
-  Aprovado: { color: 'text-[#1FAE66]', bg: 'bg-green-50',  text: 'border-[#1FAE66]' },
-  Pendente: { color: 'text-emerald-600', bg: 'bg-emerald-50', text: 'border-emerald-600' },
-  Atenção:  { color: 'text-red-500',   bg: 'bg-red-50',    text: 'border-red-400' },
+const statusConfig: Record<string, { color: string; bg: string; border: string }> = {
+  Aprovado: { color: 'text-[#1FAE66]',    bg: 'bg-green-50',   border: 'border-[#1FAE66]' },
+  Pendente: { color: 'text-emerald-600',  bg: 'bg-emerald-50', border: 'border-emerald-600' },
+  Atenção:  { color: 'text-red-500',      bg: 'bg-red-50',     border: 'border-red-400' },
 }
-const getCfg = (s: string) => statusConfig[s] ?? { color: 'text-slate-400', bg: 'bg-slate-50', text: 'border-slate-300' }
+const getCfg = (s: string) => statusConfig[s] ?? { color: 'text-slate-400', bg: 'bg-slate-50', border: 'border-slate-300' }
+
+const formatDate = (iso: string) => new Date(iso).toLocaleDateString('pt-BR')
+const formatBytes = (b: number) => {
+  if (!b) return ''
+  if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)} KB`
+  return `${(b / (1024 * 1024)).toFixed(1)} MB`
+}
+
+const updateStatus = async (id: string, status: string) => {
+  const { error } = await supabase.from('documentos').update({ status }).eq('id', id)
+  if (!error) {
+    const idx = docs.value.findIndex(d => d.id === id)
+    if (idx !== -1) docs.value[idx].status = status
+  }
+}
 </script>
 
 <template>
@@ -49,9 +73,6 @@ const getCfg = (s: string) => statusConfig[s] ?? { color: 'text-slate-400', bg: 
           Centralize e valide documentos de colaboradores e candidatos em um único local seguro.
         </p>
       </div>
-      <button class="flex items-center gap-2 px-8 py-3 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-900/20">
-        <Upload :size="18" /> Enviar Documento
-      </button>
     </div>
 
     <!-- Tabs -->
@@ -69,8 +90,13 @@ const getCfg = (s: string) => statusConfig[s] ?? { color: 'text-slate-400', bg: 
       </button>
     </div>
 
-    <!-- Grid de Documentos -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+    <!-- Loading -->
+    <div v-if="loading" class="py-20 text-center">
+      <div class="w-8 h-8 border-2 border-slate-200 border-t-green-600 rounded-full animate-spin mx-auto" />
+    </div>
+
+    <!-- Grid -->
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
       <div
         v-for="doc in filteredDocs"
         :key="doc.id"
@@ -83,7 +109,7 @@ const getCfg = (s: string) => statusConfig[s] ?? { color: 'text-slate-400', bg: 
           </div>
           <span
             class="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border"
-            :class="[getCfg(doc.status).color, getCfg(doc.status).bg, getCfg(doc.status).text]"
+            :class="[getCfg(doc.status).color, getCfg(doc.status).bg, getCfg(doc.status).border]"
           >
             <CheckCircle v-if="doc.status === 'Aprovado'" :size="12" />
             <Clock       v-else-if="doc.status === 'Pendente'" :size="12" />
@@ -92,27 +118,42 @@ const getCfg = (s: string) => statusConfig[s] ?? { color: 'text-slate-400', bg: 
           </span>
         </div>
 
-        <h4 class="text-sm font-black text-green-900 mb-1 truncate">{{ doc.name }}</h4>
+        <h4 class="text-sm font-black text-green-900 mb-1 truncate">{{ doc.nome }}</h4>
         <p class="text-xs text-slate-400 font-medium mb-5">
-          {{ doc.candidate }} <span class="opacity-50 mx-1">•</span> {{ doc.type }}
+          {{ doc.tipo }}
+          <span v-if="doc.tamanho_bytes" class="opacity-50 mx-1">•</span>
+          {{ formatBytes(doc.tamanho_bytes) }}
         </p>
 
         <!-- Footer -->
         <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-          <span class="text-xs text-slate-400 font-medium">{{ doc.date }}</span>
+          <span class="text-xs text-slate-400 font-medium">{{ formatDate(doc.created_at) }}</span>
           <div class="flex gap-2">
-            <button class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-green-600 hover:border-green-600/30 transition-all">
+            <a
+              :href="doc.url"
+              target="_blank"
+              download
+              class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-green-600 hover:border-green-600/30 transition-all"
+            >
               <Download :size="15" />
-            </button>
-            <button class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-slate-700 transition-all">
-              <MoreVertical :size="15" />
-            </button>
+            </a>
+            <!-- Status quick-actions -->
+            <div class="relative group">
+              <button class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-slate-700 transition-all">
+                <MoreVertical :size="15" />
+              </button>
+              <div class="hidden group-hover:flex absolute right-0 top-full mt-1 z-10 bg-white border border-slate-100 rounded-xl shadow-lg flex-col min-w-[130px] overflow-hidden text-xs font-bold">
+                <button @click="updateStatus(doc.id, 'Aprovado')" class="px-4 py-2.5 hover:bg-green-50 text-left text-green-700">Aprovar</button>
+                <button @click="updateStatus(doc.id, 'Pendente')" class="px-4 py-2.5 hover:bg-slate-50 text-left text-slate-600">Pendente</button>
+                <button @click="updateStatus(doc.id, 'Atenção')"  class="px-4 py-2.5 hover:bg-red-50 text-left text-red-500">Atenção</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div v-if="filteredDocs.length === 0" class="py-24 text-center text-slate-400 font-medium text-sm">
+    <div v-if="!loading && filteredDocs.length === 0" class="py-24 text-center text-slate-400 font-medium text-sm">
       Nenhum documento encontrado nesta categoria.
     </div>
 

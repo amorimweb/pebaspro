@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { 
-  MessageSquare, Send, CheckCheck, Clock, 
-  User, Search, MoreVertical, Phone,
+import {
+  MessageSquare, Send, CheckCheck,
+  Search, Paperclip, FileText,
   CheckCircle2, AlertCircle, ArrowLeft,
-  ChevronRight, Briefcase, Zap
+  Briefcase, Zap, Download, X
 } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'empresa-master' })
@@ -26,6 +26,8 @@ const { atualizarStatusCandidatura } = useAdmissao()
 const newMessage = ref('')
 const searchTerm = ref('')
 const chatContainer = ref<HTMLElement | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+const uploadingDoc = ref(false)
 const toast = ref<{ msg: string; tipo: 'ok' | 'erro'; action?: { label: string, to: string } } | null>(null)
 let unsubscribeMessages: (() => void) | null = null
 let unsubscribeConversations: (() => void) | null = null
@@ -158,6 +160,49 @@ const vincularComAdmissao = async () => {
     console.warn('Não foi possível vincular automaticamente com a Candidatura', e)
     mostrarToast('Candidato marcado como contratado!', 'ok')
   }
+}
+
+const handleFileSelect = async (e: Event) => {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!fileInput.value) fileInput.value = e.target as HTMLInputElement
+  if (!file || !activeConversationId.value) return
+
+  if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    mostrarToast('Apenas arquivos PDF são aceitos', 'erro')
+    return
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    mostrarToast('Arquivo muito grande. Máximo 10 MB.', 'erro')
+    return
+  }
+
+  uploadingDoc.value = true
+  try {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('conversa_id', activeConversationId.value)
+    form.append('empresa_id', participantId.value || '')
+    if (activeConv.value?.otherUser?.id) form.append('talento_id', activeConv.value.otherUser.id)
+
+    await $fetch('/api/upload/documento', { method: 'POST', body: form })
+
+    await fetchMessages(activeConversationId.value)
+    scrollToBottom()
+    mostrarToast('Documento enviado com sucesso!', 'ok', { label: 'Ver Documentos', to: '/painel/empresa/documentos' })
+  } catch (err: any) {
+    mostrarToast(err?.data?.statusMessage || 'Erro ao enviar documento', 'erro')
+  } finally {
+    uploadingDoc.value = false
+    if (fileInput.value) fileInput.value.value = ''
+  }
+}
+
+const formatBytes = (bytes: number) => {
+  if (!bytes) return ''
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 const scrollToBottom = () => {
@@ -309,11 +354,15 @@ const formatDate = (date: string) => {
             </div>
           </div>
           <div class="flex items-center gap-3">
-             <button class="p-2.5 text-slate-400 hover:text-green-600 hover:bg-slate-50 rounded-xl transition-all">
-               <Phone :size="20" />
-             </button>
-             <button class="p-2.5 text-slate-400 hover:text-green-600 hover:bg-slate-50 rounded-xl transition-all">
-               <MoreVertical :size="20" />
+             <input ref="fileInput" type="file" accept=".pdf,application/pdf" class="hidden" @change="handleFileSelect" />
+             <button
+               @click="fileInput?.click()"
+               :disabled="uploadingDoc"
+               class="p-2.5 text-slate-400 hover:text-green-600 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-40"
+               title="Anexar documento PDF"
+             >
+               <div v-if="uploadingDoc" class="w-5 h-5 border-2 border-slate-200 border-t-green-600 rounded-full animate-spin" />
+               <Paperclip v-else :size="20" />
              </button>
           </div>
         </header>
@@ -365,20 +414,45 @@ const formatDate = (date: string) => {
              <p class="text-sm font-semibold uppercase tracking-widest">Inicie a conversa</p>
           </div>
 
-          <div 
-            v-for="msg in orderedMessages" 
-            :key="msg.id" 
+          <div
+            v-for="msg in orderedMessages"
+            :key="msg.id"
             class="flex flex-col"
             :class="msg.remetente_id === participantId ? 'items-end' : 'items-start'"
           >
-            <div 
+            <!-- Document message -->
+            <div
+              v-if="msg.tipo === 'documento' && msg.documento"
+              class="max-w-[75%] bg-white border border-slate-100 rounded-[20px] shadow-sm overflow-hidden"
+              :class="msg.remetente_id === participantId ? 'rounded-tr-none' : 'rounded-tl-none'"
+            >
+              <div class="flex items-center gap-3 p-4">
+                <div class="p-2.5 rounded-xl bg-green-600/10 text-green-600 shrink-0">
+                  <FileText :size="20" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-slate-800 truncate">{{ msg.documento.nome }}</p>
+                  <p class="text-[10px] text-slate-400 font-medium mt-0.5">
+                    PDF {{ msg.documento.tamanho_bytes ? '· ' + formatBytes(msg.documento.tamanho_bytes) : '' }}
+                  </p>
+                </div>
+                <a :href="msg.documento.url" target="_blank" download class="p-2 rounded-xl text-slate-400 hover:text-green-600 hover:bg-slate-50 transition-all">
+                  <Download :size="16" />
+                </a>
+              </div>
+            </div>
+
+            <!-- Text message -->
+            <div
+              v-else
               class="max-w-[75%] px-5 py-4 shadow-sm"
-              :class="msg.remetente_id === participantId 
-                ? 'bg-[#1FAE66] text-white rounded-[24px] rounded-tr-none' 
+              :class="msg.remetente_id === participantId
+                ? 'bg-[#1FAE66] text-white rounded-[24px] rounded-tr-none'
                 : 'bg-white text-slate-700 rounded-[24px] rounded-tl-none border border-slate-50'"
             >
               <p class="text-sm font-medium leading-relaxed">{{ msg.conteudo }}</p>
             </div>
+
             <div class="flex items-center gap-1.5 mt-1.5 px-1">
                <span class="text-[9px] font-black uppercase tracking-widest text-slate-300">
                 {{ formatTime(msg.created_at) }}
