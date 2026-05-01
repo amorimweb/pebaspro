@@ -70,8 +70,8 @@ const kpis = computed(() => [
         <button class="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">
           Exportar Relatórios
         </button>
-        <button @click="navigateTo('/painel/empresa/vagas/nova')" class="px-8 py-3 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-900/20">
-          + Nova Vaga
+        <button @click="navigateTo('/painel/empresa/vagas')" class="px-8 py-3 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-900/20">
+          Vagas
         </button>
       </div>
     </div>
