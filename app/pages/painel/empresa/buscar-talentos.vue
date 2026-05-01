@@ -421,7 +421,7 @@ const getAvatarInitial = (name?: string | null) => {
                     <!-- Experiência -->
                     <section>
                         <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900 mb-4">
-                            <span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm">💼</span>
+                            <span class="w-8 h-8 rounded-lg bg-green-100 text-green-600 flex items-center justify-center text-sm">💼</span>
                             Experiência Profissional
                         </h3>
                         

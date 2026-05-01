@@ -189,12 +189,12 @@ const formatDate = (date: string) => {
         <div class="p-6 bg-white border-b border-slate-50">
           <h2 class="text-xl font-black text-[#0D2E5C] mb-4">Mensagens</h2>
           <div class="relative group">
-            <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#1E88E5] transition-colors" :size="18" />
+            <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-green-600 transition-colors" :size="18" />
             <input 
               v-model="searchTerm"
               type="text" 
               placeholder="Buscar contatos ou vagas..." 
-              class="w-full h-11 pl-12 pr-4 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-[#1E88E5]/10 focus:bg-white transition-all outline-none"
+              class="w-full h-11 pl-12 pr-4 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-green-600/10 focus:bg-white transition-all outline-none"
             />
           </div>
         </div>
@@ -243,7 +243,7 @@ const formatDate = (date: string) => {
                   </span>
                 </div>
 
-                <p v-if="conv.vaga" class="text-[10px] font-black text-[#1E88E5] uppercase tracking-widest truncate mb-1">
+                <p v-if="conv.vaga" class="text-[10px] font-black text-green-600 uppercase tracking-widest truncate mb-1">
                   {{ conv.vaga.titulo }}
                 </p>
 
@@ -279,17 +279,17 @@ const formatDate = (date: string) => {
                 <span class="text-[9px] font-black bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded tracking-widest uppercase">
                   {{ activeConv?.otherUser?.tipo_conta || 'TALENTO' }}
                 </span>
-                <span v-if="activeConv?.vaga" class="text-[9px] font-black text-[#1E88E5] uppercase tracking-wider">
+                <span v-if="activeConv?.vaga" class="text-[9px] font-black text-green-600 uppercase tracking-wider">
                   Vaga: {{ activeConv.vaga.titulo }}
                 </span>
               </div>
             </div>
           </div>
           <div class="flex items-center gap-3">
-             <button class="p-2.5 text-slate-400 hover:text-[#1E88E5] hover:bg-slate-50 rounded-xl transition-all">
+             <button class="p-2.5 text-slate-400 hover:text-green-600 hover:bg-slate-50 rounded-xl transition-all">
                <Phone :size="20" />
              </button>
-             <button class="p-2.5 text-slate-400 hover:text-[#1E88E5] hover:bg-slate-50 rounded-xl transition-all">
+             <button class="p-2.5 text-slate-400 hover:text-green-600 hover:bg-slate-50 rounded-xl transition-all">
                <MoreVertical :size="20" />
              </button>
           </div>
@@ -300,12 +300,12 @@ const formatDate = (date: string) => {
           <div class="flex items-center gap-3 shrink-0">
             <div class="flex items-center gap-2">
               <Zap class="text-amber-500" :size="14" />
-              <span class="text-[10px] font-black uppercase tracking-widest text-[#0D2E5C]/60">Status:</span>
+              <span class="text-[10px] font-black uppercase tracking-widest text-green-900/60">Status:</span>
             </div>
             <div 
               class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm border border-white transition-all transform"
               :class="{
-                  'bg-blue-600 text-white': activeConv?.status_contratacao === 'interessado' || !activeConv?.status_contratacao,
+                  'bg-green-600 text-white': activeConv?.status_contratacao === 'interessado' || !activeConv?.status_contratacao,
                   'bg-orange-500 text-white': activeConv?.status_contratacao === 'negociando',
                   'bg-[#1FAE66] text-white': activeConv?.status_contratacao === 'contratado',
                   'bg-slate-400 text-white': activeConv?.status_contratacao === 'recusado'
@@ -326,7 +326,7 @@ const formatDate = (date: string) => {
             <button 
               v-if="activeConv?.status_contratacao === 'interessado' || !activeConv?.status_contratacao"
               @click="handleUpdateStatus('negociando')"
-              class="px-4 py-2 bg-[#1E88E5] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#1787D4] transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+              class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
             >
               Negociar
             </button>
@@ -343,7 +343,7 @@ const formatDate = (date: string) => {
         <!-- Messages Area -->
         <div class="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50/20 custom-scrollbar" ref="chatContainer">
           <div v-if="loadingMessages" class="flex items-center justify-center h-full">
-             <div class="w-6 h-6 border-2 border-slate-100 border-t-[#1E88E5] rounded-full animate-spin" />
+             <div class="w-6 h-6 border-2 border-slate-100 border-t-green-600 rounded-full animate-spin" />
           </div>
           
           <div v-else-if="messages.length === 0" class="flex flex-col items-center justify-center h-full text-slate-300">

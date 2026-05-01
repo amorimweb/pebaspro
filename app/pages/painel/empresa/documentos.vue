@@ -32,7 +32,7 @@ const filteredDocs = computed(() =>
 
 const statusConfig: Record<string, { color: string; bg: string; text: string }> = {
   Aprovado: { color: 'text-[#1FAE66]', bg: 'bg-green-50',  text: 'border-[#1FAE66]' },
-  Pendente: { color: 'text-[#1787D4]', bg: 'bg-blue-50',   text: 'border-[#1787D4]' },
+  Pendente: { color: 'text-emerald-600', bg: 'bg-emerald-50', text: 'border-emerald-600' },
   Atenção:  { color: 'text-red-500',   bg: 'bg-red-50',    text: 'border-red-400' },
 }
 const getCfg = (s: string) => statusConfig[s] ?? { color: 'text-slate-400', bg: 'bg-slate-50', text: 'border-slate-300' }
@@ -49,7 +49,7 @@ const getCfg = (s: string) => statusConfig[s] ?? { color: 'text-slate-400', bg: 
           Centralize e valide documentos de colaboradores e candidatos em um único local seguro.
         </p>
       </div>
-      <button class="flex items-center gap-2 px-8 py-3 bg-[#0D2E5C] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#1787D4] transition-all shadow-lg shadow-blue-900/20">
+      <button class="flex items-center gap-2 px-8 py-3 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-900/20">
         <Upload :size="18" /> Enviar Documento
       </button>
     </div>
@@ -61,7 +61,7 @@ const getCfg = (s: string) => statusConfig[s] ?? { color: 'text-slate-400', bg: 
         :key="tab"
         class="pb-3 text-sm font-bold border-b-2 transition-all -mb-px"
         :class="activeTab === tab
-          ? 'border-[#1FAE66] text-[#0D2E5C]'
+          ? 'border-green-600 text-green-900'
           : 'border-transparent text-slate-400 hover:text-slate-600'"
         @click="activeTab = tab"
       >
@@ -78,7 +78,7 @@ const getCfg = (s: string) => statusConfig[s] ?? { color: 'text-slate-400', bg: 
       >
         <!-- Top row -->
         <div class="flex items-start justify-between mb-5">
-          <div class="p-3 rounded-xl bg-[#1E88E5]/5 border border-[#1E88E5]/10 text-[#1E88E5]">
+          <div class="p-3 rounded-xl bg-green-600/5 border border-green-600/10 text-green-600">
             <FileText :size="24" />
           </div>
           <span
@@ -92,7 +92,7 @@ const getCfg = (s: string) => statusConfig[s] ?? { color: 'text-slate-400', bg: 
           </span>
         </div>
 
-        <h4 class="text-sm font-black text-[#0D2E5C] mb-1 truncate">{{ doc.name }}</h4>
+        <h4 class="text-sm font-black text-green-900 mb-1 truncate">{{ doc.name }}</h4>
         <p class="text-xs text-slate-400 font-medium mb-5">
           {{ doc.candidate }} <span class="opacity-50 mx-1">•</span> {{ doc.type }}
         </p>
@@ -101,7 +101,7 @@ const getCfg = (s: string) => statusConfig[s] ?? { color: 'text-slate-400', bg: 
         <div class="flex items-center justify-between pt-4 border-t border-slate-100">
           <span class="text-xs text-slate-400 font-medium">{{ doc.date }}</span>
           <div class="flex gap-2">
-            <button class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-[#1E88E5] hover:border-[#1E88E5]/30 transition-all">
+            <button class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-green-600 hover:border-green-600/30 transition-all">
               <Download :size="15" />
             </button>
             <button class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-slate-700 transition-all">

@@ -17,7 +17,7 @@ const services = [
 const statusConfig: Record<string, { color: string; border: string; bg: string }> = {
   Transmitido: { color: 'text-[#1FAE66]',  border: 'border-[#1FAE66]',  bg: 'bg-green-50' },
   Pendente:    { color: 'text-red-500',     border: 'border-red-400',    bg: 'bg-red-50' },
-  Processando: { color: 'text-[#1787D4]',  border: 'border-[#1787D4]',  bg: 'bg-blue-50' },
+  Processando: { color: 'text-emerald-600',  border: 'border-emerald-600',  bg: 'bg-emerald-50' },
   Erro:        { color: 'text-orange-500', border: 'border-orange-400', bg: 'bg-orange-50' },
 }
 const getCfg = (s: string) => statusConfig[s] ?? { color: 'text-slate-400', border: 'border-slate-200', bg: 'bg-slate-50' }
@@ -89,7 +89,7 @@ const formatData = (dt: string) =>
           <Download :size="16" /> Relatório
         </button>
         <button
-          class="flex items-center gap-2 px-8 py-3 bg-[#0D2E5C] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#1787D4] transition-all shadow-lg shadow-blue-900/20"
+          class="flex items-center gap-2 px-8 py-3 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-900/20"
           @click="transmitirLote"
         >
           <Send :size="16" /> Transmitir Lote
@@ -101,7 +101,7 @@ const formatData = (dt: string) =>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
       <div class="bg-white rounded-[20px] border border-slate-100 shadow-sm p-5">
         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total de Eventos</p>
-        <div class="text-3xl font-black text-[#0D2E5C]">{{ kpis.total }}</div>
+        <div class="text-3xl font-black text-green-700">{{ kpis.total }}</div>
       </div>
       <div class="bg-white rounded-[20px] border border-slate-100 shadow-sm p-5">
         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Transmitidos</p>
@@ -111,7 +111,7 @@ const formatData = (dt: string) =>
         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pendentes</p>
         <div class="text-3xl font-black text-red-500">{{ kpis.pendente }}</div>
       </div>
-      <div class="bg-[#0D2E5C] rounded-[20px] p-5 text-white shadow-xl shadow-blue-900/20">
+      <div class="bg-[#064e3b] rounded-[20px] p-5 text-white shadow-xl shadow-green-900/20">
         <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Conformidade</p>
         <div class="text-3xl font-black">{{ kpis.conformidade }}%</div>
         <div class="mt-3 h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -127,11 +127,11 @@ const formatData = (dt: string) =>
       <div class="lg:col-span-8">
         <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
           <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-black text-[#0D2E5C]">Linha do Tempo de Eventos</h3>
+            <h3 class="text-lg font-black text-green-900">Linha do Tempo de Eventos</h3>
             <div class="flex items-center gap-2">
               <NuxtLink
                 to="/painel/empresa/admissao"
-                class="text-xs font-bold text-[#1E88E5] hover:underline"
+                class="text-xs font-bold text-green-600 hover:underline"
               >
                 + Nova admissão
               </NuxtLink>
@@ -227,7 +227,7 @@ const formatData = (dt: string) =>
         <!-- Atalho para Admissão Digital -->
         <NuxtLink
           to="/painel/empresa/admissao"
-          class="bg-gradient-to-br from-[#1FAE66] to-[#1787D4] rounded-[24px] p-6 text-white shadow-xl hover:-translate-y-1 transition-all block"
+          class="bg-gradient-to-br from-green-600 to-emerald-700 rounded-[24px] p-6 text-white shadow-xl hover:-translate-y-1 transition-all block"
         >
           <ShieldCheck :size="24" class="mb-3 opacity-80" />
           <h4 class="text-sm font-black mb-1">Admissão Digital</h4>
@@ -237,8 +237,8 @@ const formatData = (dt: string) =>
 
         <!-- Serviços externos -->
         <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
-          <h4 class="text-sm font-black text-[#0D2E5C] mb-5 flex items-center gap-2">
-            <Wifi :size="18" class="text-[#1787D4]" /> Serviços Externos
+          <h4 class="text-sm font-black text-green-900 mb-5 flex items-center gap-2">
+            <Wifi :size="18" class="text-green-600" /> Serviços Externos
           </h4>
           <div class="flex flex-col gap-4">
             <div
@@ -262,8 +262,8 @@ const formatData = (dt: string) =>
           <div class="space-y-3">
             <div
               v-for="ev in [
-                { id: 'S-2200', desc: 'Admissão de Trabalhador', cor: 'text-[#1FAE66]' },
-                { id: 'S-2205', desc: 'Alteração de Dados',       cor: 'text-[#1787D4]' },
+                { id: 'S-2200', desc: 'Admissão de Trabalhador', cor: 'text-green-600' },
+                { id: 'S-2205', desc: 'Alteração de Dados',       cor: 'text-emerald-600' },
                 { id: 'S-2210', desc: 'Acidentes do Trabalho',    cor: 'text-red-500' },
                 { id: 'S-2220', desc: 'Saúde do Trabalhador',     cor: 'text-teal-500' },
                 { id: 'S-2240', desc: 'Condições Ambientais',     cor: 'text-amber-500' },

@@ -32,7 +32,7 @@ const plans: Plan[] = [
     label: 'Operacional',
     description: 'Para empresas em crescimento com demandas contínuas de RH.',
     price: 'R$ 497',
-    color: '#1787D4',
+    color: '#10b981',
     highlight: false,
   },
   {
@@ -40,7 +40,7 @@ const plans: Plan[] = [
     label: 'Corporativo',
     description: 'Para grandes operações com necessidades avançadas de compliance.',
     price: 'R$ 997',
-    color: '#0D2E5C',
+    color: '#064e3b',
     highlight: true,
   },
 ]
@@ -114,7 +114,7 @@ const selectPlan = (id: string) => {
         :key="plan.id"
         class="relative rounded-[24px] p-8 border transition-all hover:-translate-y-1"
         :class="plan.highlight
-          ? 'bg-gradient-to-br from-[#0D2E5C] to-[#1787D4] text-white border-transparent shadow-2xl shadow-blue-900/30'
+          ? 'bg-gradient-to-br from-[#064e3b] to-[#0d9488] text-white border-transparent shadow-2xl shadow-green-900/30'
           : 'bg-white border-slate-100 shadow-sm hover:shadow-xl'"
       >
         <!-- Badge Mais Popular -->
@@ -177,8 +177,8 @@ const selectPlan = (id: string) => {
         <button
           class="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
           :class="plan.id === currentPlan
-            ? (plan.highlight ? 'border border-white/40 text-white' : 'border text-[#0D2E5C]')
-            : (plan.highlight ? 'bg-[#1FAE66] text-white hover:bg-[#17974d]' : 'text-white hover:opacity-90')"
+            ? (plan.highlight ? 'border border-white/40 text-white' : 'border text-green-900')
+            : (plan.highlight ? 'bg-green-600 text-white hover:bg-green-700' : 'text-white hover:opacity-90')"
           :style="plan.id !== currentPlan && !plan.highlight ? { background: plan.color } : {}"
           @click="selectPlan(plan.id)"
         >

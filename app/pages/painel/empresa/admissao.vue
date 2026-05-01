@@ -32,8 +32,8 @@ const toast = ref<{ msg: string; tipo: 'ok' | 'erro' } | null>(null)
 const statusOrdem = ['Documentação', 'EmConferência', 'eSocial', 'Concluído']
 const statusConfig: Record<string, { label: string; color: string; bg: string; dot: string }> = {
   'Documentação':  { label: 'Documentação',   color: 'text-amber-600',  bg: 'bg-amber-50',  dot: 'bg-amber-400' },
-  'EmConferência': { label: 'Em Conferência', color: 'text-blue-600',   bg: 'bg-blue-50',   dot: 'bg-blue-400' },
-  'eSocial':       { label: 'eSocial',         color: 'text-teal-600',   bg: 'bg-teal-50',   dot: 'bg-teal-400' },
+  'EmConferência': { label: 'Em Conferência', color: 'text-green-600',   bg: 'bg-green-50',   dot: 'bg-green-400' },
+  'eSocial':       { label: 'eSocial',         color: 'text-emerald-600', bg: 'bg-emerald-50', dot: 'bg-emerald-400' },
   'Concluído':     { label: 'Concluído',       color: 'text-green-600',  bg: 'bg-green-50',  dot: 'bg-green-500' },
 }
 
@@ -163,10 +163,10 @@ const iniciais = (nome: string | null) =>
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
           <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Em andamento</span>
-          <span class="text-lg font-black text-[#0D2E5C]">{{ admissoesAtivas.length }}</span>
+          <span class="text-lg font-black text-green-700">{{ admissoesAtivas.length }}</span>
         </div>
         <button
-          class="flex items-center gap-2 px-6 py-3 bg-[#0D2E5C] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#1787D4] transition-all shadow-lg shadow-blue-900/20"
+          class="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-900/20"
           @click="tab = 'contratar'"
         >
           <UserPlus :size="16" /> Contratar
@@ -184,7 +184,7 @@ const iniciais = (nome: string | null) =>
         ]"
         :key="t.id"
         class="flex items-center gap-2 pb-3 text-sm font-bold border-b-2 transition-all -mb-px"
-        :class="tab === t.id ? 'border-[#1FAE66] text-[#0D2E5C]' : 'border-transparent text-slate-400 hover:text-slate-600'"
+        :class="tab === t.id ? 'border-green-600 text-green-700' : 'border-transparent text-slate-400 hover:text-slate-600'"
         @click="tab = (t.id as any)"
       >
         {{ t.label }}
@@ -198,7 +198,7 @@ const iniciais = (nome: string | null) =>
 
     <!-- Loading -->
     <div v-if="loading" class="py-16 flex items-center justify-center gap-3 text-slate-400">
-      <div class="w-5 h-5 border-2 border-slate-200 border-t-[#1E88E5] rounded-full animate-spin" />
+      <div class="w-5 h-5 border-2 border-slate-200 border-t-green-600 rounded-full animate-spin" />
       <span class="text-sm font-medium">Carregando...</span>
     </div>
 
@@ -216,11 +216,11 @@ const iniciais = (nome: string | null) =>
         <!-- Header da vaga -->
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-[#0D2E5C]/5 flex items-center justify-center text-[#0D2E5C]">
+            <div class="w-10 h-10 rounded-xl bg-green-600/5 flex items-center justify-center text-green-700">
               <Briefcase :size="20" />
             </div>
             <div>
-              <p class="font-black text-[#0D2E5C]">{{ vaga.titulo }}</p>
+              <p class="font-black text-green-900">{{ vaga.titulo }}</p>
               <p class="text-xs text-slate-400 font-medium">{{ vaga.local ?? 'Parauapebas, PA' }} · {{ vaga.tipo ?? 'CLT' }}</p>
             </div>
           </div>
@@ -249,7 +249,7 @@ const iniciais = (nome: string | null) =>
                 :class="[
                   cand.status === 'Aprovado' ? 'bg-green-50 text-[#1FAE66]' :
                   cand.status === 'Reprovado' ? 'bg-red-50 text-red-500' :
-                  'bg-[#1E88E5]/10 text-[#1E88E5]'
+                  'bg-green-600/10 text-green-600'
                 ]"
               >
                 {{ iniciais(cand.talento?.nome) }}
@@ -324,7 +324,7 @@ const iniciais = (nome: string | null) =>
 
               <NuxtLink
                 :to="`/vitrine/${cand.talento_id}`"
-                class="p-2 text-slate-400 hover:text-[#1E88E5] hover:bg-[#1E88E5]/5 rounded-xl transition-all"
+                class="p-2 text-slate-400 hover:text-green-600 hover:bg-green-600/5 rounded-xl transition-all"
                 title="Ver perfil"
               >
                 <ChevronRight :size="18" />
@@ -368,7 +368,7 @@ const iniciais = (nome: string | null) =>
             >
               <!-- Card header -->
               <div class="flex items-start gap-3 mb-3">
-                <div class="w-10 h-10 rounded-xl bg-[#1E88E5]/10 flex items-center justify-center font-black text-xs text-[#1E88E5] shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-green-600/10 flex items-center justify-center font-black text-xs text-green-600 shrink-0">
                   {{ iniciais(adm.talento?.nome) }}
                 </div>
                 <div class="flex-1 min-w-0">
@@ -384,7 +384,7 @@ const iniciais = (nome: string | null) =>
               <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden mb-2">
                 <div
                   class="h-full rounded-full transition-all duration-700"
-                  :class="progressoAdmissao(adm.checklist) === 100 ? 'bg-[#1FAE66]' : 'bg-[#1787D4]'"
+                  :class="progressoAdmissao(adm.checklist) === 100 ? 'bg-green-600' : 'bg-green-400'"
                   :style="{ width: progressoAdmissao(adm.checklist) + '%' }"
                 />
               </div>
@@ -423,7 +423,7 @@ const iniciais = (nome: string | null) =>
                     v-if="status === 'eSocial'"
                     class="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all"
                     :class="progressoAdmissao(adm.checklist) === 100
-                      ? 'bg-[#0D2E5C] text-white hover:bg-[#1787D4]'
+                      ? 'bg-green-700 text-white hover:bg-green-800'
                       : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
                     @click.stop="transmitirS2200(adm)"
                   >
@@ -503,7 +503,7 @@ const iniciais = (nome: string | null) =>
       >
         <div class="bg-white rounded-[28px] shadow-2xl w-full max-w-lg overflow-hidden">
           <!-- Modal header -->
-          <div class="bg-[#0D2E5C] px-8 py-6 text-white flex items-start justify-between">
+          <div class="bg-green-700 px-8 py-6 text-white flex items-start justify-between">
             <div>
               <p class="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1">Iniciando Contratação</p>
               <h3 class="text-xl font-black">{{ candidaturaAlvo?.talento?.nome ?? 'Talento' }}</h3>
@@ -522,7 +522,7 @@ const iniciais = (nome: string | null) =>
                 <input
                   v-model="form.cargo"
                   type="text"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-[#1E88E5]/20 focus:border-[#1E88E5] transition-all"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all"
                   placeholder="Ex: Operador de Escavadeira"
                 />
               </div>
@@ -530,7 +530,7 @@ const iniciais = (nome: string | null) =>
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Regime *</label>
                 <select
                   v-model="form.regime"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-[#1E88E5]/20 focus:border-[#1E88E5] transition-all bg-white"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all bg-white"
                 >
                   <option>CLT</option>
                   <option>PJ</option>
@@ -543,7 +543,7 @@ const iniciais = (nome: string | null) =>
                 <input
                   v-model="form.salario"
                   type="text"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-[#1E88E5]/20 focus:border-[#1E88E5] transition-all"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all"
                   placeholder="R$ 2.500,00"
                 />
               </div>
@@ -552,7 +552,7 @@ const iniciais = (nome: string | null) =>
                 <input
                   v-model="form.jornada"
                   type="text"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-[#1E88E5]/20 focus:border-[#1E88E5] transition-all"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all"
                   placeholder="8h/dia — 44h/semana"
                 />
               </div>
@@ -561,7 +561,7 @@ const iniciais = (nome: string | null) =>
                 <input
                   v-model="form.data_inicio"
                   type="date"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-[#1E88E5]/20 focus:border-[#1E88E5] transition-all"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all"
                 />
               </div>
               <div class="col-span-2">
@@ -569,7 +569,7 @@ const iniciais = (nome: string | null) =>
                 <textarea
                   v-model="form.observacoes"
                   rows="2"
-                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-[#1E88E5]/20 focus:border-[#1E88E5] transition-all resize-none"
+                  class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all resize-none"
                   placeholder="Informações adicionais sobre a contratação..."
                 />
               </div>

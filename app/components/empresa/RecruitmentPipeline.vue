@@ -21,10 +21,10 @@ const stages = ['Triagem', 'Entrevista', 'Documentação', 'Contratação']
 
 const getStatusColor = (status: string) => {
   const map: Record<string, string> = {
-    'Triagem': 'bg-blue-100 text-blue-600',
-    'Entrevista': 'bg-amber-100 text-amber-600',
-    'Documentação': 'bg-purple-100 text-purple-600',
-    'Contratação': 'bg-green-100 text-green-600',
+    'Triagem': 'bg-emerald-100 text-emerald-600',
+    'Entrevista': 'bg-green-100 text-green-600',
+    'Documentação': 'bg-teal-100 text-teal-600',
+    'Contratação': 'bg-green-600 text-white',
   }
   return map[status] || 'bg-slate-100 text-slate-600'
 }
@@ -37,7 +37,7 @@ const getStatusColor = (status: string) => {
         <h3 class="text-xl font-black text-slate-900 tracking-tight">Pipeline de Recrutamento</h3>
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Status em tempo real das candidaturas</p>
       </div>
-      <button class="p-3 text-slate-400 hover:text-[#1E88E5] hover:bg-slate-50 rounded-2xl transition-all">
+      <button class="p-3 text-slate-400 hover:text-green-600 hover:bg-slate-50 rounded-2xl transition-all">
         <Users size="20" />
       </button>
     </div>
@@ -59,7 +59,7 @@ const getStatusColor = (status: string) => {
         class="group flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-50 hover:border-slate-200 hover:shadow-md transition-all cursor-pointer"
       >
         <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center font-black text-slate-400 text-sm border border-slate-100 group-hover:bg-[#1E88E5]/5 group-hover:text-[#1E88E5] transition-colors">
+          <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center font-black text-slate-400 text-sm border border-slate-100 group-hover:bg-green-600/5 group-hover:text-green-600 transition-colors">
             {{ c.name.charAt(0) }}
           </div>
           <div>
@@ -81,7 +81,7 @@ const getStatusColor = (status: string) => {
           <span :class="[getStatusColor(c.status), 'px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border border-transparent']">
             {{ c.status }}
           </span>
-          <ChevronRight size="14" class="text-slate-300 group-hover:text-[#1E88E5] group-hover:translate-x-1 transition-all" />
+          <ChevronRight size="14" class="text-slate-300 group-hover:text-green-600 group-hover:translate-x-1 transition-all" />
         </div>
       </div>
     </div>

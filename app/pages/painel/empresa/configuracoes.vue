@@ -96,14 +96,14 @@ const modes = [
     id: 'operacional',
     label: 'Operacional',
     desc: 'Adiciona relatórios e alertas. Para empresas com rotina de contratação.',
-    color: '#1787D4',
+    color: '#10b981',
     modules: '7 módulos',
   },
   {
     id: 'corporativo',
     label: 'Corporativo',
     desc: 'Todos os módulos: Compliance SST, eSocial e relatórios avançados.',
-    color: '#0D2E5C',
+    color: '#059669',
     modules: '9 módulos',
   },
 ]
@@ -124,7 +124,7 @@ const modes = [
           :key="tab.id"
           @click="activeTab = tab.id"
           :class="[
-            activeTab === tab.id ? 'bg-[#1E88E5]/10 text-[#1E88E5] shadow-sm' : 'text-slate-500 hover:bg-white hover:text-slate-900',
+            activeTab === tab.id ? 'bg-green-600/10 text-green-600 shadow-sm' : 'text-slate-500 hover:bg-white hover:text-slate-900',
             'w-full flex items-center gap-3 px-6 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all'
           ]"
         >
@@ -143,15 +143,15 @@ const modes = [
                 <div class="space-y-2">
                   <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Nome Institucional</label>
                   <div class="relative group">
-                    <Building class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-[#1E88E5] transition-colors" />
-                    <input v-model="form.nome" type="text" class="w-full h-14 pl-12 pr-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-[#1E88E5]/10 focus:bg-white transition-all outline-none" />
+                    <Building class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-green-600 transition-colors" />
+                    <input v-model="form.nome" type="text" class="w-full h-14 pl-12 pr-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-green-600/10 focus:bg-white transition-all outline-none" />
                   </div>
                 </div>
                 <div class="space-y-2">
                   <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">CNPJ / Documento</label>
                   <div class="relative group">
-                    <ShieldCheck class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-[#1E88E5] transition-colors" />
-                    <input v-model="form.documento" type="text" class="w-full h-14 pl-12 pr-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-[#1E88E5]/10 focus:bg-white transition-all outline-none" placeholder="00.000.000/0001-00" />
+                    <ShieldCheck class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-green-600 transition-colors" />
+                    <input v-model="form.documento" type="text" class="w-full h-14 pl-12 pr-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-green-600/10 focus:bg-white transition-all outline-none" placeholder="00.000.000/0001-00" />
                   </div>
                 </div>
                 <div class="space-y-2">
@@ -164,19 +164,19 @@ const modes = [
                 <div class="space-y-2">
                   <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Endereço Matriz</label>
                   <div class="relative group">
-                    <MapPin class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-[#1E88E5] transition-colors" />
-                    <input v-model="form.endereco" type="text" class="w-full h-14 pl-12 pr-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-[#1E88E5]/10 focus:bg-white transition-all outline-none" placeholder="Cidade, Estado" />
+                    <MapPin class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-green-600 transition-colors" />
+                    <input v-model="form.endereco" type="text" class="w-full h-14 pl-12 pr-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-green-600/10 focus:bg-white transition-all outline-none" placeholder="Cidade, Estado" />
                   </div>
                 </div>
              </div>
 
              <div class="space-y-2">
                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Proposta de Valor / Sobre a Empresa</label>
-                <textarea v-model="form.sobre_mim" rows="5" class="w-full p-6 bg-slate-50 border-none rounded-[32px] text-sm font-medium text-slate-600 focus:ring-2 focus:ring-[#1E88E5]/10 focus:bg-white transition-all outline-none leading-relaxed"></textarea>
+                <textarea v-model="form.sobre_mim" rows="5" class="w-full p-6 bg-slate-50 border-none rounded-[32px] text-sm font-medium text-slate-600 focus:ring-2 focus:ring-green-600/10 focus:bg-white transition-all outline-none leading-relaxed"></textarea>
              </div>
 
              <div class="flex justify-end gap-3 pt-6 border-t border-slate-50">
-                <button @click="handleSave" :disabled="isSaving" class="px-10 py-5 bg-[#0D2E5C] text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-900/20 hover:bg-[#1787D4] active:scale-95 transition-all disabled:opacity-50">
+                <button @click="handleSave" :disabled="isSaving" class="px-10 py-5 bg-green-600 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-green-600/20 hover:bg-green-700 active:scale-95 transition-all disabled:opacity-50">
                   {{ isSaving ? 'Committing...' : 'Salvar Alterações' }}
                 </button>
              </div>
@@ -255,9 +255,9 @@ const modes = [
                      <td class="px-6 py-5">
                        <span class="px-3 py-1 bg-slate-50 text-slate-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-100">{{ usr }}</span>
                      </td>
-                     <td class="px-6 py-5">
-                        <button class="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><Edit2 size="16" /></button>
-                     </td>
+                      <td class="px-6 py-5">
+                         <button class="p-2 text-slate-400 hover:text-green-600 transition-colors"><Edit2 size="16" /></button>
+                      </td>
                    </tr>
                  </tbody>
                </table>
@@ -272,18 +272,18 @@ const modes = [
              </div>
 
              <div class="space-y-4">
-                <div v-for="item in ['Novos Candidatos', 'Alertas de SST (ASO / NR)', 'Transmissão eSocial']" :key="item" class="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 flex items-center justify-between">
-                   <div class="flex items-center gap-4">
-                      <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#1E88E5] shadow-sm">
-                         <Bell size="18" />
-                      </div>
+                 <div v-for="item in ['Novos Candidatos', 'Alertas de SST (ASO / NR)', 'Transmissão eSocial']" :key="item" class="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                       <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-green-600 shadow-sm">
+                          <Bell size="18" />
+                       </div>
                       <div>
                          <p class="text-sm font-black text-slate-900 tracking-tight">{{ item }}</p>
                          <p class="text-[10px] font-medium text-slate-500 leading-tight">Receber alerta crítico via e-mail e push</p>
                       </div>
-                   </div>
-                   <input type="checkbox" checked class="w-5 h-5 accent-[#1E88E5]" />
-                </div>
+                    </div>
+                    <input type="checkbox" checked class="w-5 h-5 accent-green-600" />
+                 </div>
              </div>
           </div>
 
@@ -300,7 +300,7 @@ const modes = [
              </div>
 
              <div class="p-8 bg-slate-50 rounded-[32px] border border-slate-100 flex items-center gap-6">
-                <div class="w-16 h-16 rounded-[24px] bg-white flex items-center justify-center text-indigo-600 shadow-sm border border-slate-100">
+                <div class="w-16 h-16 rounded-[24px] bg-white flex items-center justify-center text-green-600 shadow-sm border border-slate-100">
                    <ShieldAlert size="32" />
                 </div>
                 <div class="flex-1">

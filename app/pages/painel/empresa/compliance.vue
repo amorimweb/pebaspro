@@ -21,7 +21,7 @@ definePageMeta({
         <button class="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">
           <Download :size="16" /> Exportar LNT
         </button>
-        <button class="flex items-center gap-2 px-8 py-3 bg-[#0D2E5C] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#1787D4] transition-all shadow-lg shadow-blue-900/20">
+        <button class="flex items-center gap-2 px-8 py-3 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-900/20">
           <AlertTriangle :size="16" /> Novo Alerta
         </button>
       </div>
@@ -35,7 +35,7 @@ definePageMeta({
 
         <!-- Visão Geral de Regulamentação -->
         <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
-          <h3 class="text-lg font-black text-[#0D2E5C] mb-5">Visão Geral de Regulamentação</h3>
+          <h3 class="text-lg font-black text-green-900 mb-5">Visão Geral de Regulamentação</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <!-- ASOs Pendentes -->
             <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100">
@@ -54,7 +54,7 @@ definePageMeta({
 
         <!-- Histórico de Inspeções -->
         <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6">
-          <h3 class="text-lg font-black text-[#0D2E5C] mb-4">Histórico de Inspeções</h3>
+          <h3 class="text-lg font-black text-green-900 mb-4">Histórico de Inspeções</h3>
           <p class="text-sm text-slate-400 font-medium">Nenhuma inspeção recente registrada no sistema.</p>
         </div>
       </div>

@@ -8,9 +8,9 @@ const admissions = [
 ]
 
 const getStatusColor = (status: string) => {
-  if (status === 'eSocial') return 'text-teal-600'
+  if (status === 'eSocial') return 'text-emerald-600'
   if (status === 'Documentação') return 'text-amber-600'
-  return 'text-indigo-600'
+  return 'text-green-600'
 }
 
 const getStepStatus = (progress: number, threshold: number) => {
@@ -27,7 +27,7 @@ const getStepStatus = (progress: number, threshold: number) => {
         <h3 class="text-xl font-black text-slate-900 tracking-tight">Admissão Digital</h3>
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Acompanhamento de onboarding e eSocial</p>
       </div>
-      <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+      <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
         <UserPlus size="20" />
       </div>
     </div>
@@ -65,7 +65,7 @@ const getStepStatus = (progress: number, threshold: number) => {
 
             <div>
               <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
-                <div :class="['h-full rounded-full bg-teal-500 transition-all duration-1000']" :style="{ width: adm.progress + '%' }" />
+                <div :class="['h-full rounded-full bg-green-500 transition-all duration-1000']" :style="{ width: adm.progress + '%' }" />
               </div>
               <p class="mt-2 text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">{{ adm.progress }}%</p>
             </div>

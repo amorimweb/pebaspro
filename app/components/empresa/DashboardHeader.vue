@@ -17,7 +17,7 @@ const kpis = [
     value: '24', 
     trend: 'up', 
     trendValue: '12%', 
-    color: 'text-blue-600 bg-blue-50',
+    color: 'text-green-600 bg-green-50',
     path: '/painel/empresa/vagas'
   },
   { 
@@ -35,7 +35,7 @@ const kpis = [
     value: '12', 
     trend: 'down', 
     trendValue: '4%', 
-    color: 'text-indigo-600 bg-indigo-50',
+    color: 'text-emerald-600 bg-emerald-50',
     path: '/painel/empresa/admissao'
   },
   
@@ -62,7 +62,7 @@ const kpis = [
         <button class="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">
           Exportar Relatórios
         </button>
-        <button @click="navigateTo('/painel/empresa/vagas/nova')" class="px-8 py-3 bg-[#0D2E5C] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#1787D4] transition-all shadow-lg shadow-blue-900/20">
+        <button @click="navigateTo('/painel/empresa/vagas/nova')" class="px-8 py-3 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-900/20">
           + Nova Vaga
         </button>
       </div>

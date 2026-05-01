@@ -17,7 +17,7 @@
 
 .view-header h2 {
   font-size: 28px;
-  color: var(--pb-blue-deep);
+  color: #064e3b;
   font-weight: 800;
   letter-spacing: -0.5px;
   margin-bottom: 4px;
@@ -37,7 +37,7 @@
 
 .section-title-row h3 {
   font-size: 18px;
-  color: var(--pb-blue-deep);
+  color: #064e3b;
   font-weight: 700;
 }
 
@@ -65,8 +65,8 @@
 
 .search-box input:focus {
   outline: none;
-  border-color: var(--pb-blue-brand);
-  box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+  border-color: #1FAE66;
+  box-shadow: 0 0 0 3px rgba(31, 174, 102, 0.1);
 }
 
 .search-box svg {
@@ -138,9 +138,9 @@
 }
 
 .btn-icon-sml:hover {
-  border-color: var(--pb-blue-brand);
-  color: var(--pb-blue-brand);
-  background: rgba(30, 136, 229, 0.05);
+  border-color: #1FAE66;
+  color: #1FAE66;
+  background: rgba(31, 174, 102, 0.05);
 }
 
 .btn-primary {
@@ -148,7 +148,7 @@
   align-items: center;
   gap: 8px;
   background: var(--pb-green-main);
-  color: var(--pb-blue-deep);
+  color: #064e3b;
   padding: 12px 24px;
   border-radius: 10px;
   font-size: 14px;

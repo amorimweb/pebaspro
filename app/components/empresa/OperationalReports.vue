@@ -3,10 +3,10 @@ import { Filter, Download } from 'lucide-vue-next'
 
 const chartData = [
   { name: 'Operacional', value: 45, color: 'bg-emerald-500' },
-  { name: 'Técnico', value: 30, color: 'bg-cyan-500' },
-  { name: 'Engenharia', value: 15, color: 'bg-blue-600' },
-  { name: 'ADM', value: 25, color: 'bg-teal-400' },
-  { name: 'Logística', value: 20, color: 'bg-slate-700' },
+  { name: 'Técnico', value: 30, color: 'bg-green-500' },
+  { name: 'Engenharia', value: 15, color: 'bg-green-700' },
+  { name: 'ADM', value: 25, color: 'bg-teal-500' },
+  { name: 'Logística', value: 20, color: 'bg-emerald-800' },
 ]
 
 const stats = [

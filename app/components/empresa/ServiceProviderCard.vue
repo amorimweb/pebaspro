@@ -13,7 +13,7 @@ const { company } = useEmpresaDashboard()
 <template>
   <div class="relative overflow-hidden mb-10 group">
     <!-- Background Gradient -->
-    <div class="absolute inset-0 bg-gradient-to-r from-[#0D2E5C] to-[#1787D4] rounded-[32px]"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-green-700 to-teal-700 rounded-[32px]"></div>
     <div class="absolute -right-20 -top-20 w-64 h-64 bg-white/5 rounded-full blur-3xl transition-transform group-hover:scale-125 duration-1000"></div>
     
     <div class="relative p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -49,7 +49,7 @@ const { company } = useEmpresaDashboard()
       </div>
 
       <div class="shrink-0 flex flex-col items-center gap-2">
-        <button class="px-6 py-2 bg-[#1FAE66] text-[#0D2E5C] rounded-xl font-black text-[10px] uppercase tracking-tight shadow-lg shadow-green-900/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+        <button class="px-6 py-2 bg-[#1FAE66] text-green-900 rounded-xl font-black text-[10px] uppercase tracking-tight shadow-lg shadow-green-950/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
           Ativar <ArrowRight size="12" />
         </button>
         <span class="text-[7px] font-black text-white/30 uppercase tracking-tighter">Plano Corporativo</span>

@@ -225,7 +225,7 @@ const formatData = (dt: string | null) =>
           <RefreshCw :size="16" />
         </button>
         <button
-          class="flex items-center gap-2 px-8 py-3 bg-[#0D2E5C] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#1787D4] transition-all shadow-lg shadow-blue-900/20"
+          class="flex items-center gap-2 px-8 py-3 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-900/20"
           @click="isFormOpen = !isFormOpen"
         >
           <Plus :size="18" /> Nova Vaga
@@ -237,7 +237,7 @@ const formatData = (dt: string | null) =>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
       <div class="bg-white rounded-[20px] border border-slate-100 shadow-sm p-5">
         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total de Vagas</p>
-        <div class="text-3xl font-black text-[#0D2E5C]">{{ kpis.total }}</div>
+        <div class="text-3xl font-black text-green-700">{{ kpis.total }}</div>
       </div>
       <div class="bg-white rounded-[20px] border border-slate-100 shadow-sm p-5">
         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Vagas Ativas</p>
@@ -245,7 +245,7 @@ const formatData = (dt: string | null) =>
       </div>
       <div class="bg-white rounded-[20px] border border-slate-100 shadow-sm p-5">
         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Candidatos</p>
-        <div class="text-3xl font-black text-[#1787D4]">{{ kpis.candidatos }}</div>
+        <div class="text-3xl font-black text-green-500">{{ kpis.candidatos }}</div>
       </div>
       <div class="bg-white rounded-[20px] border border-slate-100 shadow-sm p-5">
         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Aprovados</p>
@@ -255,7 +255,7 @@ const formatData = (dt: string | null) =>
 
     <!-- Formulário Nova Vaga -->
     <Transition name="slide-down">
-      <div v-if="isFormOpen" class="bg-[#0D2E5C] rounded-[24px] p-8 text-white shadow-xl shadow-blue-900/20">
+      <div v-if="isFormOpen" class="bg-[#064e3b] rounded-[24px] p-8 text-white shadow-xl shadow-green-900/20">
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-xl font-black">Publicar Nova Vaga</h3>
           <button class="text-white/50 hover:text-white transition-colors" @click="isFormOpen = false">
@@ -279,7 +279,7 @@ const formatData = (dt: string | null) =>
               <label class="block text-[10px] font-black uppercase tracking-widest mb-2 opacity-75">Regime</label>
               <select
                 v-model="form.tipo"
-                class="w-full px-4 py-3 rounded-xl border border-white/20 bg-[#0D2E5C] text-white outline-none focus:ring-2 focus:ring-white/20 transition-all"
+                class="w-full px-4 py-3 rounded-xl border border-white/20 bg-[#064e3b] text-white outline-none focus:ring-2 focus:ring-white/20 transition-all"
               >
                 <option>CLT</option><option>PJ</option><option>Temporário</option><option>Estágio</option>
               </select>
@@ -288,7 +288,7 @@ const formatData = (dt: string | null) =>
               <label class="block text-[10px] font-black uppercase tracking-widest mb-2 opacity-75">Modalidade</label>
               <select
                 v-model="form.modalidade"
-                class="w-full px-4 py-3 rounded-xl border border-white/20 bg-[#0D2E5C] text-white outline-none focus:ring-2 focus:ring-white/20 transition-all"
+                class="w-full px-4 py-3 rounded-xl border border-white/20 bg-[#064e3b] text-white outline-none focus:ring-2 focus:ring-white/20 transition-all"
               >
                 <option>Presencial</option><option>Híbrido</option><option>Remoto</option>
               </select>
@@ -315,7 +315,7 @@ const formatData = (dt: string | null) =>
               <label class="block text-[10px] font-black uppercase tracking-widest mb-2 opacity-75">Experiência</label>
               <select
                 v-model="form.nivel_experiencia"
-                class="w-full px-4 py-3 rounded-xl border border-white/20 bg-[#0D2E5C] text-white outline-none focus:ring-2 focus:ring-white/20 transition-all"
+                class="w-full px-4 py-3 rounded-xl border border-white/20 bg-[#064e3b] text-white outline-none focus:ring-2 focus:ring-white/20 transition-all"
               >
                 <option value="">Não especificado</option>
                 <option>Sem experiência</option>
@@ -392,7 +392,7 @@ const formatData = (dt: string | null) =>
             v-for="f in [{ id: 'todas', label: 'Todas' }, { id: 'ativas', label: 'Ativas' }, { id: 'encerradas', label: 'Encerradas' }]"
             :key="f.id"
             class="px-4 py-2 transition-all"
-            :class="filtroStatus === f.id ? 'bg-[#0D2E5C] text-white' : 'text-slate-500 hover:bg-slate-50'"
+            :class="filtroStatus === f.id ? 'bg-green-600 text-white' : 'text-slate-500 hover:bg-slate-50'"
             @click="filtroStatus = (f.id as any)"
           >
             {{ f.label }}
@@ -408,7 +408,7 @@ const formatData = (dt: string | null) =>
             v-model="searchTerm"
             type="text"
             placeholder="Buscar vagas..."
-            class="pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium outline-none focus:ring-2 focus:ring-[#1E88E5]/10 focus:bg-white transition-all w-52"
+            class="pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium outline-none focus:ring-2 focus:ring-green-600/10 focus:bg-white transition-all w-52"
           />
         </div>
 
@@ -419,7 +419,7 @@ const formatData = (dt: string | null) =>
 
       <!-- Loading state -->
       <div v-if="loading" class="py-16 flex items-center justify-center gap-3 text-slate-400">
-        <div class="w-5 h-5 border-2 border-slate-200 border-t-[#1E88E5] rounded-full animate-spin" />
+        <div class="w-5 h-5 border-2 border-slate-200 border-t-green-600 rounded-full animate-spin" />
         <span class="text-sm font-medium">Carregando vagas...</span>
       </div>
 
@@ -445,11 +445,11 @@ const formatData = (dt: string | null) =>
               <!-- Vaga -->
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-xl bg-[#1E88E5]/10 flex items-center justify-center text-[#1E88E5] shrink-0">
+                  <div class="w-9 h-9 rounded-xl bg-green-600/10 flex items-center justify-center text-green-600 shrink-0">
                     <Briefcase :size="18" />
                   </div>
                   <div>
-                    <p class="font-bold text-[#0D2E5C] text-sm">{{ vaga.titulo }}</p>
+                    <p class="font-bold text-green-900 text-sm">{{ vaga.titulo }}</p>
                     <p v-if="vaga.salario" class="text-xs text-slate-400 font-medium">{{ vaga.salario }}</p>
                   </div>
                 </div>
@@ -480,7 +480,7 @@ const formatData = (dt: string | null) =>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-2">
                   <div class="flex items-baseline gap-1">
-                    <span class="text-base font-black text-[#0D2E5C]">{{ vaga.total_candidatos }}</span>
+                    <span class="text-base font-black text-green-700">{{ vaga.total_candidatos }}</span>
                     <span class="text-xs text-slate-400 font-medium">total</span>
                   </div>
                   <span v-if="vaga.candidatos_aprovados > 0" class="text-xs font-black text-[#1FAE66]">
@@ -510,7 +510,7 @@ const formatData = (dt: string | null) =>
 
                   <!-- Ver detalhes → modal -->
                   <button
-                    class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-[#1E88E5] hover:border-[#1E88E5]/30 transition-all"
+                    class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-green-600 hover:border-green-600/30 transition-all"
                     title="Ver detalhes da vaga"
                     @click="vagaDetalhes = vaga"
                   >
@@ -575,7 +575,7 @@ const formatData = (dt: string | null) =>
         <div class="relative z-10 h-full w-full max-w-xl bg-white shadow-2xl flex flex-col overflow-hidden">
 
           <!-- Header do drawer -->
-          <div class="bg-[#0D2E5C] px-8 py-6 text-white flex items-start justify-between shrink-0">
+          <div class="bg-[#064e3b] px-8 py-6 text-white flex items-start justify-between shrink-0">
             <div class="flex-1 pr-4">
               <span
                 class="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg"
@@ -595,7 +595,7 @@ const formatData = (dt: string | null) =>
 
           <!-- Chips de info -->
           <div class="flex flex-wrap gap-2 px-8 py-4 border-b border-slate-100 shrink-0">
-            <span v-if="vagaDetalhes.tipo" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-[#1E88E5] rounded-xl text-xs font-bold">
+            <span v-if="vagaDetalhes.tipo" class="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-600 rounded-xl text-xs font-bold">
               <Tag :size="12" /> {{ vagaDetalhes.tipo }}
             </span>
             <span v-if="vagaDetalhes.modalidade" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold">
@@ -621,7 +621,7 @@ const formatData = (dt: string | null) =>
             <!-- Candidatos -->
             <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
               <div class="text-center">
-                <div class="text-2xl font-black text-[#0D2E5C]">{{ vagaDetalhes.total_candidatos }}</div>
+                <div class="text-2xl font-black text-green-800">{{ vagaDetalhes.total_candidatos }}</div>
                 <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Candidatos</div>
               </div>
               <div class="w-px h-10 bg-slate-200" />

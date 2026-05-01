@@ -41,7 +41,7 @@ const scoreLabel = computed(() => {
         <h3 class="text-xl font-black text-slate-900 tracking-tight">Compliance SST + eSocial</h3>
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Gestão de conformidade ativa</p>
       </div>
-      <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+      <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
         <AlertTriangle size="20" />
       </div>
     </div>
@@ -80,7 +80,7 @@ const scoreLabel = computed(() => {
       <p class="mt-3 text-xs font-black uppercase tracking-[0.22em] text-slate-500">{{ scoreLabel }}</p>
     </div>
 
-    <button class="mt-8 py-4 bg-[#0D2E5C] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#1787D4] transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/10">
+    <button class="mt-8 py-4 bg-green-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-900/10">
       Acessar Central SST <ChevronRight size="12" />
     </button>
   </div>

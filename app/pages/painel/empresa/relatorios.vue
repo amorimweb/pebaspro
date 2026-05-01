@@ -29,7 +29,7 @@ const exportData = (label: string) => {
           <Printer :size="16" /> Imprimir
         </button>
         <button
-          class="flex items-center gap-2 px-8 py-3 bg-[#0D2E5C] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#1787D4] transition-all shadow-lg shadow-blue-900/20"
+          class="flex items-center gap-2 px-8 py-3 bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-900/20"
           @click="exportData('Dados Operacionais (XLSX)')"
         >
           <FileDown :size="16" /> Exportar Dados
