@@ -11,7 +11,7 @@ const { data: prestadores, refresh, pending } = await useAsyncData<any[]>('prest
   let query = (supabase
     .from('usuarios')
     .select('*, servicos(id, titulo, preco_inicial)') as any)
-    .eq('tipo_conta', 'prestador')
+    .or('tipo_conta.eq.prestador,and(tipo_conta.eq.empresa,modo_prestador.eq.true)')
     .eq('cadastro_completo', true)
     .eq('status', 'ativo')
 

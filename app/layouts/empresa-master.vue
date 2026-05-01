@@ -18,7 +18,8 @@ import {
   LogOut,
   ExternalLink,
   ChevronDown,
-  MessageSquare
+  MessageSquare,
+  Wrench
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
@@ -32,6 +33,7 @@ const ALL_MENU_ITEMS = [
   { id: 'mensagens',   icon: MessageSquare,   label: 'Mensagens',        path: '/painel/empresa/mensagens' },
   { id: 'recrutamento',icon: Briefcase,       label: 'Recrutamento',     path: '/painel/empresa/vagas' },
   { id: 'talentos',    icon: Search,          label: 'Banco de Talentos',path: '/painel/empresa/buscar-talentos' },
+  { id: 'servicos',    icon: Wrench,          label: 'Servicos',         path: '/painel/empresa/servicos' },
   { id: 'admissao',    icon: UserPlus,        label: 'Admissão Digital', path: '/painel/empresa/admissao' },
   { id: 'documentos',  icon: FileText,        label: 'Documentos',       path: '/painel/empresa/documentos' },
   { id: 'relatorios',  icon: BarChart3,       label: 'Relatórios',       path: '/painel/empresa/relatorios' },
@@ -47,13 +49,13 @@ const MODE_LABELS = {
 // Mapeamento de módulos por modo (simplificado para demonstração inicial)
 const modeModules = {
   essencial:    ['dashboard', 'mensagens', 'recrutamento', 'talentos', 'admissao', 'documentos', 'configuracoes'],
-  operacional:  ['dashboard', 'mensagens', 'recrutamento', 'talentos', 'admissao', 'documentos', 'relatorios', 'configuracoes'],
-  corporativo:  ['dashboard', 'mensagens', 'recrutamento', 'talentos', 'admissao', 'documentos', 'relatorios', 'configuracoes'],
+  operacional:  ['dashboard', 'mensagens', 'recrutamento', 'talentos', 'servicos', 'admissao', 'documentos', 'relatorios', 'configuracoes'],
+  corporativo:  ['dashboard', 'mensagens', 'recrutamento', 'talentos', 'servicos', 'admissao', 'documentos', 'relatorios', 'configuracoes'],
 }
 
 const menuItems = computed(() => {
   const allowedIds = modeModules[mode.value] || modeModules.corporativo
-  return ALL_MENU_ITEMS.filter(m => allowedIds.includes(m.id))
+  return ALL_MENU_ITEMS.filter(m => allowedIds.includes(m.id) && (m.id !== 'servicos' || authStore.profile?.modo_prestador))
 })
 
 const modeDef = computed(() => MODE_LABELS[mode.value] || MODE_LABELS.corporativo)

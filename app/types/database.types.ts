@@ -563,6 +563,7 @@ export interface Database {
           objetivo_profissional: string | null
           latitude: number | null
           longitude: number | null
+          modo_prestador: boolean
           role: string
         }
         Insert: {
@@ -588,6 +589,7 @@ export interface Database {
           objetivo_profissional?: string | null
           latitude?: number | null
           longitude?: number | null
+          modo_prestador?: boolean
           role?: string
         }
         Update: {
@@ -613,6 +615,7 @@ export interface Database {
           objetivo_profissional?: string | null
           latitude?: number | null
           longitude?: number | null
+          modo_prestador?: boolean
           role?: string
         }
         Relationships: []

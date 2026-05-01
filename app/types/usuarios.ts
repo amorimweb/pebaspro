@@ -26,6 +26,7 @@ export interface CreateUsuarioPayload {
     longitude?: number | null
     cidade?: string | null
     estado?: string | null
+    modo_prestador?: boolean | null
     role?: string
 }
 
@@ -54,5 +55,6 @@ export interface UpdateUsuarioPayload {
     longitude?: number | null
     cidade?: string | null
     estado?: string | null
+    modo_prestador?: boolean | null
     role?: string
 }
