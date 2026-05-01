@@ -101,7 +101,7 @@ onUnmounted(() => {
 
 <template>
   <div
-    class="bg-gradient-to-r from-green-700 to-teal-700 text-white text-center px-4 py-20 md:pt-32 h-auto min-h-[70vh] md:h-[80vh] flex flex-col justify-center items-center relative overflow-visible"
+    class="bg-gradient-to-r from-green-700 to-teal-700 text-white text-center px-4 pt-32 pb-20 md:pt-44 md:pb-28 h-auto min-h-[640px] md:min-h-[calc(100vh-4rem)] flex flex-col justify-center items-center relative overflow-visible"
   >
     <!-- Elementos Decorativos de Fundo -->
     <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
@@ -109,7 +109,7 @@ onUnmounted(() => {
        <div class="absolute bottom-10 right-10 w-96 h-96 bg-green-300 rounded-full blur-3xl"></div>
     </div>
 
-    <div class="relative z-10 max-w-4xl mx-auto">
+    <div class="relative z-10 max-w-4xl mx-auto w-full">
       <h1 class="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6 tracking-tight leading-[1.1]">
         {{ content.title.split(' ').slice(0, -1).join(' ') }} 
         <span class="text-green-300">{{ content.title.split(' ').pop() }}</span>
@@ -120,7 +120,7 @@ onUnmounted(() => {
       </p>
 
       <!-- Busca Ao Vivo -->
-      <div class="flex flex-col items-center w-full group/search relative mb-8 md:mb-12 z-50 px-2" ref="dropdownRef">
+      <div class="flex flex-col items-center w-full group/search relative mb-6 md:mb-8 z-50 px-2" ref="dropdownRef">
         <div class="relative w-full max-w-2xl mx-auto group z-50">
           <input
             v-model="searchQuery"
@@ -179,7 +179,7 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <div v-if="authStore.user" class="mt-6 animate-fade-in delay-500">
+      <div v-if="authStore.user" class="mt-4 animate-fade-in delay-500">
          <p class="text-white/60 text-sm font-bold uppercase tracking-widest">Acesso rápido para {{ authStore.profile?.tipo_conta || 'você' }}</p>
       </div>
     </div>

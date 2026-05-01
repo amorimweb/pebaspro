@@ -9,35 +9,6 @@ definePageMeta({
 
 const authStore = useAuthStore()
 
-const parallaxSections = ref([] as HTMLElement[])
-
-onMounted(() => {
-  const handleScroll = () => {
-    parallaxSections.value.forEach((section, index) => {
-      if (!section) return
-      
-      const rect = section.getBoundingClientRect()
-      const scrolled = window.scrollY
-      const rate = scrolled * (0.3 + index * 0.05) // Different speeds for each section
-      
-      // Only apply parallax when section is in viewport
-      if (rect.top < window.innerHeight && rect.bottom > 0) {
-        section.style.transform = `translateY(${rate * 0.15}px)`
-      }
-    })
-  }
-
-  // Get all parallax sections
-  const sections = document.querySelectorAll('.parallax-section')
-  parallaxSections.value = Array.from(sections) as HTMLElement[]
-  
-  window.addEventListener('scroll', handleScroll, { passive: true })
-  
-  onBeforeUnmount(() => {
-    window.removeEventListener('scroll', handleScroll)
-  })
-})
-
 useSeoMeta({
   title: 'PEBASPRO - Encontre o profissional ideal',
   description: 'Conectamos você com os melhores prestadores da região de forma rápida e segura.'
@@ -72,25 +43,11 @@ useSeoMeta({
 
       <StatsSection />
       
-      <div class="parallax-section">
-        <CardsPrestadorEmpresa />
-      </div>
-      <div class="parallax-section">
-        <CategoriasPopulares />
-      </div>
-      <div class="parallax-section">
-        <NossaPlataforma />
-      </div>
-      <div class="parallax-section">
-        <EmpresasParceiras />
-      </div>
+      <CardsPrestadorEmpresa />
+      <CategoriasPopulares />
+      <NossaPlataforma />
+      <EmpresasParceiras />
     </main>
   </div>
 </template>
 
-<style scoped>
-.parallax-section {
-  will-change: transform;
-  transition: transform 0.1s ease-out;
-}
-</style>
