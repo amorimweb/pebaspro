@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import { useNotifications } from '~/composables/useNotifications'
+import { usePushNotifications } from '~/composables/usePushNotifications'
 
 const authStore = useAuthStore()
 const isSidebarOpen = ref(false)
+
+const { init: initPush } = usePushNotifications()
+onMounted(() => {
+  if (authStore.profile?.id) initPush()
+})
+watch(() => authStore.profile?.id, (id) => { if (id) initPush() })
 
 const menuItems = computed(() => {
   const profile = authStore.profile

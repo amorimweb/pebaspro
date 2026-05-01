@@ -1,5 +1,6 @@
 import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { sendPushToUser } from '~/server/utils/sendPush'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -84,6 +85,28 @@ export default defineEventHandler(async (event) => {
       .from('conversas')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversaId)
+
+    const { data: conversa } = await supabase
+      .from('conversas')
+      .select('participante1_id, participante2_id')
+      .eq('id', conversaId)
+      .single()
+
+    if (conversa) {
+      const recipientId = conversa.participante1_id === userId
+        ? conversa.participante2_id
+        : conversa.participante1_id
+
+      const { data: remetente } = await supabase
+        .from('usuarios').select('nome').eq('id', userId).single()
+
+      await sendPushToUser(supabase, recipientId, {
+        title: remetente?.nome || 'Novo documento',
+        body: `Documento enviado: ${file.name}`,
+        url: '/painel/mensagens',
+        tag: `mensagem-${conversaId}`,
+      })
+    }
   }
 
   return { ok: true, documento: doc }

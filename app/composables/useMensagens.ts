@@ -88,17 +88,12 @@ if (!participantId) return
 
   // ─── Send Message ──────────────────────────────────────────────────────────
   const sendMessage = async (conversationId: string, content: string) => {
-    const participantId = getParticipantId()
-    if (!participantId || !content.trim()) return
+    if (!content.trim()) return
     try {
-      const { error: err } = await supabase
-        .from('mensagens')
-        .insert({
-          conversa_id: conversationId,
-          remetente_id: participantId,
-          conteudo: content.trim()
-        })
-      if (err) throw err
+      await $fetch('/api/mensagens', {
+        method: 'POST',
+        body: { conversa_id: conversationId, conteudo: content.trim() },
+      })
     } catch (e: any) {
       console.error('Erro ao enviar:', e.message)
       throw e
