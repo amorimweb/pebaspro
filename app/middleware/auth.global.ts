@@ -4,8 +4,23 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     const user = useSupabaseUser()
     const authStore = useAuthStore()
 
-    const publicRoutes = ['/', '/login', '/cadastro', '/confirm', '/esqueci-senha', '/redefinir-senha']
-    const isPublicRoute = publicRoutes.some(path => to.path === path || to.path.startsWith('/cadastro/'))
+    const publicPrefixes = [
+        '/',
+        '/login',
+        '/cadastro',
+        '/confirm',
+        '/esqueci-senha',
+        '/redefinir-senha',
+        // Rotas públicas (permitir compartilhar link sem forçar onboarding)
+        '/vagas',
+        '/servicos',
+        '/empresas',
+        '/prestadores',
+        '/contato',
+    ]
+    const isPublicRoute =
+        publicPrefixes.some((p) => to.path === p || to.path.startsWith(`${p}/`)) ||
+        to.path.startsWith('/cadastro/')
 
     if (!user.value) {
         if (!isPublicRoute) {
@@ -13,6 +28,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         }
         return
     }
+    // Em alguns momentos a sessão pode hidratar sem id; não tratar como autenticado.
+    if (!user.value.id) return
 
     // Ensure profile is loaded
     if (!authStore.initialized) {

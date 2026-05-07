@@ -11,6 +11,8 @@ const { coords, getLocation, loading: locationLoading } = useLocation()
 const { translateError } = useTranslation()
 const loading = computed(() => authStore.profileLoading || uploading.value || locationLoading.value)
 
+const fileInput = ref<HTMLInputElement | null>(null)
+
 onMounted(async () => {
     if (user.value && !authStore.profile) {
         await authStore.fetchProfile()

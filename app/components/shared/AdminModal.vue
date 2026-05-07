@@ -56,8 +56,10 @@ watch(() => props.isOpen, (val) => {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-.zoom-in-95 { transform: scale(0.95); opacity: 0; }
-.v-enter-to .zoom-in-95 { transform: scale(1); opacity: 1; }
+/* Animação do painel sincronizada com a Transition "fade" */
+.zoom-in-95 { transform: scale(1); opacity: 1; transition: transform 0.25s ease, opacity 0.25s ease; }
+.fade-enter-from .zoom-in-95,
+.fade-leave-to .zoom-in-95 { transform: scale(0.96); opacity: 0; }
 
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 </style>

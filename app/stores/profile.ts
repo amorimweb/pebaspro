@@ -26,8 +26,14 @@ export const useProfileStore = defineStore('profile', {
                 this.profile = data
                 return { data, error: null }
             } catch (err: any) {
+                // 401 é esperado quando não há sessão; não tratar como "erro" barulhento.
+                if (err?.statusCode === 401) {
+                    this.profile = null
+                    this.error = null
+                    return { data: null, error: err }
+                }
                 console.error('Erro ao buscar perfil:', err)
-                this.error = err.statusMessage || 'Erro ao carregar perfil'
+                this.error = err?.data?.message || err?.message || 'Erro ao carregar perfil'
                 this.profile = null
                 return { data: null, error: err }
             } finally {

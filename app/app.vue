@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Main App Component
+import AssistantFloating from '~/components/assistant/AssistantFloating.vue'
 </script>
 
 <template>
@@ -7,5 +7,6 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
+    <AssistantFloating />
   </div>
 </template>

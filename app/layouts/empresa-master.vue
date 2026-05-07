@@ -93,30 +93,14 @@ const isActive = (path: string) => {
       <!-- Header -->
       <div class="p-8 border-b border-white/5">
         <NuxtLink to="/painel/empresa" class="flex items-center gap-4 mb-4 group/logo transition-all hover:opacity-90">
-          <div class="w-12 h-12 rounded-[14px] bg-gradient-to-br from-[#1FAE66] to-[#059669] flex items-center justify-center shadow-lg shadow-green-500/20 relative overflow-hidden group">
-            <div class="absolute inset-0 bg-white/20 opacity-50 transition-opacity group-hover:opacity-100" />
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="white" class="z-10 drop-shadow">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-            </svg>
+          <div class="w-12 h-12 rounded-[14px] bg-white/10 border border-white/10 flex items-center justify-center shadow-lg shadow-green-500/10 relative overflow-hidden">
+            <img src="/PEBASPRO-logo.png" alt="PebasPro" class="w-9 h-9 object-contain drop-shadow" />
           </div>
           <div>
             <h1 class="text-xl font-[900] tracking-tighter leading-none">PEBASPRO</h1>
             <span class="text-[10px] text-[#1FAE66] font-bold uppercase tracking-widest mt-1 inline-block">Profissionais Locais</span>
           </div>
         </NuxtLink>
-        
-        <div class="mt-4 flex items-center justify-between">
-           <span class="bg-white/10 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-[#1FAE66]">Painel Empresarial</span>
-        </div>
-
-        <!-- Mode Badge -->
-        <div 
-          class="mt-4 flex items-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all"
-          :style="{ borderColor: modeDef.color, color: modeDef.color }"
-        >
-          <Zap size="10" :fill="modeDef.color" />
-          Modo {{ modeDef.label }}
-        </div>
       </div>
 
       <!-- Navigation -->

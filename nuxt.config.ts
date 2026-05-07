@@ -6,7 +6,6 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     '@nuxtjs/supabase',
     '@pinia/nuxt',
-    '@pinia-plugin-persistedstate/nuxt',
     '@vite-pwa/nuxt',
   ],
   app: {

@@ -5,7 +5,7 @@ export default defineNuxtPlugin(() => {
     // Sincroniza o perfil sempre que o estado do usuário mudar
     watch(user, async (newUser, oldUser) => {
         // 1. Usuário logou ou mudou
-        if (newUser) {
+        if (newUser && newUser.id) {
             if (newUser.id !== oldUser?.id || !authStore.profile) {
                 await authStore.fetchProfile()
             } else {

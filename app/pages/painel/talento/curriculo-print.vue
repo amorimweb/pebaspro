@@ -144,7 +144,7 @@ const initials = computed(() => {
           </div>
 
           <!-- Rodapé -->
-          <div class="sidebar-footer">
+          <div class="sidebar-footer sidebar-footer-brand">
             <p>PEBASPRO</p>
             <p>Onde o talento encontra a oportunidade</p>
           </div>
@@ -436,5 +436,8 @@ body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
   .period-dot { animation: none !important; }
 
   .btn-print, .btn-toolbar, .toolbar { display: none !important; }
+
+  /* Não imprimir marca/fras e do rodapé */
+  .sidebar-footer-brand { display: none !important; }
 }
 </style>

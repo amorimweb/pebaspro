@@ -2,9 +2,10 @@
 import {
   Briefcase, Plus, Search, Filter, Eye,
   Trash2, Users, Clock, CheckCircle2, AlertCircle, RefreshCw, X,
-  MapPin, Banknote, CalendarDays, GraduationCap, Tag
+  MapPin, Banknote, CalendarDays, GraduationCap, Tag, Share2, Copy
 } from 'lucide-vue-next'
 import type { Database } from '~/types/database.types'
+import AdminModal from '~/components/shared/AdminModal.vue'
 
 definePageMeta({ layout: 'empresa-master' })
 
@@ -27,6 +28,61 @@ const isFormOpen = ref(false)
 const toast      = ref<{ msg: string; tipo: 'ok' | 'erro' } | null>(null)
 
 const hoje = () => new Date().toISOString().split('T')[0]
+
+// ─── Compartilhar vaga ─────────────────────────────────────────────────────────
+const isShareOpen = ref(false)
+const vagaShare = ref<VagaRow | null>(null)
+
+const config = useRuntimeConfig()
+const baseUrl = computed(() => {
+  const fromConfig = (config.public as any)?.siteUrl as string | undefined
+  if (fromConfig) return fromConfig.replace(/\/$/, '')
+  return process.client ? window.location.origin : ''
+})
+
+const shareUrl = computed(() => {
+  if (!vagaShare.value) return ''
+  const origin = baseUrl.value
+  const path = `/vagas/${vagaShare.value.id}`
+  return origin ? `${origin}${path}` : path
+})
+
+const shareText = computed(() => {
+  if (!vagaShare.value) return ''
+  return `Vaga: ${vagaShare.value.titulo} — PEBASPRO`
+})
+
+const openShare = (vaga: VagaRow) => {
+  vagaShare.value = vaga
+  isShareOpen.value = true
+}
+
+const closeShare = () => {
+  isShareOpen.value = false
+  vagaShare.value = null
+}
+
+const copyShareLink = async () => {
+  if (!shareUrl.value) return
+  try {
+    await navigator.clipboard.writeText(shareUrl.value)
+    mostrarToast('Link copiado!', 'ok')
+  } catch {
+    mostrarToast('Não foi possível copiar o link.', 'erro')
+  }
+}
+
+const shareTargets = computed(() => {
+  const url = encodeURIComponent(shareUrl.value)
+  const text = encodeURIComponent(shareText.value)
+  return [
+    { id: 'whatsapp', label: 'WhatsApp', href: `https://wa.me/?text=${text}%0A${url}` },
+    { id: 'linkedin', label: 'LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${url}` },
+    { id: 'facebook', label: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${url}` },
+    { id: 'x', label: 'X', href: `https://twitter.com/intent/tweet?text=${text}&url=${url}` },
+    { id: 'email', label: 'E-mail', href: `mailto:?subject=${text}&body=${text}%0A${url}` },
+  ]
+})
 
 const form = reactive({
   titulo: '',
@@ -517,6 +573,15 @@ const formatData = (dt: string | null) =>
                     <Eye :size="15" />
                   </button>
 
+                  <!-- Compartilhar -->
+                  <button
+                    class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-[#1E88E5] hover:border-[#1E88E5]/30 transition-all"
+                    title="Compartilhar vaga"
+                    @click="openShare(vaga)"
+                  >
+                    <Share2 :size="15" />
+                  </button>
+
                   <!-- Encerrar -->
                   <button
                     v-if="isAtiva(vaga)"
@@ -558,6 +623,56 @@ const formatData = (dt: string | null) =>
         </div>
       </div>
     </div>
+
+    <!-- ── MODAL COMPARTILHAR ── -->
+    <AdminModal
+      :isOpen="isShareOpen"
+      title="Compartilhar vaga"
+      maxWidth="max-w-xl"
+      @close="closeShare"
+    >
+      <div class="space-y-6">
+        <div>
+          <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Vaga</p>
+          <p class="text-lg font-black text-slate-900">{{ vagaShare?.titulo || '—' }}</p>
+          <p class="text-sm text-slate-500 font-medium mt-1">Envie para redes sociais ou copie o link direto.</p>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4">
+          <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Link direto</p>
+          <div class="flex gap-2">
+            <input
+              :value="shareUrl"
+              readonly
+              class="flex-1 h-11 px-4 rounded-xl bg-white border border-slate-200 text-sm font-medium text-slate-700 outline-none"
+            />
+            <button
+              class="h-11 px-4 rounded-xl bg-[#1E88E5] text-white font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all flex items-center gap-2"
+              @click="copyShareLink"
+            >
+              <Copy :size="14" /> Copiar
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Compartilhar em</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <a
+              v-for="t in shareTargets"
+              :key="t.id"
+              :href="t.href"
+              target="_blank"
+              rel="noopener"
+              class="flex items-center justify-between px-4 py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition-all"
+            >
+              <span class="text-sm font-bold text-slate-700">{{ t.label }}</span>
+              <span class="text-slate-300 text-xs font-black uppercase tracking-widest">Abrir</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </AdminModal>
 
     <!-- ── MODAL DETALHES DA VAGA ── -->
     <Transition name="drawer">
