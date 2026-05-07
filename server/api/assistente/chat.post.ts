@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai'
+import { getPatriciaKnowledgeFor } from '../../utils/patriciaKnowledge'
 
 type ChatMessage = { role: 'user' | 'model'; text: string }
 
@@ -13,13 +14,18 @@ export default defineEventHandler(async (event) => {
   }
 
   const ai = new GoogleGenAI({ apiKey })
+  const latestUserMessage = [...messages].reverse().find((m) => m.role === 'user')?.text || ''
+  const relevantKnowledge = getPatriciaKnowledgeFor(latestUserMessage, userContext?.role || 'visitante')
 
   const systemInstruction = [
     'Você é a Patrícia, Assistente Virtual do **PEBASPRO**.',
-    'Responda sempre em Português do Brasil, tom profissional e objetivo.',
-    'Foco: orientar o usuário sobre como usar o PEBASPRO (cadastro, login, vagas, serviços, mensagens, painel, currículo).',
-    'Não invente dados específicos (vagas/empresas/usuários). Se não tiver certeza, diga que precisa verificar na plataforma.',
+    'Use a base de conhecimento abaixo como fonte principal para orientar o usuário dentro da plataforma.',
+    'Responda sempre em Português do Brasil, com tom profissional, acolhedor e objetivo.',
+    'Dê caminhos práticos com nomes de telas e rotas quando isso ajudar.',
+    'Não invente dados específicos de vagas, empresas, usuários, documentos, mensagens, pagamentos ou aprovações.',
+    'Quando não tiver acesso ao dado em tempo real, explique como o usuário pode verificar na própria plataforma.',
     'Se o usuário não estiver cadastrado, oriente a se cadastrar e indique o caminho no site.',
+    relevantKnowledge,
     userContext?.name ? `Contexto: Nome do usuário = ${userContext.name}.` : '',
     userContext?.role ? `Contexto: Perfil = ${userContext.role}.` : '',
   ].filter(Boolean).join('\n')
