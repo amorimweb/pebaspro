@@ -113,90 +113,112 @@ const sendMessage = async () => {
 </script>
 
 <template>
-  <div class="fixed bottom-6 right-6 z-[120] print:hidden">
-    <!-- Botão flutuante -->
+  <div class="fixed bottom-4 right-4 z-[120] print:hidden sm:bottom-6 sm:right-6">
     <button
       v-if="!isOpen"
-      class="w-14 h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-sky-600 text-white shadow-2xl shadow-emerald-500/20 flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+      class="group relative flex h-[60px] w-[60px] items-center justify-center rounded-[22px] bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-600 text-white shadow-2xl shadow-emerald-500/25 transition-all hover:-translate-y-1 hover:shadow-sky-600/30 active:translate-y-0"
       title="Abrir assistente"
       @click="toggle"
     >
+      <span class="absolute -right-1 -top-1 h-4 w-4 rounded-full border-2 border-white bg-emerald-300 shadow-sm" />
       <MessageSquare :size="22" />
     </button>
 
-    <!-- Painel -->
     <div
       v-else
-      class="w-[92vw] max-w-[420px] h-[70vh] max-h-[720px] bg-white rounded-[28px] shadow-2xl border border-slate-100 overflow-hidden"
+      class="flex h-[min(76vh,680px)] w-[calc(100vw-2rem)] max-w-[430px] flex-col overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)] ring-1 ring-slate-900/5"
     >
-      <div class="h-12 bg-slate-900 flex items-center justify-between px-4">
-        <p class="text-[10px] font-black uppercase tracking-widest text-slate-200">
-          Assistente PEBASPRO
-        </p>
-        <div class="flex items-center gap-1">
-          <button class="p-2 text-white/70 hover:text-white" @click="clearHistory" title="Limpar conversa">
-            <Trash2 :size="16" />
-          </button>
-          <button class="p-2 text-white/70 hover:text-white" @click="toggle" title="Fechar">
-            <X :size="18" />
-          </button>
+      <div class="relative overflow-hidden bg-slate-950 px-4 py-4 text-white">
+        <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-emerald-500/25 via-teal-400/10 to-sky-500/25" />
+        <div class="relative flex items-center justify-between gap-3">
+          <div class="flex min-w-0 items-center gap-3">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-sky-500 shadow-lg shadow-emerald-500/20">
+              <Bot :size="22" />
+            </div>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-black uppercase tracking-wide text-white">
+                Patrícia
+              </p>
+              <div class="mt-1 flex items-center gap-1.5">
+                <span class="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_0_3px_rgba(110,231,183,0.14)]" />
+                <p class="text-[11px] font-bold text-slate-300">
+                  Assistente PEBASPRO
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <button class="rounded-xl p-2 text-white/65 transition hover:bg-white/10 hover:text-white" @click="clearHistory" title="Limpar conversa">
+              <Trash2 :size="16" />
+            </button>
+            <button class="rounded-xl p-2 text-white/65 transition hover:bg-white/10 hover:text-white" @click="toggle" title="Fechar">
+              <X :size="18" />
+            </button>
+          </div>
+        </div>
+
+        <div class="relative mt-4 rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3">
+          <p class="text-xs font-semibold leading-relaxed text-slate-200">
+            Tire dúvidas sobre vagas, serviços, cadastro, mensagens e currículo.
+          </p>
         </div>
       </div>
 
-      <!-- Mensagens -->
-      <div ref="messagesEl" class="h-[calc(70vh-3rem-92px)] max-h-[calc(720px-3rem-92px)] overflow-y-auto p-4 bg-slate-50">
-        <div class="space-y-3">
+      <div ref="messagesEl" class="assistant-scroll min-h-0 flex-1 overflow-y-auto bg-[linear-gradient(180deg,#f8fafc_0%,#eefdf6_48%,#f8fafc_100%)] px-4 py-5">
+        <div class="space-y-4">
           <div
             v-for="m in messages"
             :key="m.id"
-            class="flex gap-2"
+            class="flex items-end gap-2.5"
             :class="m.role === 'user' ? 'justify-end' : 'justify-start'"
           >
-            <div v-if="m.role === 'model'" class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-sky-600 flex items-center justify-center text-white shrink-0 mt-1">
-              <Bot :size="18" />
+            <div v-if="m.role === 'model'" class="mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-sky-600 text-white shadow-md shadow-emerald-500/20">
+              <Bot :size="17" />
             </div>
 
             <div
-              class="max-w-[80%] rounded-2xl px-4 py-3 text-sm font-medium shadow-sm whitespace-pre-wrap"
+              class="max-w-[78%] whitespace-pre-wrap px-4 py-3 text-sm font-semibold leading-relaxed shadow-sm"
               :class="m.role === 'user'
-                ? 'bg-gradient-to-r from-emerald-500 to-sky-600 text-white rounded-tr-sm'
-                : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm'"
+                ? 'rounded-[20px] rounded-br-md bg-gradient-to-br from-emerald-500 to-sky-600 text-white shadow-sky-600/15'
+                : 'rounded-[20px] rounded-bl-md border border-slate-200/80 bg-white text-slate-800 shadow-slate-200/70'"
             >
               {{ m.text }}
             </div>
 
-            <div v-if="m.role === 'user'" class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 shrink-0 mt-1">
-              <User :size="18" />
+            <div v-if="m.role === 'user'" class="mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200">
+              <User :size="17" />
             </div>
           </div>
 
-          <div v-if="isLoading" class="flex items-center gap-2 text-slate-500 text-sm">
-            <Loader2 class="animate-spin" :size="16" />
-            Digitando...
+          <div v-if="isLoading" class="flex items-center gap-2.5 pl-1 text-sm font-bold text-slate-500">
+            <span class="flex h-8 w-8 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-sm ring-1 ring-slate-200">
+              <Loader2 class="animate-spin" :size="16" />
+            </span>
+            Patrícia está digitando...
           </div>
         </div>
       </div>
 
-      <!-- Input -->
-      <div class="p-3 bg-white border-t border-slate-200">
+      <div class="border-t border-slate-200/80 bg-white px-3 py-3">
         <form class="flex items-end gap-2" @submit.prevent="sendMessage">
           <textarea
             v-model="input"
             rows="1"
             placeholder="Digite sua mensagem..."
-            class="flex-1 max-h-28 min-h-[44px] bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 resize-none"
+            class="min-h-[48px] flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
             @keydown.enter.exact.prevent="sendMessage"
           />
           <button
             type="submit"
-            class="w-11 h-11 rounded-2xl bg-gradient-to-r from-emerald-500 to-sky-600 text-white flex items-center justify-center shadow-lg disabled:opacity-50"
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-sky-600 text-white shadow-lg shadow-sky-600/20 transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45"
             :disabled="!input.trim() || isLoading"
             title="Enviar"
           >
-            <Send :size="18" />
+            <Send :size="19" />
           </button>
         </form>
-        <p class="mt-2 text-[10px] text-slate-400 text-center">
+        <p class="mt-2 text-center text-[10px] font-medium text-slate-400">
           O assistente pode cometer erros. Confirme informações importantes.
         </p>
       </div>
@@ -204,3 +226,24 @@ const sendMessage = async () => {
   </div>
 </template>
 
+<style scoped>
+.assistant-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 transparent;
+}
+
+.assistant-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.assistant-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.assistant-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+</style>
