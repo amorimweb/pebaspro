@@ -30,27 +30,21 @@ const handleLogin = async () => {
     }
     
     if (data.user) {
-      // Buscar perfil do usuário
-      await authStore.fetchProfile()
-      
-      const profile = authStore.profile
+      const result = await authStore.fetchProfile(data.session?.access_token)
+      const profile = result?.data
 
-      // 1. Se o perfil estiver incompleto, forçar onboarding
-      if (!profile || !profile.cadastro_completo) {
+      if (!profile || !profile.cadastro_completo || !profile.tipo_conta) {
         await navigateTo('/cadastro/onboarding')
         return
       }
 
-      // 2. Redirecionar baseado no tipo de conta se o perfil estiver completo
       const redirectMap: Record<string, string> = {
         talento: '/',
         empresa: '/painel/empresa',
         prestador: '/painel/prestador',
         cliente: '/',
       }
-      
-      const target = redirectMap[profile.tipo_conta as keyof typeof redirectMap] || '/'
-      await navigateTo(target)
+      await navigateTo(redirectMap[profile.tipo_conta] || '/')
     }
   } catch (error: any) {
     console.error('Erro no login:', error)
@@ -132,7 +126,7 @@ const loginWithGoogle = async () => {
           <span>ou</span>
         </div>
 
-        <button type="button" @click="loginWithGoogle" class="google-btn">
+        <button type="button" @click="loginWithGoogle" class="google-btn" :disabled="loading">
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
           Continuar com Google
         </button>
@@ -149,11 +143,13 @@ const loginWithGoogle = async () => {
 <style scoped>
 .auth-page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: #f1f5f9; /* Um pouco mais escuro para destacar o card branco */
-  padding: 20px;
+  overflow-x: hidden;
+  padding: 16px;
   font-family: 'Inter', sans-serif;
 }
 
@@ -167,7 +163,7 @@ const loginWithGoogle = async () => {
   max-width: 480px;
   width: 100%;
   background: white;
-  padding: 32px 20px;
+  padding: 28px 20px;
   border-radius: 24px;
   box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
 }
@@ -180,7 +176,7 @@ const loginWithGoogle = async () => {
  
 .auth-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 @media (min-width: 768px) {
@@ -190,8 +186,8 @@ const loginWithGoogle = async () => {
 }
 
 .auth-logo {
-  height: 80px;
-  margin: 0 auto 24px;
+  height: 64px;
+  margin: 0 auto 18px;
   display: block;
 }
 
@@ -209,7 +205,7 @@ const loginWithGoogle = async () => {
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .form-group {
@@ -339,16 +335,63 @@ const loginWithGoogle = async () => {
   transform: translateY(-1px);
 }
 
+.google-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .google-btn img {
   width: 20px;
   height: 20px;
 }
 
 .auth-footer {
-  margin-top: 32px;
+  margin-top: 24px;
   text-align: center;
   font-size: 0.875rem;
   color: #6b7280;
+}
+
+@media (max-height: 720px) {
+  .auth-page {
+    align-items: flex-start;
+    padding-block: 12px;
+  }
+
+  .auth-card {
+    padding-block: 20px;
+  }
+
+  .auth-logo {
+    height: 52px;
+    margin-bottom: 12px;
+  }
+
+  .auth-header {
+    margin-bottom: 14px;
+  }
+
+  .auth-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .auth-form {
+    gap: 12px;
+  }
+
+  .form-group input,
+  .submit-btn {
+    height: 44px;
+  }
+
+  .google-btn {
+    height: 48px;
+  }
+
+  .auth-footer {
+    margin-top: 16px;
+  }
 }
 
 .auth-footer a {

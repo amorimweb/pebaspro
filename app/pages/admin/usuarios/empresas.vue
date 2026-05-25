@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { 
-  Search, 
-  Filter, 
-  Building2, 
-  Briefcase, 
-  Eye, 
-  Lock, 
-  Unlock, 
-  Edit, 
-  ShieldCheck 
+import {
+  Search,
+  Filter,
+  Building2,
+  Briefcase,
+  Eye,
+  Lock,
+  Unlock,
+  Edit,
+  ShieldCheck
 } from 'lucide-vue-next'
+import type { Database } from '~/types/database.types'
 import { useAdminPermissions } from '~/composables/useAdminPermissions'
 import { useAdminAudit } from '~/composables/useAdminAudit'
 
@@ -18,6 +19,7 @@ definePageMeta({
   middleware: 'admin'
 })
 
+const supabase = useSupabaseClient<Database>()
 const { canPerformAction } = useAdminPermissions()
 const { logAction } = useAdminAudit()
 
@@ -29,44 +31,54 @@ const selectedEmpresa = ref<any>(null)
 const isModalOpen = ref(false)
 const itemsPerPage = 10
 
-// Mock Data
-const mockEmpresas = ref(Array.from({ length: 25 }, (_, i) => ({
-  id: i + 1,
-  nome: `Empresa ${i + 1} Ltda`,
-  cnpj: `${(10 + i).toString().padStart(2, '0')}.345.678/0001-90`,
-  email: `contato@empresa${i + 1}.com.br`,
-  status: i % 5 === 0 ? 'bloqueado' : i % 3 === 0 ? 'pendente' : 'ativo',
-  vagasAtivas: Math.floor(Math.random() * 15),
-  plano: i % 4 === 0 ? 'Premium' : i % 2 === 0 ? 'Pro' : 'Gratuito',
-  dataCadastro: `1${i % 9}/01/2026`,
-})))
+// DB State
+const empresas = ref<any[]>([])
+const totalCount = ref(0)
+const statsValues = ref({ total: 0, ativas: 0, pendentes: 0, suspensas: 0 })
 
-// Simulate loading
-onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false
-  }, 500)
-})
+const totalPages = computed(() => Math.ceil(totalCount.value / itemsPerPage))
 
-// Filter logic
-const filteredEmpresas = computed(() => {
-  return mockEmpresas.value.filter(e => 
-    e.nome.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    e.cnpj.includes(searchTerm.value) ||
-    e.email.toLowerCase().includes(searchTerm.value.toLowerCase())
-  )
-})
+const fetchEmpresas = async () => {
+  isLoading.value = true
+  let query = supabase
+    .from('usuarios')
+    .select('id, nome, email, status, regiao, created_at', { count: 'exact' })
+    .eq('tipo_conta', 'empresa')
+  if (searchTerm.value) {
+    query = query.or(`nome.ilike.%${searchTerm.value}%,email.ilike.%${searchTerm.value}%`)
+  }
+  const from = (currentPage.value - 1) * itemsPerPage
+  const { data, count } = await query.order('created_at', { ascending: false }).range(from, from + itemsPerPage - 1)
+  empresas.value = data ?? []
+  totalCount.value = count ?? 0
+  isLoading.value = false
+}
 
-// Pagination logic
-const totalPages = computed(() => Math.ceil(filteredEmpresas.value.length / itemsPerPage))
-const paginatedEmpresas = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return filteredEmpresas.value.slice(start, start + itemsPerPage)
-})
+const fetchStats = async () => {
+  const [
+    { count: total },
+    { count: ativas },
+    { count: pendentes },
+    { count: suspensas }
+  ] = await Promise.all([
+    supabase.from('usuarios').select('*', { count: 'exact', head: true }).eq('tipo_conta', 'empresa'),
+    supabase.from('usuarios').select('*', { count: 'exact', head: true }).eq('tipo_conta', 'empresa').eq('status', 'ativo'),
+    supabase.from('usuarios').select('*', { count: 'exact', head: true }).eq('tipo_conta', 'empresa').eq('status', 'pendente'),
+    supabase.from('usuarios').select('*', { count: 'exact', head: true }).eq('tipo_conta', 'empresa').eq('status', 'suspenso'),
+  ])
+  statsValues.value = { total: total ?? 0, ativas: ativas ?? 0, pendentes: pendentes ?? 0, suspensas: suspensas ?? 0 }
+}
 
-// Watch search to reset page
 watch(searchTerm, () => {
   currentPage.value = 1
+  fetchEmpresas()
+})
+
+watch(currentPage, fetchEmpresas)
+
+onMounted(() => {
+  fetchStats()
+  fetchEmpresas()
 })
 
 const handleViewDetails = (empresa: any) => {
@@ -75,32 +87,22 @@ const handleViewDetails = (empresa: any) => {
   logAction('view_empresa_details', 'empresas', { empresaId: empresa.id })
 }
 
-const handleToggleStatus = (empresa: any) => {
+const handleToggleStatus = async (empresa: any) => {
   if (!canPerformAction('edit', 'empresas')) {
     alert('Você não tem permissão para realizar esta ação.')
     return
   }
-  const newStatus = empresa.status === 'bloqueado' ? 'ativo' : 'bloqueado'
-  
-  const index = mockEmpresas.value.findIndex(e => e.id === empresa.id)
-  if (index !== -1) {
-    mockEmpresas.value[index].status = newStatus
-  }
-  
+  const newStatus = empresa.status === 'suspenso' ? 'ativo' : 'suspenso'
+  await supabase.from('usuarios').update({ status: newStatus }).eq('id', empresa.id)
   logAction('toggle_empresa_status', 'empresas', { empresaId: empresa.id, newStatus })
-  alert(`Status da empresa ${empresa.nome} alterado para ${newStatus}. (Simulação)`)
+  await Promise.all([fetchStats(), fetchEmpresas()])
 }
 
-const handleValidate = (empresa: any) => {
+const handleValidate = async (empresa: any) => {
   if (!canPerformAction('edit', 'empresas')) return
-  
-  const index = mockEmpresas.value.findIndex(e => e.id === empresa.id)
-  if (index !== -1) {
-    mockEmpresas.value[index].status = 'ativo'
-  }
-  
+  await supabase.from('usuarios').update({ status: 'ativo' }).eq('id', empresa.id)
   logAction('validate_empresa', 'empresas', { empresaId: empresa.id })
-  alert(`Cadastro da empresa ${empresa.nome} validado com sucesso. (Simulação)`)
+  await Promise.all([fetchStats(), fetchEmpresas()])
 }
 </script>
 
@@ -116,6 +118,19 @@ const handleValidate = (empresa: any) => {
         <button class="rounded-2xl bg-slate-900 px-6 py-3 text-sm font-black text-white shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all flex items-center gap-2">
           Adicionar Nova Empresa
         </button>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-2 gap-6 sm:grid-cols-4">
+      <div v-for="stat in [
+        { label: 'Total', value: statsValues.total.toLocaleString('pt-BR'), color: 'text-slate-900' },
+        { label: 'Ativas', value: statsValues.ativas.toLocaleString('pt-BR'), color: 'text-green-600' },
+        { label: 'Pendentes', value: statsValues.pendentes.toLocaleString('pt-BR'), color: 'text-amber-600' },
+        { label: 'Suspensas', value: statsValues.suspensas.toLocaleString('pt-BR'), color: 'text-red-600' }
+      ]" :key="stat.label" class="p-6 bg-white rounded-[28px] border border-slate-100 shadow-sm transition-all hover:shadow-md">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ stat.label }}</p>
+        <h3 class="text-2xl font-black transition-all" :class="stat.color">{{ stat.value }}</h3>
       </div>
     </div>
 
@@ -143,9 +158,9 @@ const handleValidate = (empresa: any) => {
         <p class="text-slate-400 font-black uppercase tracking-widest text-xs">Carregando Empresas...</p>
       </div>
 
-      <AdminEmptyState 
-        v-else-if="filteredEmpresas.length === 0"
-        title="Nenhuma empresa encontrada" 
+      <AdminEmptyState
+        v-else-if="empresas.length === 0"
+        title="Nenhuma empresa encontrada"
         :description="`Não encontramos resultados para sua busca: '${searchTerm}'`"
       />
 
@@ -156,13 +171,13 @@ const handleValidate = (empresa: any) => {
               <tr>
                 <th class="py-5 px-8 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Empresa</th>
                 <th class="px-6 py-5 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Status</th>
-                <th class="px-6 py-5 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Plano</th>
-                <th class="px-6 py-5 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Vagas Ativas</th>
+                <th class="px-6 py-5 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Região</th>
+                <th class="px-6 py-5 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Cadastro</th>
                 <th class="px-6 py-5 text-right text-xs font-black text-slate-400 uppercase tracking-widest">Ações</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
-              <tr v-for="empresa in paginatedEmpresas" :key="empresa.id" class="group hover:bg-slate-50/50 transition-colors">
+              <tr v-for="empresa in empresas" :key="empresa.id" class="group hover:bg-slate-50/50 transition-colors">
                 <td class="whitespace-nowrap py-5 px-8">
                   <div class="flex items-center">
                     <div class="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
@@ -170,31 +185,24 @@ const handleValidate = (empresa: any) => {
                     </div>
                     <div class="ml-4">
                       <div class="text-sm font-black text-slate-900">{{ empresa.nome }}</div>
-                      <div class="text-xs font-medium text-slate-400">{{ empresa.cnpj }}</div>
+                      <div class="text-xs font-medium text-slate-400">{{ empresa.email }}</div>
                     </div>
                   </div>
                 </td>
                 <td class="whitespace-nowrap px-6 py-5">
                   <span v-if="empresa.status === 'ativo'" class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-green-50 text-green-600 ring-1 ring-inset ring-green-600/20">
-                    Ativo
+                    Ativa
                   </span>
                   <span v-else-if="empresa.status === 'pendente'" class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-600 ring-1 ring-inset ring-amber-600/20">
                     Aguardando Validação
                   </span>
                   <span v-else class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-50 text-red-600 ring-1 ring-inset ring-red-600/10">
-                    Bloqueado
+                    Suspensa
                   </span>
                 </td>
-                <td class="whitespace-nowrap px-6 py-5 text-sm font-bold text-slate-600">
-                  <span class="inline-flex items-center rounded-lg bg-slate-50 px-2 py-1 text-[9px] font-black uppercase tracking-tight text-slate-500 ring-1 ring-inset ring-slate-200">
-                    {{ empresa.plano }}
-                  </span>
-                </td>
-                <td class="whitespace-nowrap px-6 py-5">
-                   <div class="flex items-center gap-1.5 text-xs font-black text-slate-700">
-                      <Briefcase class="h-4 w-4 text-slate-400" />
-                      {{ empresa.vagasAtivas }}
-                   </div>
+                <td class="whitespace-nowrap px-6 py-5 text-sm font-medium text-slate-600">{{ empresa.regiao ?? '—' }}</td>
+                <td class="whitespace-nowrap px-6 py-5 text-xs font-bold text-slate-400">
+                  {{ new Date(empresa.created_at).toLocaleDateString('pt-BR') }}
                 </td>
                 <td class="whitespace-nowrap px-8 py-5 text-right">
                   <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -208,11 +216,11 @@ const handleValidate = (empresa: any) => {
                       <button class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
                         <Edit class="h-4 w-4" />
                       </button>
-                      <button 
-                        @click="handleToggleStatus(empresa)" 
-                        :class="[empresa.status === 'bloqueado' ? 'hover:text-green-600 hover:bg-green-50' : 'hover:text-red-600 hover:bg-red-50', 'p-2 text-slate-400 rounded-xl transition-all']"
+                      <button
+                        @click="handleToggleStatus(empresa)"
+                        :class="[empresa.status === 'suspenso' ? 'hover:text-green-600 hover:bg-green-50' : 'hover:text-red-600 hover:bg-red-50', 'p-2 text-slate-400 rounded-xl transition-all']"
                       >
-                        <Unlock v-if="empresa.status === 'bloqueado'" class="h-4 w-4" />
+                        <Unlock v-if="empresa.status === 'suspenso'" class="h-4 w-4" />
                         <Lock v-else class="h-4 w-4" />
                       </button>
                     </template>
@@ -222,12 +230,12 @@ const handleValidate = (empresa: any) => {
             </tbody>
           </table>
         </div>
-        
-        <AdminPagination 
-          :current-page="currentPage" 
-          :total-pages="totalPages" 
-          :total-items="filteredEmpresas.length" 
-          :items-per-page="itemsPerPage" 
+
+        <AdminPagination
+          :current-page="currentPage"
+          :total-pages="totalPages"
+          :total-items="totalCount"
+          :items-per-page="itemsPerPage"
           @page-change="currentPage = $event"
         />
       </div>
@@ -242,18 +250,20 @@ const handleValidate = (empresa: any) => {
           </div>
           <div>
             <h3 class="text-2xl font-black text-slate-900 tracking-tight">{{ selectedEmpresa.nome }}</h3>
-            <p class="text-slate-500 font-bold uppercase tracking-widest text-[10px]">{{ selectedEmpresa.cnpj }}</p>
+            <p class="text-slate-500 font-bold uppercase tracking-widest text-[10px]">{{ selectedEmpresa.regiao ?? 'Empresa' }}</p>
           </div>
         </div>
         
         <div class="grid grid-cols-2 gap-6 px-2">
+          <div class="col-span-2 border-b border-slate-50 pb-4">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Contato Oficial</p>
+            <p class="text-sm font-black text-slate-900">{{ selectedEmpresa.email }}</p>
+          </div>
           <div v-for="info in [
-            { label: 'Contato Oficial', value: selectedEmpresa.email, caps: false },
             { label: 'Status do Registro', value: selectedEmpresa.status, caps: true },
-            { label: 'Plano Ativo', value: selectedEmpresa.plano, caps: false },
-            { label: 'Vagas Publicadas', value: selectedEmpresa.vagasAtivas, caps: false },
-            { label: 'Data de Fundação/Cadastro', value: selectedEmpresa.dataCadastro, caps: false }
-          ]" :key="info.label" :class="{ 'col-span-2 border-b border-slate-50 pb-4': info.label === 'Contato Oficial' }">
+            { label: 'Região', value: selectedEmpresa.regiao ?? '—', caps: false },
+            { label: 'Data de Cadastro', value: new Date(selectedEmpresa.created_at).toLocaleDateString('pt-BR'), caps: false }
+          ]" :key="info.label">
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ info.label }}</p>
             <p class="text-sm font-black text-slate-900" :class="{ 'uppercase text-green-600': info.caps && info.value === 'ativo' }">
               {{ info.value }}

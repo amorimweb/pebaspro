@@ -563,6 +563,8 @@ export interface Database {
           objetivo_profissional: string | null
           latitude: number | null
           longitude: number | null
+          cidade: string | null
+          estado: string | null
           modo_prestador: boolean
           role: string
         }
@@ -589,6 +591,8 @@ export interface Database {
           objetivo_profissional?: string | null
           latitude?: number | null
           longitude?: number | null
+          cidade?: string | null
+          estado?: string | null
           modo_prestador?: boolean
           role?: string
         }
@@ -615,6 +619,8 @@ export interface Database {
           objetivo_profissional?: string | null
           latitude?: number | null
           longitude?: number | null
+          cidade?: string | null
+          estado?: string | null
           modo_prestador?: boolean
           role?: string
         }

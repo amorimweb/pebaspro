@@ -24,9 +24,10 @@ export const useAuthStore = defineStore('auth', () => {
         }
     })
 
-    async function fetchProfile() {
+    async function fetchProfile(accessToken?: string) {
+        let result
         try {
-            await profileStore.fetchProfile()
+            result = await profileStore.fetchProfile(accessToken)
             if (profile.value?.status === 'suspenso') {
                 if (process.client) {
                     alert('Sua conta foi suspensa por violar os termos de uso. Entre em contato com o suporte.')
@@ -39,21 +40,31 @@ export const useAuthStore = defineStore('auth', () => {
         } finally {
             initialized.value = true
         }
+        return result
     }
 
     async function updateProfile(data: UpdateUsuarioPayload) {
-        const userId = user.value?.id || profile.value?.id
+        let userId = user.value?.id || profile.value?.id
+        if (!userId) {
+            // Fallback: read session directly from Supabase (handles SSR hydration race)
+            const supabase = useSupabaseClient()
+            const { data: { session } } = await supabase.auth.getSession()
+            userId = session?.user?.id
+        }
         if (!userId) return { error: { message: 'Usuário não autenticado' } }
 
         profileStore.loading = true
         try {
+            const supabase = useSupabaseClient()
+            const { data: { session } } = await supabase.auth.getSession()
             await $fetch(`/api/usuarios/${userId}`, {
                 method: 'PUT',
-                body: data
+                body: data,
+                headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined
             })
 
             // Forçar a re-busca do perfil para atualizar todos os componentes
-            await profileStore.fetchProfile()
+            await profileStore.fetchProfile(session?.access_token)
             return { data: profileStore.profile, error: null }
         } catch (e: any) {
             console.error('Erro ao atualizar perfil no store:', e)

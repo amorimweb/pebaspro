@@ -1,33 +1,74 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
+import { useProfileStore } from '~/stores/profile'
 import type { Database } from '~/types/database.types'
 
 const authStore = useAuthStore()
+const profileStore = useProfileStore()
 const user = useSupabaseUser()
 const supabase = useSupabaseClient<Database>()
+const PENDING_PROFILE_KEY = 'pebas_pending_complete_profile'
 
 // Observe o usuário para redirecionar assim que a sessão for confirmada
 watch(user, async (newUser) => {
   if (newUser) {
     // Sincroniza o perfil antes de decidir o destino
-    await authStore.fetchProfile()
-    
-    const profile = authStore.profile
-    
-    // 1. Se o perfil estiver incompleto, forçar onboarding
-    if (!profile || !profile.cadastro_completo) {
+    const { data: { session } } = await supabase.auth.getSession()
+    let result = await authStore.fetchProfile(session?.access_token)
+    let profile = result?.data
+    let hadPendingRegistration = false
+
+    if (!profile && newUser.user_metadata?.cadastro) {
+      hadPendingRegistration = true
+      const { error } = await profileStore.createProfile({
+        id: newUser.id,
+        email: newUser.email || null,
+        ...newUser.user_metadata.cadastro
+      })
+      if (!error) {
+        result = await authStore.fetchProfile(session?.access_token)
+        profile = result?.data
+      }
+    }
+
+    if (!profile && import.meta.client) {
+      const storedProfile = localStorage.getItem(PENDING_PROFILE_KEY)
+      if (storedProfile) {
+        hadPendingRegistration = true
+        try {
+          const cadastro = JSON.parse(storedProfile)
+          const { error } = await profileStore.createProfile({
+            id: newUser.id,
+            email: newUser.email || null,
+            ...cadastro
+          })
+          if (!error) {
+            localStorage.removeItem(PENDING_PROFILE_KEY)
+            result = await authStore.fetchProfile(session?.access_token)
+            profile = result?.data
+          }
+        } catch (error) {
+          console.error('Erro ao concluir cadastro com Google:', error)
+        }
+      }
+    }
+
+    if (!profile && !hadPendingRegistration) {
+      await authStore.signOut()
+      navigateTo('/cadastro?complete=required')
+      return
+    }
+
+    if (!profile || !profile.cadastro_completo || !profile.tipo_conta) {
       navigateTo('/cadastro/onboarding')
     } else {
-      // 2. Redirecionar baseado no tipo de conta se o perfil estiver completo
       const redirectMap: Record<string, string> = {
         talento: '/',
         empresa: '/painel/empresa',
         prestador: '/painel/prestador',
         cliente: '/',
       }
-      
-      const target = redirectMap[profile.tipo_conta as keyof typeof redirectMap] || '/'
-      navigateTo(target)
+      navigateTo(redirectMap[profile.tipo_conta] || '/')
     }
   }
 }, { immediate: true })

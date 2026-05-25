@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { 
-  Search, 
-  Filter, 
-  Briefcase, 
-  MapPin, 
-  Building2, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  MoreVertical, 
-  Eye, 
-  Play, 
-  Pause, 
-  Star 
+import {
+  Search,
+  Filter,
+  Briefcase,
+  MapPin,
+  Building2,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  MoreVertical,
+  Eye,
+  Play,
+  Pause,
+  Star
 } from 'lucide-vue-next'
+import type { Database } from '~/types/database.types'
 import { useAdminPermissions } from '~/composables/useAdminPermissions'
 import { useAdminAudit } from '~/composables/useAdminAudit'
 
@@ -22,6 +23,7 @@ definePageMeta({
   middleware: 'admin'
 })
 
+const supabase = useSupabaseClient<Database>()
 const { canPerformAction } = useAdminPermissions()
 const { logAction } = useAdminAudit()
 
@@ -33,44 +35,59 @@ const selectedVaga = ref<any>(null)
 const isModalOpen = ref(false)
 const itemsPerPage = 8
 
-// Mock Data
-const mockVagas = ref(Array.from({ length: 30 }, (_, i) => ({
-  id: i + 1,
-  titulo: `Vaga de Teste ${i + 1}`,
-  empresa: `Empresa ${Math.floor(i / 3) + 1} Ltda`,
-  local: i % 3 === 0 ? 'Remoto' : i % 2 === 0 ? 'São Paulo, SP' : 'Híbrido',
-  status: i % 5 === 0 ? 'encerrada' : i % 4 === 0 ? 'pausada' : 'aberta',
-  tipo: i % 3 === 0 ? 'PJ' : 'CLT',
-  candidatos: Math.floor(Math.random() * 150),
-  dataCriacao: `1${i % 9}/04/2026`,
-  destaque: i % 7 === 0
-})))
+// DB State
+const vagas = ref<any[]>([])
+const totalCount = ref(0)
+const statsValues = ref({ total: 0, ativas: 0, premium: 0, candidaturas: 0 })
 
-// Simulate loading
-onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false
-  }, 500)
-})
+const totalPages = computed(() => Math.ceil(totalCount.value / itemsPerPage))
 
-// Filter logic
-const filteredVagas = computed(() => {
-  return mockVagas.value.filter(v => 
-    v.titulo.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    v.empresa.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    v.local.toLowerCase().includes(searchTerm.value.toLowerCase())
-  )
-})
+const today = new Date().toISOString().split('T')[0]
 
-// Pagination logic
-const totalPages = computed(() => Math.ceil(filteredVagas.value.length / itemsPerPage))
-const paginatedVagas = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return filteredVagas.value.slice(start, start + itemsPerPage)
-})
+const vagaStatus = (vaga: any): 'aberta' | 'encerrada' => {
+  if (!vaga.encerramento) return 'aberta'
+  return vaga.encerramento < today ? 'encerrada' : 'aberta'
+}
+
+const fetchVagas = async () => {
+  isLoading.value = true
+  let query = supabase
+    .from('vagas')
+    .select('id, titulo, modalidade, tipo, local, data_publicacao, encerramento, empresa_id, usuarios!empresa_id(nome)', { count: 'exact' })
+  if (searchTerm.value) {
+    query = query.ilike('titulo', `%${searchTerm.value}%`)
+  }
+  const from = (currentPage.value - 1) * itemsPerPage
+  const { data, count } = await query.order('data_publicacao', { ascending: false }).range(from, from + itemsPerPage - 1)
+  vagas.value = (data ?? []).map((v: any) => ({
+    ...v,
+    empresa: v.usuarios?.nome ?? '—',
+    status: vagaStatus(v),
+    candidatos: 0,
+    destaque: false,
+  }))
+  totalCount.value = count ?? 0
+  isLoading.value = false
+}
+
+const fetchStats = async () => {
+  const [{ count: total }, { count: ativas }] = await Promise.all([
+    supabase.from('vagas').select('*', { count: 'exact', head: true }),
+    supabase.from('vagas').select('*', { count: 'exact', head: true }).is('encerramento', null),
+  ])
+  statsValues.value = { total: total ?? 0, ativas: ativas ?? 0, premium: 0, candidaturas: 0 }
+}
 
 watch(searchTerm, () => {
   currentPage.value = 1
+  fetchVagas()
+})
+
+watch(currentPage, fetchVagas)
+
+onMounted(() => {
+  fetchStats()
+  fetchVagas()
 })
 
 const handleViewDetails = (vaga: any) => {
@@ -79,30 +96,22 @@ const handleViewDetails = (vaga: any) => {
   logAction('view_vaga_details', 'vagas', { vagaId: vaga.id })
 }
 
-const handleToggleStatus = (vaga: any, newStatus: any) => {
+const handleToggleStatus = async (vaga: any, newStatus: string) => {
   if (!canPerformAction('edit', 'vagas')) {
     alert('Permissão negada.')
     return
   }
-  
-  const index = mockVagas.value.findIndex(v => v.id === vaga.id)
-  if (index !== -1) {
-    mockVagas.value[index].status = newStatus
-  }
-  
+  const encerramento = newStatus === 'encerrada' ? today : null
+  await supabase.from('vagas').update({ encerramento }).eq('id', vaga.id)
   logAction('change_vaga_status', 'vagas', { vagaId: vaga.id, newStatus })
-  alert(`Status da vaga "${vaga.titulo}" alterado para ${newStatus}.`)
+  await Promise.all([fetchStats(), fetchVagas()])
 }
 
 const handleToggleDestaque = (vaga: any) => {
   if (!canPerformAction('edit', 'vagas')) return
-  
-  const index = mockVagas.value.findIndex(v => v.id === vaga.id)
-  if (index !== -1) {
-    mockVagas.value[index].destaque = !mockVagas.value[index].destaque
-  }
-  
-  logAction('toggle_vaga_destaque', 'vagas', { vagaId: vaga.id, destaque: !vaga.destaque })
+  const index = vagas.value.findIndex(v => v.id === vaga.id)
+  if (index !== -1) vagas.value[index].destaque = !vagas.value[index].destaque
+  logAction('toggle_vaga_destaque', 'vagas', { vagaId: vaga.id })
 }
 </script>
 
@@ -122,12 +131,10 @@ const handleToggleDestaque = (vaga: any) => {
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-2 gap-6 sm:grid-cols-4">
+    <div class="grid grid-cols-2 gap-6 sm:grid-cols-2">
        <div v-for="stat in [
-         { label: 'Total Registrado', value: '3.456', color: 'text-slate-900' },
-         { label: 'Oportunidades Ativas', value: '1.245', color: 'text-green-600' },
-         { label: 'Destaques Premium', value: '342', color: 'text-purple-600' },
-         { label: 'Candidaturas Mês', value: '18.492', color: 'text-blue-600' }
+         { label: 'Total Registrado', value: statsValues.total.toLocaleString('pt-BR'), color: 'text-slate-900' },
+         { label: 'Oportunidades Ativas', value: statsValues.ativas.toLocaleString('pt-BR'), color: 'text-green-600' }
        ]" :key="stat.label" class="p-6 bg-white rounded-[28px] border border-slate-100 shadow-sm transition-all hover:shadow-md">
           <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ stat.label }}</p>
           <h3 class="text-2xl font-black" :class="stat.color">{{ stat.value }}</h3>
@@ -158,9 +165,9 @@ const handleToggleDestaque = (vaga: any) => {
         <p class="text-slate-400 font-black uppercase tracking-widest text-xs">Acessando Banco de Vagas...</p>
       </div>
 
-      <AdminEmptyState 
-        v-else-if="filteredVagas.length === 0"
-        title="Nenhuma vaga localizada" 
+      <AdminEmptyState
+        v-else-if="vagas.length === 0"
+        title="Nenhuma vaga localizada"
         :description="`Não encontramos resultados ativos para '${searchTerm}'`"
       />
 
@@ -172,12 +179,12 @@ const handleToggleDestaque = (vaga: any) => {
                 <th class="py-5 px-8 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Oportunidade</th>
                 <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Empresa</th>
                 <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Inscritos</th>
+                <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Publicação</th>
                 <th class="px-6 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Gerenciar</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
-              <tr v-for="vaga in paginatedVagas" :key="vaga.id" class="group hover:bg-slate-50/50 transition-colors">
+              <tr v-for="vaga in vagas" :key="vaga.id" class="group hover:bg-slate-50/50 transition-colors">
                 <td class="whitespace-nowrap py-5 px-8">
                   <div class="flex items-center">
                     <div class="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
@@ -213,8 +220,8 @@ const handleToggleDestaque = (vaga: any) => {
                     <XCircle class="h-3.5 w-3.5" /> Encerrada
                   </span>
                 </td>
-                <td class="whitespace-nowrap px-6 py-5 text-xs font-black text-slate-900">
-                  {{ vaga.candidatos }}
+                <td class="whitespace-nowrap px-6 py-5 text-xs font-bold text-slate-400">
+                  {{ vaga.data_publicacao ? new Date(vaga.data_publicacao).toLocaleDateString('pt-BR') : '—' }}
                 </td>
                 <td class="whitespace-nowrap px-8 py-5 text-right">
                   <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -225,11 +232,14 @@ const handleToggleDestaque = (vaga: any) => {
                       <button @click="handleToggleDestaque(vaga)" class="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-xl transition-all" :title="vaga.destaque ? 'Remover Destaque' : 'Destacar'">
                         <Star class="h-4 w-4" :class="{ 'fill-current text-amber-400': vaga.destaque }" />
                       </button>
-                      <button v-if="vaga.status === 'aberta'" @click="handleToggleStatus(vaga, 'pausada')" class="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all">
+                      <button v-if="vaga.status === 'aberta'" @click="handleToggleStatus(vaga, 'pausada')" class="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all" title="Pausar">
                         <Pause class="h-4 w-4" />
                       </button>
-                      <button v-if="vaga.status === 'pausada'" @click="handleToggleStatus(vaga, 'aberta')" class="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all">
+                      <button v-if="vaga.status === 'pausada'" @click="handleToggleStatus(vaga, 'aberta')" class="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all" title="Reabrir">
                         <Play class="h-4 w-4" />
+                      </button>
+                      <button v-if="vaga.status !== 'encerrada'" @click="handleToggleStatus(vaga, 'encerrada')" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Encerrar">
+                        <XCircle class="h-4 w-4" />
                       </button>
                     </template>
                   </div>
@@ -239,11 +249,11 @@ const handleToggleDestaque = (vaga: any) => {
           </table>
         </div>
         
-        <AdminPagination 
-          :current-page="currentPage" 
-          :total-pages="totalPages" 
-          :total-items="filteredVagas.length" 
-          :items-per-page="itemsPerPage" 
+        <AdminPagination
+          :current-page="currentPage"
+          :total-pages="totalPages"
+          :total-items="totalCount"
+          :items-per-page="itemsPerPage"
           @page-change="currentPage = $event"
         />
       </div>
@@ -264,11 +274,11 @@ const handleToggleDestaque = (vaga: any) => {
         
         <div class="grid grid-cols-2 gap-8 px-2">
           <div v-for="info in [
-            { label: 'Status Estratégico', value: selectedVaga.status, caps: true },
-            { label: 'Local de Atuação', value: selectedVaga.local, caps: false },
-            { label: 'Modelo de Contrato', value: selectedVaga.tipo, caps: false },
-            { label: 'Volume de Candidatos', value: selectedVaga.candidatos, caps: false },
-            { label: 'Data de Publicação', value: selectedVaga.dataCriacao, caps: false }
+            { label: 'Status', value: selectedVaga.status, caps: true },
+            { label: 'Local de Atuação', value: selectedVaga.local ?? '—', caps: false },
+            { label: 'Modalidade', value: selectedVaga.modalidade ?? '—', caps: false },
+            { label: 'Modelo de Contrato', value: selectedVaga.tipo ?? '—', caps: false },
+            { label: 'Data de Publicação', value: selectedVaga.data_publicacao ? new Date(selectedVaga.data_publicacao).toLocaleDateString('pt-BR') : '—', caps: false }
           ]" :key="info.label">
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ info.label }}</p>
             <p class="text-sm font-black text-slate-900" :class="{ 'uppercase text-green-600': info.caps && info.value === 'aberta' }">

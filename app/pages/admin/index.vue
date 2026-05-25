@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { 
-  Users, 
-  Building2, 
-  Briefcase, 
-  CalendarCheck, 
+import {
+  Users,
+  Building2,
+  Briefcase,
+  CalendarCheck,
   AlertCircle,
   DollarSign
 } from 'lucide-vue-next'
+import type { Database } from '~/types/database.types'
 import { useAdminPermissions } from '~/composables/useAdminPermissions'
 import { useAdminAudit } from '~/composables/useAdminAudit'
 
@@ -15,16 +16,41 @@ definePageMeta({
   middleware: 'admin'
 })
 
+const supabase = useSupabaseClient<Database>()
 const { canPerformAction } = useAdminPermissions()
 const { logAction } = useAdminAudit()
 
-// Mock Data
-const stats = [
-  { name: 'Total de Usuários', value: '71.897', change: '+12%', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-  { name: 'Empresas Ativas', value: '1.234', change: '+5.4%', icon: Building2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  { name: 'Vagas Abertas', value: '456', change: '-2.1%', icon: Briefcase, color: 'text-purple-600', bg: 'bg-purple-50' },
-  { name: 'Serviços Realizados', value: '8.912', change: '+24%', icon: CalendarCheck, color: 'text-amber-600', bg: 'bg-amber-50' },
-]
+// Real stats from DB
+const statsValues = ref({ usuarios: 0, empresas: 0, vagas: 0, servicos: 0 })
+
+const stats = computed(() => [
+  { name: 'Total de Usuários', value: statsValues.value.usuarios.toLocaleString('pt-BR'), change: '', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
+  { name: 'Empresas Ativas', value: statsValues.value.empresas.toLocaleString('pt-BR'), change: '', icon: Building2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  { name: 'Vagas Abertas', value: statsValues.value.vagas.toLocaleString('pt-BR'), change: '', icon: Briefcase, color: 'text-purple-600', bg: 'bg-purple-50' },
+  { name: 'Serviços Ativos', value: statsValues.value.servicos.toLocaleString('pt-BR'), change: '', icon: CalendarCheck, color: 'text-amber-600', bg: 'bg-amber-50' },
+])
+
+const fetchStats = async () => {
+  const [
+    { count: usuarios },
+    { count: empresas },
+    { count: vagas },
+    { count: servicos }
+  ] = await Promise.all([
+    supabase.from('usuarios').select('*', { count: 'exact', head: true }),
+    supabase.from('usuarios').select('*', { count: 'exact', head: true }).eq('tipo_conta', 'empresa').eq('status', 'ativo'),
+    supabase.from('vagas').select('*', { count: 'exact', head: true }).is('encerramento', null),
+    supabase.from('servicos').select('*', { count: 'exact', head: true }).eq('ativo', true),
+  ])
+  statsValues.value = {
+    usuarios: usuarios ?? 0,
+    empresas: empresas ?? 0,
+    vagas: vagas ?? 0,
+    servicos: servicos ?? 0,
+  }
+}
+
+onMounted(fetchStats)
 
 const recentActivity = [
   { id: 1, content: 'Nova empresa cadastrada', target: 'Tech Solutions Ltda', date: 'Há 10 min', icon: Building2, iconBg: 'bg-blue-500' },

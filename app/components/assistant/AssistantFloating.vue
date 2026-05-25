@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MessageSquare, X, Send, Bot, User, Loader2, Trash2 } from 'lucide-vue-next'
+import { X, Send, User, Loader2, Trash2 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 
 const isOpen = ref(false)
@@ -68,6 +68,52 @@ const toggle = () => {
   isOpen.value = !isOpen.value
 }
 
+const splitAssistantReply = (text: string, maxLength = 360) => {
+  const blocks = text.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean)
+  const chunks: string[] = []
+
+  for (const block of blocks) {
+    if (block.length <= maxLength) {
+      chunks.push(block)
+      continue
+    }
+
+    const sentences = block.match(/[^.!?]+[.!?]+(?:\s+|$)|[^.!?]+$/g) || [block]
+    let current = ''
+
+    for (const sentence of sentences) {
+      const candidate = `${current} ${sentence.trim()}`.trim()
+      if (candidate.length <= maxLength) {
+        current = candidate
+        continue
+      }
+
+      if (current) chunks.push(current)
+      if (sentence.trim().length <= maxLength) {
+        current = sentence.trim()
+        continue
+      }
+
+      current = ''
+      for (const word of sentence.trim().split(/\s+/)) {
+        const candidateWord = `${current} ${word}`.trim()
+        if (candidateWord.length > maxLength && current) {
+          chunks.push(current)
+          current = word
+        } else {
+          current = candidateWord
+        }
+      }
+    }
+
+    if (current) chunks.push(current)
+  }
+
+  return chunks.length ? chunks : [text]
+}
+
+const wait = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds))
+
 const sendMessage = async () => {
   const text = input.value.trim()
   if (!text || isLoading.value) return
@@ -88,13 +134,21 @@ const sendMessage = async () => {
       body: { messages: apiMessages, userContext: userContext.value },
     })
 
-    const modelMsg: ChatMessage = {
-      id: crypto.randomUUID?.() || String(Date.now() + 1),
+    const reply = resp?.text || 'Não consegui gerar uma resposta agora. Tente novamente.'
+    const modelMessages: ChatMessage[] = splitAssistantReply(reply).map((part, index) => ({
+      id: crypto.randomUUID?.() || String(Date.now() + index + 1),
       role: 'model',
-      text: resp?.text || 'Não consegui gerar uma resposta agora. Tente novamente.',
-      ts: Date.now(),
+      text: part,
+      ts: Date.now() + index,
+    }))
+
+    for (const [index, message] of modelMessages.entries()) {
+      if (index > 0) {
+        await wait(Math.min(1100, Math.max(550, message.text.length * 3)))
+      }
+      messages.value = [...messages.value, message]
+      scrollToBottom()
     }
-    messages.value = [...messages.value, modelMsg]
   } catch (e: any) {
     messages.value = [
       ...messages.value,
@@ -121,19 +175,19 @@ const sendMessage = async () => {
       @click="toggle"
     >
       <span class="absolute -right-1 -top-1 h-4 w-4 rounded-full border-2 border-white bg-emerald-300 shadow-sm" />
-      <MessageSquare :size="22" />
+      <img src="/patricia.jpeg" alt="Patricia" class="h-full w-full rounded-[22px] object-cover" />
     </button>
 
     <div
       v-else
-      class="flex h-[min(76vh,680px)] w-[calc(100vw-2rem)] max-w-[430px] flex-col overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)] ring-1 ring-slate-900/5"
+      class="flex h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-[430px] flex-col overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)] ring-1 ring-slate-900/5 sm:h-[calc(100dvh-3rem)]"
     >
       <div class="relative overflow-hidden bg-slate-950 px-4 py-4 text-white">
         <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-emerald-500/25 via-teal-400/10 to-sky-500/25" />
         <div class="relative flex items-center justify-between gap-3">
           <div class="flex min-w-0 items-center gap-3">
-            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-sky-500 shadow-lg shadow-emerald-500/20">
-              <Bot :size="22" />
+            <div class="h-11 w-11 shrink-0 overflow-hidden rounded-2xl bg-white shadow-lg shadow-emerald-500/20 ring-1 ring-white/20">
+              <img src="/patricia.jpeg" alt="Patricia" class="h-full w-full object-cover" />
             </div>
             <div class="min-w-0">
               <p class="truncate text-sm font-black uppercase tracking-wide text-white">
@@ -173,8 +227,8 @@ const sendMessage = async () => {
             class="flex items-end gap-2.5"
             :class="m.role === 'user' ? 'justify-end' : 'justify-start'"
           >
-            <div v-if="m.role === 'model'" class="mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-sky-600 text-white shadow-md shadow-emerald-500/20">
-              <Bot :size="17" />
+            <div v-if="m.role === 'model'" class="mb-1 h-8 w-8 shrink-0 overflow-hidden rounded-2xl bg-white shadow-md shadow-emerald-500/20 ring-1 ring-emerald-100">
+              <img src="/patricia.jpeg" alt="Patricia" class="h-full w-full object-cover" />
             </div>
 
             <div
@@ -192,8 +246,9 @@ const sendMessage = async () => {
           </div>
 
           <div v-if="isLoading" class="flex items-center gap-2.5 pl-1 text-sm font-bold text-slate-500">
-            <span class="flex h-8 w-8 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-sm ring-1 ring-slate-200">
-              <Loader2 class="animate-spin" :size="16" />
+            <span class="relative h-8 w-8 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+              <img src="/patricia.jpeg" alt="Patricia" class="h-full w-full object-cover opacity-65" />
+              <Loader2 class="absolute inset-0 m-auto animate-spin text-emerald-700" :size="16" />
             </span>
             Patrícia está digitando...
           </div>

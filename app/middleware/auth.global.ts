@@ -17,6 +17,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         '/empresas',
         '/prestadores',
         '/contato',
+        '/manutencao',
     ]
     const isPublicRoute =
         publicPrefixes.some((p) => to.path === p || to.path.startsWith(`${p}/`)) ||
@@ -31,17 +32,20 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     // Em alguns momentos a sessão pode hidratar sem id; não tratar como autenticado.
     if (!user.value.id) return
 
-    // Ensure profile is loaded
-    if (!authStore.initialized) {
-        await authStore.fetchProfile()
+    // Ensure profile is loaded — always fetch if we have a user but no profile
+    // (the auth-sync plugin may have set initialized=true via the SSR "else" branch
+    //  before the session was available, leaving profile=null for an authenticated user)
+    if (!authStore.profile) {
+        const supabase = useSupabaseClient()
+        const { data: { session } } = await supabase.auth.getSession()
+        await authStore.fetchProfile(session?.access_token)
     }
 
     // 2. Enforce onboarding for incomplete profiles
     const profile = authStore.profile
     const isOnboardingRoute = to.path.startsWith('/cadastro/')
-    const isLogoutRoute = to.path === '/login' || to.path === '/confirm' // Rotas que podem lidar com troca de conta
 
-    if (user.value && !isPublicRoute && !isOnboardingRoute) {
+    if (!isPublicRoute && !isOnboardingRoute) {
         if (!profile || !profile.cadastro_completo || !profile.tipo_conta) {
             console.log('Middleware: Perfil incompleto. Redirecionando para onboarding...')
             return navigateTo('/cadastro/onboarding')

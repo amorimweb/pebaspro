@@ -1,19 +1,24 @@
 <script setup lang="ts">
-import { 
-  Settings, 
-  Shield, 
-  Bell, 
-  Globe, 
-  Mail, 
-  CreditCard, 
-  Database, 
-  Lock, 
-  Save, 
-  RotateCcw, 
+import {
+  Settings,
+  Shield,
+  Bell,
+  Globe,
+  Mail,
+  CreditCard,
+  Database,
+  Lock,
+  Save,
+  RotateCcw,
   Activity,
   ArrowRight,
   Eye,
-  Trash2
+  Trash2,
+  Edit,
+  KeyRound,
+  Download,
+  Timer,
+  Webhook
 } from 'lucide-vue-next'
 import { useAdminPermissions } from '~/composables/useAdminPermissions'
 import { useAdminAudit } from '~/composables/useAdminAudit'
@@ -216,14 +221,153 @@ const handleAction = (type: string, data?: any) => {
                  </div>
              </div>
 
-             <!-- OTHER TABS (SIMPLIFIED FOR MASTER AESTHETIC) -->
-             <div v-if="!['geral', 'permissoes', 'pagamentos'].includes(activeTab)" class="animate-in fade-in zoom-in-95 duration-500 p-20 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm border-dashed">
-                <div class="h-20 w-20 bg-slate-50 rounded-[32px] flex items-center justify-center text-slate-300 mx-auto mb-6">
-                   <component :is="tabs.find(t => t.id === activeTab)?.icon" class="h-10 w-10" />
+             <!-- NOTIFICATIONS TAB -->
+             <div v-if="activeTab === 'notificacoes'" class="animate-in slide-in-from-right-4 duration-500 space-y-6">
+                <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+                   <div class="bg-slate-50 px-8 py-6 border-b border-slate-100">
+                      <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">Gatilhos de Alerta</h3>
+                      <p class="text-xs font-medium text-slate-500 mt-1">Configure quais eventos disparam notificações para os administradores.</p>
+                   </div>
+                   <div class="divide-y divide-slate-50">
+                      <div v-for="item in [
+                        { id: 'notif-1', title: 'Novos Cadastros', desc: 'Alertar quando uma nova empresa ou prestador se cadastrar.' },
+                        { id: 'notif-2', title: 'Pagamentos Recusados', desc: 'Alertar sobre falhas em cobranças de assinaturas.' },
+                        { id: 'notif-3', title: 'Denúncias Recebidas', desc: 'Alertar quando um usuário ou vaga for denunciado.' },
+                        { id: 'notif-4', title: 'Erros de Integração', desc: 'Alertar sobre falhas nas APIs externas.' }
+                      ]" :key="item.id" class="px-8 py-6 flex items-center justify-between">
+                         <div>
+                            <p class="text-sm font-black text-slate-900">{{ item.title }}</p>
+                            <p class="text-xs font-medium text-slate-500 mt-0.5">{{ item.desc }}</p>
+                         </div>
+                         <button @click="handleAction('toggle_notif', { id: item.id })" :disabled="!canPerformAction('edit', 'configuracoes')" :class="[
+                           'relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none ring-offset-2 focus:ring-2 focus:ring-indigo-600 disabled:opacity-50',
+                           item.id !== 'notif-3' ? 'bg-indigo-600' : 'bg-slate-200'
+                         ]">
+                            <span :class="[
+                              'inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow',
+                              item.id !== 'notif-3' ? 'translate-x-7' : 'translate-x-1'
+                            ]" />
+                         </button>
+                      </div>
+                   </div>
                 </div>
-                <h4 class="text-xl font-black text-slate-900 tracking-tight italic">{{ tabs.find(t => t.id === activeTab)?.label }}</h4>
-                <p class="text-sm font-medium text-slate-500 mt-2 mb-8">Esta seção está programada para o ciclo de deploy v4.3.</p>
-                <button @click="handleAction('test')" class="px-8 py-3 bg-slate-50 rounded-2xl text-xs font-black text-slate-700 hover:bg-slate-100 transition-all uppercase tracking-widest">Ativar Heurística de Teste</button>
+             </div>
+
+             <!-- EMAILS TAB -->
+             <div v-if="activeTab === 'emails'" class="animate-in slide-in-from-right-4 duration-500 space-y-6">
+                <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+                   <div class="bg-slate-50 px-8 py-6 border-b border-slate-100">
+                      <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">Remetente Padrão</h3>
+                   </div>
+                   <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div v-for="field in [
+                        { label: 'E-mail de Remetente (From)', value: 'no-reply@pebaspro.com.br', type: 'email' },
+                        { label: 'Nome do Remetente', value: 'Equipe PEBASPRO', type: 'text' }
+                      ]" :key="field.label">
+                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{{ field.label }}</label>
+                         <input :type="field.type" :value="field.value" :disabled="!canPerformAction('edit', 'configuracoes')" class="w-full bg-slate-50 border-transparent rounded-[18px] px-5 py-3 text-sm font-bold text-slate-900 focus:ring-indigo-600 focus:bg-white transition-all border outline-none disabled:opacity-50" />
+                      </div>
+                   </div>
+                </div>
+                <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+                   <div class="px-8 py-6 border-b border-slate-50 flex items-center justify-between">
+                      <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">Templates Ativos</h3>
+                   </div>
+                   <div class="divide-y divide-slate-50">
+                      <div v-for="template in ['Boas-vindas (Novo Usuário)', 'Recuperação de Senha', 'Confirmação de Pagamento', 'Aviso de Vaga Aprovada']" :key="template" class="px-8 py-5 flex items-center justify-between group hover:bg-slate-50 transition-all">
+                         <div class="flex items-center gap-4">
+                            <div class="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
+                               <Mail class="h-5 w-5" />
+                            </div>
+                            <span class="text-sm font-black text-slate-900">{{ template }}</span>
+                         </div>
+                         <button v-if="canPerformAction('edit', 'configuracoes')" @click="handleAction('edit_template', { template })" class="text-[10px] font-black text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-all uppercase tracking-widest opacity-0 group-hover:opacity-100">
+                            Editar
+                         </button>
+                      </div>
+                   </div>
+                </div>
+             </div>
+
+             <!-- INTEGRATIONS TAB -->
+             <div v-if="activeTab === 'integracoes'" class="animate-in slide-in-from-right-4 duration-500 space-y-6">
+                <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+                   <div class="bg-slate-50 px-8 py-6 border-b border-slate-100">
+                      <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">Gateway de Pagamento</h3>
+                      <p class="text-xs font-medium text-slate-500 mt-1">Stripe / Pagar.me</p>
+                   </div>
+                   <div class="p-8 space-y-6">
+                      <div v-for="field in [
+                        { label: 'Public Key', placeholder: 'pk_test_...', type: 'text' },
+                        { label: 'Secret Key', placeholder: 'sk_test_...', type: 'password' }
+                      ]" :key="field.label">
+                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{{ field.label }}</label>
+                         <input :type="field.type" :placeholder="field.placeholder" :disabled="!canPerformAction('edit', 'configuracoes')" class="w-full bg-slate-50 border border-slate-100 rounded-[18px] px-5 py-3 text-sm font-bold text-slate-900 focus:ring-indigo-600 focus:bg-white transition-all outline-none disabled:opacity-50" />
+                      </div>
+                      <button v-if="canPerformAction('edit', 'configuracoes')" @click="handleAction('test_gateway')" class="flex items-center gap-2 px-6 py-3 bg-slate-50 rounded-2xl text-xs font-black text-slate-700 hover:bg-slate-100 transition-all border border-slate-100">
+                         <Activity class="h-4 w-4" />
+                         Testar Conexão
+                      </button>
+                   </div>
+                </div>
+                <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+                   <div class="bg-slate-50 px-8 py-6 border-b border-slate-100">
+                      <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">Serviço de E-mail</h3>
+                      <p class="text-xs font-medium text-slate-500 mt-1">SendGrid / AWS SES</p>
+                   </div>
+                   <div class="p-8 space-y-6">
+                      <div>
+                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">API Key</label>
+                         <input type="password" placeholder="SG...." :disabled="!canPerformAction('edit', 'configuracoes')" class="w-full bg-slate-50 border border-slate-100 rounded-[18px] px-5 py-3 text-sm font-bold text-slate-900 focus:ring-indigo-600 focus:bg-white transition-all outline-none disabled:opacity-50" />
+                      </div>
+                      <button v-if="canPerformAction('edit', 'configuracoes')" @click="handleAction('test_email_service')" class="flex items-center gap-2 px-6 py-3 bg-slate-50 rounded-2xl text-xs font-black text-slate-700 hover:bg-slate-100 transition-all border border-slate-100">
+                         <Activity class="h-4 w-4" />
+                         Testar Conexão
+                      </button>
+                   </div>
+                </div>
+             </div>
+
+             <!-- SECURITY TAB -->
+             <div v-if="activeTab === 'seguranca'" class="animate-in slide-in-from-right-4 duration-500 space-y-6">
+                <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+                   <div class="bg-slate-50 px-8 py-6 border-b border-slate-100">
+                      <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">Controles de Acesso</h3>
+                   </div>
+                   <div class="divide-y divide-slate-50">
+                      <div class="px-8 py-6 flex items-center justify-between">
+                         <div>
+                            <p class="text-sm font-black text-slate-900">Autenticação em Duas Etapas (2FA) Obrigatória</p>
+                            <p class="text-xs font-medium text-slate-500 mt-0.5">Exigir 2FA para todos os administradores.</p>
+                         </div>
+                         <button @click="handleAction('toggle_2fa')" :disabled="!canPerformAction('edit', 'configuracoes')" class="relative inline-flex h-8 w-14 items-center rounded-full bg-indigo-600 transition-colors focus:outline-none ring-offset-2 focus:ring-2 focus:ring-indigo-600 disabled:opacity-50">
+                            <span class="translate-x-7 inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform" />
+                         </button>
+                      </div>
+                      <div class="px-8 py-6 flex items-center justify-between">
+                         <div>
+                            <p class="text-sm font-black text-slate-900">Tempo de Expiração da Sessão</p>
+                            <p class="text-xs font-medium text-slate-500 mt-0.5">Deslogar administradores inativos após:</p>
+                         </div>
+                         <select :disabled="!canPerformAction('edit', 'configuracoes')" class="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-sm font-bold text-slate-900 focus:ring-indigo-600 outline-none disabled:opacity-50">
+                            <option>15 minutos</option>
+                            <option selected>30 minutos</option>
+                            <option>1 hora</option>
+                            <option>4 horas</option>
+                         </select>
+                      </div>
+                   </div>
+                </div>
+                <div class="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 flex items-center justify-between group hover:border-indigo-100 transition-all">
+                   <div>
+                      <h4 class="text-sm font-black text-slate-900 uppercase tracking-widest">Logs de Auditoria</h4>
+                      <p class="text-xs font-medium text-slate-500 mt-1">Exporte o histórico completo de ações administrativas.</p>
+                   </div>
+                   <button @click="handleAction('export_logs')" class="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black hover:bg-indigo-600 transition-all shadow-xl shadow-slate-900/10">
+                      <Download class="h-4 w-4" />
+                      Exportar Logs
+                   </button>
+                </div>
              </div>
           </template>
        </div>

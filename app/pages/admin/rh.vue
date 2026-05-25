@@ -1,23 +1,28 @@
 <script setup lang="ts">
-import { 
-  Search, 
-  Filter, 
-  Briefcase, 
-  Users, 
-  CheckCircle2, 
-  Clock, 
-  XCircle, 
-  MoreVertical, 
-  FileSignature, 
-  ArrowRightLeft, 
-  Eye, 
-  Edit, 
-  PauseCircle, 
-  PlayCircle, 
-  History, 
-  Check, 
-  X 
+import {
+  Search,
+  Filter,
+  Briefcase,
+  Users,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  MoreVertical,
+  FileSignature,
+  ArrowRightLeft,
+  Eye,
+  Edit,
+  PauseCircle,
+  PlayCircle,
+  History,
+  Check,
+  X,
+  UserCheck,
+  UserMinus,
+  FileCheck,
+  FileX
 } from 'lucide-vue-next'
+import type { Database } from '~/types/database.types'
 import { useAdminPermissions } from '~/composables/useAdminPermissions'
 import { useAdminAudit } from '~/composables/useAdminAudit'
 
@@ -26,6 +31,7 @@ definePageMeta({
   middleware: 'admin'
 })
 
+const supabase = useSupabaseClient<Database>()
 const { canPerformAction } = useAdminPermissions()
 const { logAction } = useAdminAudit()
 
@@ -48,117 +54,133 @@ const selectedItem = ref<any>(null)
 const isModalOpen = ref(false)
 const itemsPerPage = 8
 
-// Mock Data
-const mockVagas = ref(Array.from({ length: 25 }, (_, i) => ({
-  id: i + 1,
-  titulo: `Vaga RH ${i + 1}`,
-  empresa: `Empresa ${Math.floor(i / 4) + 1} Ltda`,
-  cidade: i % 3 === 0 ? 'Remoto' : i % 2 === 0 ? 'São Paulo, SP' : 'Rio de Janeiro, RJ',
-  status: i % 5 === 0 ? 'encerrada' : i % 4 === 0 ? 'pausada' : 'aberta',
-  urgencia: i % 6 === 0 ? 'alta' : i % 3 === 0 ? 'media' : 'baixa',
-  candidatos: Math.floor(Math.random() * 200),
-  dataCriacao: `1${i % 9}/04/2026`
-})))
+// DB state
+const tabData = ref<any[]>([])
+const tabCount = ref(0)
+const statsValues = ref({ vagasAbertas: 0, candidaturas: 0, admissoes: 0 })
 
-const mockCandidatos = ref(Array.from({ length: 30 }, (_, i) => ({
-  id: i + 1,
-  nome: `Candidato ${i + 1}`,
-  vaga: `Vaga RH ${Math.floor(i / 3) + 1}`,
-  fase: i % 4 === 0 ? 'Triagem' : i % 3 === 0 ? 'Entrevista' : i % 2 === 0 ? 'Proposta' : 'Inscrito',
-  score: Math.floor(Math.random() * 40) + 60,
-  dataAplicacao: `1${i % 9}/04/2026`
-})))
+const totalPages = computed(() => Math.ceil(tabCount.value / itemsPerPage))
+const today = new Date().toISOString().split('T')[0]
 
-const mockAdmissoes = ref(Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  nome: `Colaborador ${i + 1}`,
-  tipo: i % 3 === 0 ? 'Desligamento' : 'Admissão',
-  empresa: `Empresa ${Math.floor(i / 4) + 1} Ltda`,
-  status: i % 4 === 0 ? 'concluido' : i % 2 === 0 ? 'pendente' : 'em_andamento',
-  dataEfetivacao: `2${i % 9}/04/2026`
-})))
-
-const mockDocumentos = ref(Array.from({ length: 15 }, (_, i) => ({
+// Static mock for tabs without DB tables
+const mockDocumentos = Array.from({ length: 15 }, (_, i) => ({
   id: i + 1,
   usuario: `Usuário ${i + 1}`,
   tipo: i % 3 === 0 ? 'Comprovante de Residência' : i % 2 === 0 ? 'CNH' : 'RG/CPF',
   status: i % 4 === 0 ? 'rejeitado' : i % 2 === 0 ? 'aprovado' : 'pendente',
   dataEnvio: `0${i % 9 + 1}/04/2026`
-})))
+}))
 
-const mockAuditoria = ref(Array.from({ length: 40 }, (_, i) => ({
+const mockAuditoria = Array.from({ length: 40 }, (_, i) => ({
   id: i + 1,
   usuario: `Admin ${Math.floor(i / 5) + 1}`,
   acao: i % 3 === 0 ? 'Aprovação de Documento' : i % 2 === 0 ? 'Alteração de Status de Vaga' : 'Visualização de Perfil',
   detalhes: `Ação realizada no item #${i * 2 + 1}`,
   data: `1${i % 9}/04/2026 14:${(i * 3).toString().padStart(2, '0')}`
-})))
+}))
+
+const fetchTabData = async () => {
+  isLoading.value = true
+  const from = (currentPage.value - 1) * itemsPerPage
+
+  if (activeTab.value === 'vagas') {
+    let query = supabase
+      .from('vagas')
+      .select('id, titulo, local, encerramento, data_publicacao, empresa_id, usuarios!empresa_id(nome)', { count: 'exact' })
+    if (searchTerm.value) query = query.ilike('titulo', `%${searchTerm.value}%`)
+    const { data, count } = await query.order('data_publicacao', { ascending: false }).range(from, from + itemsPerPage - 1)
+    tabData.value = (data ?? []).map((v: any) => ({
+      ...v,
+      empresa: v.usuarios?.nome ?? '—',
+      cidade: v.local ?? '—',
+      status: !v.encerramento || v.encerramento > today ? 'aberta' : 'encerrada',
+      candidatos: 0,
+    }))
+    tabCount.value = count ?? 0
+
+  } else if (activeTab.value === 'candidatos') {
+    let query = supabase
+      .from('candidaturas')
+      .select('id, status, created_at, vagas(titulo), talento:usuarios!talento_id(nome)', { count: 'exact' })
+    if (searchTerm.value) query = (query as any).ilike('usuarios.nome', `%${searchTerm.value}%`)
+    const { data, count } = await (query as any).order('created_at', { ascending: false }).range(from, from + itemsPerPage - 1)
+    tabData.value = (data ?? []).map((c: any) => ({
+      ...c,
+      nome: c.talento?.nome ?? '—',
+      vaga: c.vagas?.titulo ?? '—',
+      fase: c.status ?? 'Pendente',
+      score: 75,
+      dataAplicacao: new Date(c.created_at).toLocaleDateString('pt-BR'),
+    }))
+    tabCount.value = count ?? 0
+
+  } else if (activeTab.value === 'admissoes') {
+    let query = supabase
+      .from('admissoes')
+      .select('id, cargo, regime, status, created_at, empresa:usuarios!empresa_id(nome), talento:usuarios!talento_id(nome)', { count: 'exact' })
+    if (searchTerm.value) query = (query as any).ilike('cargo', `%${searchTerm.value}%`)
+    const { data, count } = await (query as any).order('created_at', { ascending: false }).range(from, from + itemsPerPage - 1)
+    tabData.value = (data ?? []).map((a: any) => ({
+      ...a,
+      nome: a.talento?.nome ?? '—',
+      empresa: a.empresa?.nome ?? '—',
+      tipo: 'Admissão',
+      dataEfetivacao: new Date(a.created_at).toLocaleDateString('pt-BR'),
+    }))
+    tabCount.value = count ?? 0
+
+  } else if (activeTab.value === 'documentos') {
+    const term = searchTerm.value.toLowerCase()
+    const filtered = term ? mockDocumentos.filter(d => Object.values(d).some(v => String(v).toLowerCase().includes(term))) : mockDocumentos
+    tabCount.value = filtered.length
+    tabData.value = filtered.slice(from, from + itemsPerPage)
+
+  } else {
+    const term = searchTerm.value.toLowerCase()
+    const filtered = term ? mockAuditoria.filter(a => Object.values(a).some(v => String(v).toLowerCase().includes(term))) : mockAuditoria
+    tabCount.value = filtered.length
+    tabData.value = filtered.slice(from, from + itemsPerPage)
+  }
+
+  isLoading.value = false
+}
+
+const fetchStats = async () => {
+  const [{ count: vagasAbertas }, { count: candidaturas }, { count: admissoes }] = await Promise.all([
+    supabase.from('vagas').select('*', { count: 'exact', head: true }).is('encerramento', null),
+    supabase.from('candidaturas').select('*', { count: 'exact', head: true }),
+    supabase.from('admissoes').select('*', { count: 'exact', head: true }),
+  ])
+  statsValues.value = { vagasAbertas: vagasAbertas ?? 0, candidaturas: candidaturas ?? 0, admissoes: admissoes ?? 0 }
+}
 
 // Funnel Chart Config
 const funnelChart = {
-  series: [{
-    name: 'Recrutamento',
-    data: [1000, 800, 400, 150, 50]
-  }],
+  series: [{ name: 'Recrutamento', data: [1000, 800, 400, 150, 50] }],
   options: {
     chart: { type: 'bar', toolbar: { show: false } },
-    plotOptions: {
-      bar: {
-        borderRadius: 4,
-        horizontal: true,
-        barHeight: '70%',
-        distributed: true,
-        isFunnel: true,
-      },
-    },
+    plotOptions: { bar: { borderRadius: 4, horizontal: true, barHeight: '70%', distributed: true, isFunnel: true } },
     colors: ['#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'],
     dataLabels: {
       enabled: true,
-      formatter: (val, opt) => opt.w.globals.labels[opt.dataPointIndex] + ': ' + val,
+      formatter: (val: any, opt: any) => opt.w.globals.labels[opt.dataPointIndex] + ': ' + val,
       dropShadow: { enabled: true },
     },
-    xaxis: {
-      categories: ['Inscritos', 'Triagem', 'Entrevista', 'Proposta', 'Contratados'],
-    },
+    xaxis: { categories: ['Inscritos', 'Triagem', 'Entrevista', 'Proposta', 'Contratados'] },
     legend: { show: false }
   }
 }
 
-// Logic
-const getDataByTab = () => {
-  switch (activeTab.value) {
-    case 'vagas': return mockVagas.value
-    case 'candidatos': return mockCandidatos.value
-    case 'admissoes': return mockAdmissoes.value
-    case 'documentos': return mockDocumentos.value
-    case 'auditoria': return mockAuditoria.value
-    default: return []
-  }
-}
-
-const filteredData = computed(() => {
-  const data = getDataByTab()
-  if (!searchTerm.value) return data
-  const term = searchTerm.value.toLowerCase()
-  return (data as any[]).filter(item => {
-    return Object.values(item).some(val => 
-      String(val).toLowerCase().includes(term)
-    )
-  })
-})
-
-const totalPages = computed(() => Math.ceil(filteredData.value.length / itemsPerPage))
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return filteredData.value.slice(start, start + itemsPerPage)
-})
-
 watch([activeTab, searchTerm], () => {
   currentPage.value = 1
+  fetchTabData()
 })
 
+watch(currentPage, fetchTabData)
+
 onMounted(() => {
-  setTimeout(() => isLoading.value = false, 500)
+  fetchStats()
+  fetchTabData()
 })
 
 const handleViewDetails = (item: any) => {
@@ -194,15 +216,11 @@ const handleAction = (action: string, item: any) => {
     </div>
 
     <!-- RH Stats -->
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7 overflow-x-auto pb-2 scrollbar-hide">
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-3 overflow-x-auto pb-2 scrollbar-hide">
       <div v-for="stat in [
-        { label: 'Vagas Abertas', value: '145', color: 'text-green-600' },
-        { label: 'Pausadas', value: '32', color: 'text-amber-600' },
-        { label: 'Encerradas', value: '89', color: 'text-slate-400' },
-        { label: 'Inscrições', value: '8.492', color: 'text-purple-600' },
-        { label: 'Admissões', value: '124', color: 'text-blue-600' },
-        { label: 'Desligados', value: '18', color: 'text-red-600' },
-        { label: 'Docs Pendentes', value: '56', color: 'text-orange-600' }
+        { label: 'Vagas Abertas', value: statsValues.vagasAbertas.toLocaleString('pt-BR'), color: 'text-green-600' },
+        { label: 'Candidaturas', value: statsValues.candidaturas.toLocaleString('pt-BR'), color: 'text-purple-600' },
+        { label: 'Admissões', value: statsValues.admissoes.toLocaleString('pt-BR'), color: 'text-blue-600' }
       ]" :key="stat.label" class="min-w-[120px] p-4 bg-white rounded-2xl border border-slate-100 shadow-sm text-center">
          <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">{{ stat.label }}</p>
          <h3 class="text-xl font-black" :class="stat.color">{{ stat.value }}</h3>
@@ -251,8 +269,8 @@ const handleAction = (action: string, item: any) => {
                <p class="text-[10px] font-black text-slate-400 uppercase">Processando Dados...</p>
             </div>
             
-            <AdminEmptyState 
-              v-else-if="filteredData.length === 0"
+            <AdminEmptyState
+              v-else-if="tabData.length === 0"
               title="Nada encontrado"
               :description="`Nenhum registro de '${activeTab}' corresponde aos critérios.`"
             />
@@ -278,16 +296,28 @@ const handleAction = (action: string, item: any) => {
                     <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Data</th>
                     <th class="px-6 py-4 text-right"></th>
                   </tr>
-                  <!-- Fallback titles for others -->
-                  <tr v-else>
-                    <th class="py-4 px-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
-                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Info</th>
+                  <tr v-else-if="activeTab === 'admissoes'">
+                    <th class="py-4 px-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Colaborador</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo</th>
                     <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Data</th>
+                    <th class="px-6 py-4 text-right"></th>
+                  </tr>
+                  <tr v-else-if="activeTab === 'documentos'">
+                    <th class="py-4 px-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Usuário</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo de Documento</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                    <th class="px-6 py-4 text-right"></th>
+                  </tr>
+                  <tr v-else-if="activeTab === 'auditoria'">
+                    <th class="py-4 px-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Agente</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Ação Executada</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Data / Hora</th>
                     <th class="px-6 py-4 text-right"></th>
                   </tr>
                </thead>
                <tbody class="divide-y divide-slate-50">
-                  <tr v-for="item in paginatedData" :key="item.id" class="group hover:bg-slate-50/50 transition-colors">
+                  <tr v-for="item in tabData" :key="item.id" class="group hover:bg-slate-50/50 transition-colors">
                      <!-- VAGAS ROW -->
                      <template v-if="activeTab === 'vagas'">
                         <td class="py-4 px-6">
@@ -335,12 +365,94 @@ const handleAction = (action: string, item: any) => {
                         </td>
                      </template>
 
+                     <!-- ADMISSOES ROW -->
+                     <template v-else-if="activeTab === 'admissoes'">
+                        <td class="py-4 px-6">
+                           <p class="text-sm font-black text-slate-900">{{ item.nome }}</p>
+                           <p class="text-[10px] font-bold text-slate-400 uppercase">{{ item.empresa }}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                           <span :class="[
+                             item.tipo === 'Admissão' ? 'bg-green-50 text-green-600 ring-green-600/10' : 'bg-red-50 text-red-600 ring-red-600/10',
+                             'px-2.5 py-1 rounded-full text-[9px] font-black uppercase ring-1 ring-inset'
+                           ]">
+                             <component :is="item.tipo === 'Admissão' ? UserCheck : UserMinus" class="inline h-3 w-3 mr-1" />
+                             {{ item.tipo }}
+                           </span>
+                        </td>
+                        <td class="px-6 py-4">
+                           <span :class="[
+                             item.status === 'concluido' ? 'bg-green-50 text-green-600 ring-green-600/10' :
+                             item.status === 'pendente' ? 'bg-amber-50 text-amber-600 ring-amber-600/10' :
+                             'bg-blue-50 text-blue-600 ring-blue-600/10',
+                             'px-2.5 py-1 rounded-full text-[9px] font-black uppercase ring-1 ring-inset'
+                           ]">
+                             {{ item.status.replace('_', ' ') }}
+                           </span>
+                        </td>
+                        <td class="px-6 py-4 text-xs font-bold text-slate-500">{{ item.dataEfetivacao }}</td>
+                     </template>
+
+                     <!-- DOCUMENTOS ROW -->
+                     <template v-else-if="activeTab === 'documentos'">
+                        <td class="py-4 px-6">
+                           <p class="text-sm font-black text-slate-900">{{ item.usuario }}</p>
+                           <p class="text-[10px] font-bold text-slate-400 uppercase">Enviado em {{ item.dataEnvio }}</p>
+                        </td>
+                        <td class="px-6 py-4 text-xs font-bold text-slate-600">{{ item.tipo }}</td>
+                        <td class="px-6 py-4">
+                           <span :class="[
+                             item.status === 'aprovado' ? 'bg-green-50 text-green-600 ring-green-600/10' :
+                             item.status === 'rejeitado' ? 'bg-red-50 text-red-600 ring-red-600/10' :
+                             'bg-amber-50 text-amber-600 ring-amber-600/10',
+                             'px-2.5 py-1 rounded-full text-[9px] font-black uppercase ring-1 ring-inset'
+                           ]">
+                             {{ item.status }}
+                           </span>
+                        </td>
+                     </template>
+
+                     <!-- AUDITORIA ROW -->
+                     <template v-else-if="activeTab === 'auditoria'">
+                        <td class="py-4 px-6">
+                           <div class="flex items-center gap-3">
+                              <div class="h-9 w-9 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 text-xs font-black">
+                                 {{ item.usuario.split(' ').map((w: string) => w[0]).join('') }}
+                              </div>
+                              <p class="text-sm font-black text-slate-900">{{ item.usuario }}</p>
+                           </div>
+                        </td>
+                        <td class="px-6 py-4 text-xs font-bold text-slate-600">{{ item.acao }}</td>
+                        <td class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{{ item.data }}</td>
+                     </template>
+
                      <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                           <button @click="handleViewDetails(item)" class="p-2 text-slate-400 hover:text-slate-900 hover:bg-white shadow-sm rounded-xl transition-all border border-transparent hover:border-slate-100">
+                           <button v-if="activeTab !== 'auditoria'" @click="handleViewDetails(item)" class="p-2 text-slate-400 hover:text-slate-900 hover:bg-white shadow-sm rounded-xl transition-all border border-transparent hover:border-slate-100">
                               <Eye class="h-4 w-4" />
                            </button>
-                           <button class="p-2 text-slate-400 hover:text-green-600 hover:bg-white shadow-sm rounded-xl transition-all border border-transparent hover:border-slate-100">
+                           <!-- VAGAS actions -->
+                           <template v-if="activeTab === 'vagas' && canPerformAction('edit', 'rh')">
+                              <button v-if="item.status === 'aberta'" @click="handleAction('pausar', item)" class="p-2 text-slate-400 hover:text-amber-600 hover:bg-white shadow-sm rounded-xl transition-all border border-transparent hover:border-slate-100" title="Pausar">
+                                 <PauseCircle class="h-4 w-4" />
+                              </button>
+                              <button v-if="item.status === 'pausada'" @click="handleAction('abrir', item)" class="p-2 text-slate-400 hover:text-green-600 hover:bg-white shadow-sm rounded-xl transition-all border border-transparent hover:border-slate-100" title="Reabrir">
+                                 <PlayCircle class="h-4 w-4" />
+                              </button>
+                              <button v-if="item.status !== 'encerrada'" @click="handleAction('encerrar', item)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-white shadow-sm rounded-xl transition-all border border-transparent hover:border-slate-100" title="Encerrar">
+                                 <XCircle class="h-4 w-4" />
+                              </button>
+                           </template>
+                           <!-- DOCUMENTOS actions -->
+                           <template v-if="activeTab === 'documentos' && item.status === 'pendente' && canPerformAction('edit', 'rh')">
+                              <button @click="handleAction('aprovar', item)" class="p-2 text-slate-400 hover:text-green-600 hover:bg-white shadow-sm rounded-xl transition-all border border-transparent hover:border-slate-100" title="Aprovar">
+                                 <FileCheck class="h-4 w-4" />
+                              </button>
+                              <button @click="handleAction('rejeitar', item)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-white shadow-sm rounded-xl transition-all border border-transparent hover:border-slate-100" title="Rejeitar">
+                                 <FileX class="h-4 w-4" />
+                              </button>
+                           </template>
+                           <button v-if="activeTab !== 'auditoria'" class="p-2 text-slate-400 hover:text-green-600 hover:bg-white shadow-sm rounded-xl transition-all border border-transparent hover:border-slate-100">
                               <MoreVertical class="h-4 w-4" />
                            </button>
                         </div>
@@ -351,11 +463,11 @@ const handleAction = (action: string, item: any) => {
           </div>
 
           <!-- Pagination -->
-          <AdminPagination 
-            v-if="filteredData.length > 0"
+          <AdminPagination
+            v-if="tabCount > 0"
             :current-page="currentPage"
             :total-pages="totalPages"
-            :total-items="filteredData.length"
+            :total-items="tabCount"
             :items-per-page="itemsPerPage"
             @page-change="currentPage = $event"
           />

@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { 
-  Search, 
-  Filter, 
-  CalendarCheck, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  AlertTriangle, 
-  MoreVertical, 
-  UserCircle, 
-  Eye, 
-  MessageSquare, 
-  Ban, 
-  CalendarDays 
+import {
+  Search,
+  Filter,
+  CalendarCheck,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  MoreVertical,
+  UserCircle,
+  Eye,
+  MessageSquare,
+  Ban,
+  CalendarDays
 } from 'lucide-vue-next'
+import type { Database } from '~/types/database.types'
 import { useAdminPermissions } from '~/composables/useAdminPermissions'
 import { useAdminAudit } from '~/composables/useAdminAudit'
 
@@ -22,6 +23,7 @@ definePageMeta({
   middleware: 'admin'
 })
 
+const supabase = useSupabaseClient<Database>()
 const { canPerformAction } = useAdminPermissions()
 const { logAction } = useAdminAudit()
 
@@ -33,43 +35,53 @@ const selectedItem = ref<any>(null)
 const isModalOpen = ref(false)
 const itemsPerPage = 8
 
-// Mock Data
-const mockServicos = ref(Array.from({ length: 45 }, (_, i) => ({
-  id: i + 1,
-  titulo: i % 3 === 0 ? 'Manutenção Elétrica' : i % 2 === 0 ? 'Limpeza Pós-Obra' : 'Instalação Hidráulica',
-  prestador: `Prestador ${i}`,
-  cliente: `Cliente ${i}`,
-  status: i % 5 === 0 ? 'disputa' : i % 4 === 0 ? 'concluido' : i % 3 === 0 ? 'em_andamento' : 'agendado',
-  valor: `R$ ${(Math.random() * 800 + 100).toFixed(2).replace('.', ',')}`,
-  data: `1${i % 9}/04/2026`,
-})))
+// DB State
+const servicosList = ref<any[]>([])
+const totalCount = ref(0)
+const statsValues = ref({ ativos: 0, total: 0 })
 
-// Simulate loading
-onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false
-  }, 500)
-})
+const totalPages = computed(() => Math.ceil(totalCount.value / itemsPerPage))
 
-// Filter logic
-const filteredServicos = computed(() => {
-  return mockServicos.value.filter(s => 
-    s.titulo.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    s.prestador.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    s.cliente.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    s.id.toString().includes(searchTerm.value)
-  )
-})
+const fetchServicos = async () => {
+  isLoading.value = true
+  let query = supabase
+    .from('servicos')
+    .select('id, titulo, preco_inicial, ativo, created_at, prestador_id, usuarios!prestador_id(nome, email)', { count: 'exact' })
+  if (searchTerm.value) {
+    query = query.ilike('titulo', `%${searchTerm.value}%`)
+  }
+  const from = (currentPage.value - 1) * itemsPerPage
+  const { data, count } = await query.order('created_at', { ascending: false }).range(from, from + itemsPerPage - 1)
+  servicosList.value = (data ?? []).map((s: any) => ({
+    ...s,
+    prestador: s.usuarios?.nome ?? '—',
+    cliente: '—',
+    status: s.ativo ? 'agendado' : 'concluido',
+    valor: s.preco_inicial ? `R$ ${Number(s.preco_inicial).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—',
+    data: new Date(s.created_at).toLocaleDateString('pt-BR'),
+  }))
+  totalCount.value = count ?? 0
+  isLoading.value = false
+}
 
-// Pagination logic
-const totalPages = computed(() => Math.ceil(filteredServicos.value.length / itemsPerPage))
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return filteredServicos.value.slice(start, start + itemsPerPage)
-})
+const fetchStats = async () => {
+  const [{ count: total }, { count: ativos }] = await Promise.all([
+    supabase.from('servicos').select('*', { count: 'exact', head: true }),
+    supabase.from('servicos').select('*', { count: 'exact', head: true }).eq('ativo', true),
+  ])
+  statsValues.value = { total: total ?? 0, ativos: ativos ?? 0 }
+}
 
 watch(searchTerm, () => {
   currentPage.value = 1
+  fetchServicos()
+})
+
+watch(currentPage, fetchServicos)
+
+onMounted(() => {
+  fetchStats()
+  fetchServicos()
 })
 
 const handleViewDetails = (item: any) => {
@@ -89,10 +101,10 @@ const handleAction = (action: string, item?: any) => {
 
 // Stats computed
 const stats = computed(() => ([
-  { label: 'Em Andamento', value: mockServicos.value.filter(s => s.status === 'em_andamento').length, color: 'text-amber-600' },
-  { label: 'Próximos 7 dias', value: mockServicos.value.filter(s => s.status === 'agendado').length, color: 'text-blue-600' },
-  { label: 'Concluídos Mês', value: mockServicos.value.filter(s => s.status === 'concluido').length, color: 'text-green-600' },
-  { label: 'Em Disputa', value: mockServicos.value.filter(s => s.status === 'disputa').length, color: 'text-red-600' }
+  { label: 'Total de Serviços', value: statsValues.value.total, color: 'text-slate-900' },
+  { label: 'Serviços Ativos', value: statsValues.value.ativos, color: 'text-blue-600' },
+  { label: 'Inativos', value: statsValues.value.total - statsValues.value.ativos, color: 'text-green-600' },
+  { label: 'Em Disputa', value: 0, color: 'text-red-600' }
 ]))
 </script>
 
@@ -152,9 +164,9 @@ const stats = computed(() => ([
         <p class="text-slate-400 font-black uppercase tracking-widest text-xs">Mapeando Agenda Global...</p>
       </div>
 
-      <AdminEmptyState 
-        v-else-if="filteredServicos.length === 0"
-        title="Nenhum ciclo operacional encontrado" 
+      <AdminEmptyState
+        v-else-if="servicosList.length === 0"
+        title="Nenhum ciclo operacional encontrado"
         :description="`Refine sua busca para '${searchTerm}' ou altere os filtros de status.`"
       />
 
@@ -164,14 +176,14 @@ const stats = computed(() => ([
             <thead class="bg-slate-50/50">
               <tr>
                 <th class="py-5 px-8 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Serviço / ID</th>
-                <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Stakeholders</th>
+                <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Prestador</th>
                 <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Status Atual</th>
                 <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor Brut.</th>
                 <th class="px-6 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Ações</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
-              <tr v-for="servico in paginatedData" :key="servico.id" class="group hover:bg-slate-50/50 transition-colors">
+              <tr v-for="servico in servicosList" :key="servico.id" class="group hover:bg-slate-50/50 transition-colors">
                 <td class="whitespace-nowrap py-5 px-8">
                   <div class="flex items-center">
                     <div class="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
@@ -184,15 +196,9 @@ const stats = computed(() => ([
                   </div>
                 </td>
                 <td class="whitespace-nowrap px-6 py-5">
-                   <div class="flex flex-col gap-1">
-                      <div class="flex items-center gap-2 text-[11px] font-bold text-slate-600">
-                         <div class="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                         P: {{ servico.prestador }}
-                      </div>
-                      <div class="flex items-center gap-2 text-[11px] font-bold text-slate-600">
-                         <div class="h-1.5 w-1.5 rounded-full bg-slate-300" />
-                         C: {{ servico.cliente }}
-                      </div>
+                   <div class="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                      <div class="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                      {{ servico.prestador }}
                    </div>
                 </td>
                 <td class="whitespace-nowrap px-6 py-5">
@@ -221,6 +227,9 @@ const stats = computed(() => ([
                       <button v-if="servico.status === 'disputa'" @click="handleAction('mediar', servico)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Mediar Conflito">
                         <MessageSquare class="h-4 w-4" />
                       </button>
+                      <button v-if="servico.status === 'agendado'" @click="handleAction('remarcar', servico)" class="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all" title="Remarcar">
+                        <CalendarDays class="h-4 w-4" />
+                      </button>
                       <button v-if="servico.status === 'agendado'" @click="handleAction('cancelar', servico)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Cancelar">
                         <Ban class="h-4 w-4" />
                       </button>
@@ -232,11 +241,11 @@ const stats = computed(() => ([
           </table>
         </div>
         
-        <AdminPagination 
-          :current-page="currentPage" 
-          :total-pages="totalPages" 
-          :total-items="filteredServicos.length" 
-          :items-per-page="itemsPerPage" 
+        <AdminPagination
+          :current-page="currentPage"
+          :total-pages="totalPages"
+          :total-items="totalCount"
+          :items-per-page="itemsPerPage"
           @page-change="currentPage = $event"
         />
       </div>
@@ -258,10 +267,9 @@ const stats = computed(() => ([
         <div class="grid grid-cols-2 gap-8 px-2">
           <div v-for="info in [
             { label: 'Prestador de Serviço', value: selectedItem.prestador },
-            { label: 'Contratante / Cliente', value: selectedItem.cliente },
-            { label: 'Status Operacional', value: selectedItem.status, color: true },
-            { label: 'Valor da Transação', value: selectedItem.valor },
-            { label: 'Data do Evento', value: selectedItem.data }
+            { label: 'Status Operacional', value: selectedItem.ativo ? 'Ativo' : 'Inativo', color: true },
+            { label: 'Valor Base', value: selectedItem.valor },
+            { label: 'Data de Criação', value: selectedItem.data }
           ]" :key="info.label">
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ info.label }}</p>
             <p class="text-sm font-black text-slate-900" :class="{ 'text-red-600 uppercase': info.color && selectedItem.status === 'disputa' }">

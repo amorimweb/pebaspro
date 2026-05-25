@@ -1,604 +1,473 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/stores/auth'
 import { useProfileStore } from '~/stores/profile'
-const supabase = useSupabaseClient()
-const email = ref('')
-const password = ref('')
-const confirmPassword = ref('')
-const nome = ref('')
-const documento = ref('')
-const telefone = ref('')
-const cidade = ref('')
-const estado = ref('')
-const showPassword = ref(false)
-const loading = ref(false)
-const errorMsg = ref('')
-const successMsg = ref('')
 
-const ESTADOS_BR = [
-  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG',
-  'PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
-]
-
-// Máscaras
-const maskTelefone = (v: string) => {
-  v = v.replace(/\D/g, "")
-  v = v.replace(/^(\d{2})(\d)/g, "($1) $2")
-  v = v.replace(/(\d)(\d{4})$/, "$1-$2")
-  return v
-}
-
-const maskCPF = (v: string) => {
-  v = v.replace(/\D/g, "").slice(0, 11)
-  v = v.replace(/(\d{3})(\d)/, "$1.$2")
-  v = v.replace(/(\d{3})(\d)/, "$1.$2")
-  v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2")
-  return v
-}
-
-const maskCNPJ = (v: string) => {
-  v = v.replace(/\D/g, "").slice(0, 14)
-  v = v.replace(/(\d{2})(\d)/, "$1.$2")
-  v = v.replace(/(\d{3})(\d)/, "$1.$2")
-  v = v.replace(/(\d{3})(\d)/, "$1/$2")
-  v = v.replace(/(\d{4})(\d{1,2})$/, "$1-$2")
-  return v
-}
-
-// Para prestador: detecta CPF ou CNPJ pelo número de dígitos digitados
-const isPrestador = computed(() => chosenType.value === 'prestador')
-const isEmpresa = computed(() => chosenType.value === 'empresa')
-
-// Detecta se o campo atual é CNPJ (empresa sempre é CNPJ; prestador é CNPJ se já tem >11 dígitos)
-const isCNPJ = computed(() => {
-  if (isEmpresa.value) return true
-  if (isPrestador.value) return documento.value.replace(/\D/g, '').length > 11
-  return false
-})
-
-const docLabel = computed(() => {
-  if (isEmpresa.value) return 'CNPJ'
-  if (isPrestador.value) return 'CPF ou CNPJ'
-  return 'CPF'
-})
-const docPlaceholder = computed(() => isCNPJ.value ? '00.000.000/0001-00' : '000.000.000-00')
-const docMaxLength = computed(() => {
-  if (isEmpresa.value || isPrestador.value) return 18
-  return 14
-})
-
-const applyDocMask = (raw: string) => {
-  const digits = raw.replace(/\D/g, '')
-  if (isEmpresa.value) return maskCNPJ(raw)
-  if (isPrestador.value) return digits.length > 11 ? maskCNPJ(raw) : maskCPF(raw)
-  return maskCPF(raw)
-}
-
-// Validações de dígito verificador
-const validarCPF = (cpf: string) => {
-  const n = cpf.replace(/\D/g, '')
-  if (n.length !== 11 || /^(\d)\1+$/.test(n)) return false
-  let s = 0
-  for (let i = 0; i < 9; i++) s += Number(n.charAt(i)) * (10 - i)
-  let r = (s * 10) % 11; if (r === 10 || r === 11) r = 0
-  if (r !== Number(n.charAt(9))) return false
-  s = 0
-  for (let i = 0; i < 10; i++) s += Number(n.charAt(i)) * (11 - i)
-  r = (s * 10) % 11; if (r === 10 || r === 11) r = 0
-  return r === Number(n.charAt(10))
-}
-
-const validarCNPJ = (cnpj: string) => {
-  const n = cnpj.replace(/\D/g, '')
-  if (n.length !== 14 || /^(\d)\1+$/.test(n)) return false
-  const calc = (len: number) => {
-    let s = 0, pos = len - 7
-    for (let i = len; i >= 1; i--) { s += Number(n.charAt(len - i)) * pos--; if (pos < 2) pos = 9 }
-    const r = s % 11; return r < 2 ? 0 : 11 - r
-  }
-  return calc(12) === Number(n.charAt(12)) && calc(13) === Number(n.charAt(13))
-}
-
-const docError = ref('')
-const validateDoc = () => {
-  // Re-aplica máscara antes de validar (garante formato correto)
-  documento.value = applyDocMask(documento.value)
-
-  const digits = documento.value.replace(/\D/g, '')
-  if (!digits) { docError.value = ''; return }
-
-  if (isEmpresa.value) {
-    docError.value = validarCNPJ(documento.value) ? '' : 'CNPJ inválido'
-  } else if (isPrestador.value) {
-    if (digits.length > 11) {
-      docError.value = validarCNPJ(documento.value) ? '' : 'CNPJ inválido'
-    } else {
-      docError.value = validarCPF(documento.value) ? '' : 'CPF inválido'
-    }
-  } else {
-    docError.value = validarCPF(documento.value) ? '' : 'CPF inválido'
-  }
-}
-
-const typeCookie = useCookie('pebas_pending_type')
-const chosenType = computed(() => typeCookie.value || 'talento')
+type AccountType = 'talento' | 'prestador' | 'empresa'
 
 definePageMeta({
   layout: false,
   noPadding: true
 })
 
-const handleSignUp = async () => {
-  loading.value = true
+const PENDING_PROFILE_KEY = 'pebas_pending_complete_profile'
+const supabase = useSupabaseClient()
+const authStore = useAuthStore()
+const profileStore = useProfileStore()
+const typeCookie = useCookie<AccountType | null>('pebas_pending_type', { maxAge: 3600 })
+
+const step = ref(1)
+const loading = ref(false)
+const errorMsg = ref('')
+const successMsg = ref('')
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
+
+const form = reactive({
+  tipo_conta: (typeCookie.value || '') as AccountType | '',
+  nome: '',
+  documento: '',
+  telefone: '',
+  cidade: '',
+  estado: '',
+  regiao: '',
+  endereco: '',
+  profissao: '',
+  objetivo_profissional: '',
+  habilidades_input: '',
+  sobre_mim: '',
+  biografia: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+  termsAccepted: false
+})
+
+const accountTypes = [
+  { id: 'talento' as AccountType, title: 'Talento', description: 'Busco vagas de emprego' },
+  { id: 'prestador' as AccountType, title: 'Prestador', description: 'Ofereco meus servicos' },
+  { id: 'empresa' as AccountType, title: 'Empresa', description: 'Quero contratar talentos' }
+]
+
+const ESTADOS_BR = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
+  'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+]
+
+const isEmpresa = computed(() => form.tipo_conta === 'empresa')
+const isPrestador = computed(() => form.tipo_conta === 'prestador')
+const typeName = computed(() => accountTypes.find(type => type.id === form.tipo_conta)?.title || 'perfil')
+const docLabel = computed(() => isEmpresa.value ? 'CNPJ' : isPrestador.value ? 'CPF ou CNPJ' : 'CPF')
+const professionLabel = computed(() => isEmpresa.value ? 'Segmento da empresa' : isPrestador.value ? 'Especialidade principal' : 'Profissao / cargo desejado')
+const currentTitle = computed(() => [
+  'Identificacao',
+  'Localizacao',
+  'Apresentacao',
+  'Revise seus dados',
+  'Crie seu acesso'
+][step.value - 1])
+
+const maskTelefone = (value: string) => {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+  return digits
+    .replace(/^(\d{2})(\d)/, '($1) $2')
+    .replace(/(\d)(\d{4})$/, '$1-$2')
+}
+
+const maskCPF = (value: string) => value.replace(/\D/g, '').slice(0, 11)
+  .replace(/(\d{3})(\d)/, '$1.$2')
+  .replace(/(\d{3})(\d)/, '$1.$2')
+  .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+
+const maskCNPJ = (value: string) => value.replace(/\D/g, '').slice(0, 14)
+  .replace(/(\d{2})(\d)/, '$1.$2')
+  .replace(/(\d{3})(\d)/, '$1.$2')
+  .replace(/(\d{3})(\d)/, '$1/$2')
+  .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+
+const applyDocMask = (value: string) => {
+  const digits = value.replace(/\D/g, '')
+  return isEmpresa.value || (isPrestador.value && digits.length > 11) ? maskCNPJ(value) : maskCPF(value)
+}
+
+const validarCPF = (cpf: string) => {
+  const n = cpf.replace(/\D/g, '')
+  if (n.length !== 11 || /^(\d)\1+$/.test(n)) return false
+  let sum = 0
+  for (let index = 0; index < 9; index++) sum += Number(n[index]) * (10 - index)
+  let digit = (sum * 10) % 11
+  if (digit === 10) digit = 0
+  if (digit !== Number(n[9])) return false
+  sum = 0
+  for (let index = 0; index < 10; index++) sum += Number(n[index]) * (11 - index)
+  digit = (sum * 10) % 11
+  if (digit === 10) digit = 0
+  return digit === Number(n[10])
+}
+
+const validarCNPJ = (cnpj: string) => {
+  const n = cnpj.replace(/\D/g, '')
+  if (n.length !== 14 || /^(\d)\1+$/.test(n)) return false
+  const calc = (length: number) => {
+    let sum = 0
+    let factor = length - 7
+    for (let index = length; index >= 1; index--) {
+      sum += Number(n[length - index]) * factor--
+      if (factor < 2) factor = 9
+    }
+    const remainder = sum % 11
+    return remainder < 2 ? 0 : 11 - remainder
+  }
+  return calc(12) === Number(n[12]) && calc(13) === Number(n[13])
+}
+
+const validateDocument = () => {
+  const digits = form.documento.replace(/\D/g, '')
+  if (isEmpresa.value) return validarCNPJ(form.documento)
+  if (isPrestador.value && digits.length > 11) return validarCNPJ(form.documento)
+  return validarCPF(form.documento)
+}
+
+const setError = (message: string) => {
+  errorMsg.value = message
+  return false
+}
+
+const validateStep = (targetStep = step.value) => {
   errorMsg.value = ''
+  if (targetStep === 1) {
+    if (!form.tipo_conta) return setError('Escolha o tipo de perfil.')
+    if (form.nome.trim().length < 3) return setError('Informe seu nome ou razao social.')
+    if (!validateDocument()) return setError(`${docLabel.value} invalido. Verifique o numero informado.`)
+    if (form.telefone.replace(/\D/g, '').length < 10) return setError('Informe um WhatsApp ou celular valido.')
+  }
+  if (targetStep === 2 && (!form.cidade.trim() || !form.estado)) {
+    return setError('Informe cidade e estado.')
+  }
+  if (targetStep === 3) {
+    if (form.profissao.trim().length < 3) return setError(`Informe ${professionLabel.value.toLowerCase()}.`)
+    if (form.sobre_mim.trim().length < 20) return setError('Escreva um resumo com pelo menos 20 caracteres.')
+    if (form.tipo_conta === 'talento' && form.objetivo_profissional.trim().length < 3) {
+      return setError('Informe seu objetivo profissional.')
+    }
+    if (form.tipo_conta === 'talento' && !form.habilidades_input.trim()) {
+      return setError('Informe suas principais habilidades.')
+    }
+  }
+  if (targetStep === 5) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return setError('Informe um e-mail valido.')
+    if (form.password.length < 6) return setError('A senha deve ter pelo menos 6 caracteres.')
+    if (form.password !== form.confirmPassword) return setError('As senhas nao coincidem.')
+    if (!form.termsAccepted) return setError('Aceite os termos e a politica de privacidade.')
+  }
+  return true
+}
+
+const nextStep = () => {
+  if (validateStep()) step.value++
+}
+
+const prevStep = () => {
+  errorMsg.value = ''
+  step.value--
+}
+
+const profilePayload = () => ({
+  nome: form.nome.trim(),
+  documento: form.documento,
+  telefone: form.telefone,
+  cidade: form.cidade.trim().toUpperCase(),
+  estado: form.estado,
+  regiao: form.regiao.trim() || null,
+  endereco: form.endereco.trim() || null,
+  profissao: form.profissao.trim(),
+  objetivo_profissional: form.tipo_conta === 'talento' ? form.objetivo_profissional.trim() : null,
+  habilidades: form.tipo_conta === 'talento'
+    ? form.habilidades_input.split(',').map(skill => skill.trim()).filter(Boolean)
+    : [],
+  sobre_mim: form.sobre_mim.trim(),
+  biografia: form.biografia.trim() || form.sobre_mim.trim(),
+  tipo_conta: form.tipo_conta,
+  cadastro_completo: true,
+  status: 'ativo'
+})
+
+const redirectCompleteProfile = async (token?: string) => {
+  const result = await authStore.fetchProfile(token)
+  const profile = result?.data
+  if (!profile) return false
+  const routes: Record<string, string> = {
+    talento: '/',
+    prestador: '/painel/prestador',
+    empresa: '/painel/empresa'
+  }
+  await navigateTo(routes[profile.tipo_conta || ''] || '/')
+  return true
+}
+
+const handleSignUp = async () => {
+  if (!validateStep(1) || !validateStep(2) || !validateStep(3) || !validateStep(5)) return
+  loading.value = true
   successMsg.value = ''
+  const cadastro = profilePayload()
 
   try {
-    // 1. Validar senhas
-    if (password.value !== confirmPassword.value) {
-      errorMsg.value = 'As senhas não coincidem.'
-      loading.value = false
-      return
-    }
-
-    // 2. Validar cidade e estado
-    if (!cidade.value.trim() || !estado.value) {
-      errorMsg.value = 'Preencha sua cidade e estado.'
-      loading.value = false
-      return
-    }
-
-    // 3. Validar documento
-    let docValido = false
-    const digits = documento.value.replace(/\D/g, '')
-    if (isEmpresa.value) docValido = validarCNPJ(documento.value)
-    else if (isPrestador.value) docValido = digits.length > 11 ? validarCNPJ(documento.value) : validarCPF(documento.value)
-    else docValido = validarCPF(documento.value)
-    
-    if (!docValido) {
-      errorMsg.value = `${docLabel.value} inválido. Verifique os dados e tente novamente.`
-      loading.value = false
-      return
-    }
-
-    // 2. Prosseguir com cadastro no Supabase
     const { data, error } = await supabase.auth.signUp({
-      email: email.value,
-      password: password.value,
+      email: form.email.trim(),
+      password: form.password,
       options: {
-        data: {
-          full_name: nome.value,
-          tipo_conta: chosenType.value,
-          documento: documento.value,
-          telefone: telefone.value,
-        },
-        emailRedirectTo: `${window.location.origin}/confirm`,
+        data: { cadastro },
+        emailRedirectTo: `${window.location.origin}/confirm`
       }
     })
+    if (error) throw error
 
-    if (error) {
-      errorMsg.value = error.message
-      loading.value = false
-    } else if (data.user) {
-      // 3. Criação do Perfil via Store Centralizado
-      const profileStore = useProfileStore()
-      const { error: profileError } = await profileStore.createProfile({
-          id: data.user.id,
-          nome: nome.value,
-          email: email.value,
-          documento: documento.value,
-          telefone: telefone.value,
-          cidade: cidade.value.toUpperCase(),
-          estado: estado.value,
-          tipo_conta: chosenType.value as any
-      })
-
-      if (profileError) {
-         console.error('Aviso: Erro ao criar perfil:', profileError)
+    if (data.session?.access_token && data.user) {
+      const loaded = await redirectCompleteProfile(data.session.access_token)
+      if (!loaded) {
+        await profileStore.createProfile({ id: data.user.id, email: form.email.trim(), ...cadastro })
+        await redirectCompleteProfile(data.session.access_token)
       }
-
-      // SEMPRE redirecionar para o onboarding para completar o perfil
-      await navigateTo('/cadastro/onboarding')
-    } else {
-      // Caso o Supabase exija confirmação (fallback)
-      successMsg.value = 'Quase lá! Verifique seu e-mail para confirmar seu acesso.'
-      loading.value = false
+      return
     }
+
+    successMsg.value = 'Cadastro concluido. Confirme seu e-mail para acessar sua conta.'
   } catch (error: any) {
-    console.error('Erro no cadastro:', error)
-    errorMsg.value = error.data?.message || 'Erro ao criar conta. Tente novamente.'
+    errorMsg.value = error?.message || 'Nao foi possivel criar sua conta. Tente novamente.'
+  } finally {
     loading.value = false
   }
 }
-const loginWithGoogle = async () => {
+
+const handleGoogleSignUp = async () => {
+  if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return
+  if (!form.termsAccepted) {
+    errorMsg.value = 'Aceite os termos e a politica de privacidade.'
+    return
+  }
+  loading.value = true
+  errorMsg.value = ''
+  localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(profilePayload()))
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: {
-      redirectTo: `${window.location.origin}/confirm`,
-    },
+    options: { redirectTo: `${window.location.origin}/confirm` }
   })
-  if (error) errorMsg.value = error.message
+  if (error) {
+    localStorage.removeItem(PENDING_PROFILE_KEY)
+    errorMsg.value = error.message
+    loading.value = false
+  }
 }
-const goBack = () => {
-  typeCookie.value = null
-  navigateTo('/cadastro')
-}
+
+const goBack = () => navigateTo('/cadastro')
 </script>
 
 <template>
-  <div class="auth-page">
-    <div class="auth-card">
-      <div class="auth-header">
-        <button @click="goBack" class="back-btn mb-6">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          Mudar perfil selecionado
-        </button>
-        <h1>Dados do seu perfil</h1>
-        <p>Complete o cadastro como <strong>{{ chosenType === 'talento' ? 'Talento' : chosenType === 'prestador' ? 'Prestador' : 'Empresa' }}</strong></p>
+  <div class="registration-page">
+    <div class="registration-card">
+      <div class="progress">
+        <span :style="{ width: `${(step / 5) * 100}%` }"></span>
       </div>
 
-      <form @submit.prevent="handleSignUp" class="auth-form">
-        <div v-if="errorMsg" class="error-banner">{{ errorMsg }}</div>
-        <div v-if="successMsg" class="success-banner">{{ successMsg }}</div>
+      <header>
+        <button v-if="step === 1" class="back" type="button" @click="goBack">Voltar</button>
+        <button v-else class="back" type="button" @click="prevStep">Voltar</button>
+        <img src="/PEBASPRO-logo.png" alt="PEBASPRO" />
+        <p class="step">Etapa {{ step }} de 5</p>
+        <h1>{{ currentTitle }}</h1>
+        <p class="subtitle">Seu cadastro sera criado completo somente ao finalizar.</p>
+      </header>
 
-        <div class="form-group">
-          <label for="nome">Nome Completo / Razão Social</label>
-          <input v-model="nome" id="nome" type="text" placeholder="Como quer ser identificado?" required />
-        </div>
+      <p v-if="errorMsg" class="banner error">{{ errorMsg }}</p>
+      <p v-if="successMsg" class="banner success">{{ successMsg }}</p>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="documento">{{ docLabel }}</label>
-            <input 
-              :value="documento" 
-              @input="documento = applyDocMask(($event.target as HTMLInputElement).value)"
-              @blur="validateDoc"
-              id="documento" 
-              type="text" 
-              :placeholder="docPlaceholder" 
-              required 
-              :maxlength="docMaxLength"
-              :class="{ 'input-error': docError }"
-            />
-            <span v-if="docError" class="field-error">{{ docError }}</span>
-          </div>
-          <div class="form-group">
-            <label for="telefone">WhatsApp / Celular</label>
-            <input 
-              :value="telefone" 
-              @input="telefone = maskTelefone(($event.target as HTMLInputElement).value)"
-              id="telefone" 
-              type="text" 
-              placeholder="(94) 90000-0000" 
-              required 
-              maxlength="15"
-            />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="cidade">Cidade</label>
-            <input
-              :value="cidade"
-              @input="cidade = ($event.target as HTMLInputElement).value.toUpperCase()"
-              id="cidade"
-              type="text"
-              placeholder="SUA CIDADE"
-              required
-              style="text-transform: uppercase;"
-            />
-          </div>
-          <div class="form-group">
-            <label for="estado">Estado</label>
-            <select v-model="estado" id="estado" required class="select-field">
-              <option value="" disabled>Selecione</option>
-              <option v-for="uf in ESTADOS_BR" :key="uf" :value="uf">{{ uf }}</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="email">E-mail</label>
-          <input v-model="email" id="email" type="email" placeholder="seu@email.com" required />
-        </div>
-
-        <div class="form-group">
-          <label for="password">Senha de Acesso</label>
-          <div class="password-input-wrapper">
-            <input 
-              v-model="password" 
-              id="password" 
-              :type="showPassword ? 'text' : 'password'" 
-              placeholder="Mínimo 6 caracteres" 
-              required 
-            />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="confirmPassword">Confirmar Senha</label>
-          <div class="password-input-wrapper">
-            <input 
-              v-model="confirmPassword" 
-              id="confirmPassword" 
-              :type="showPassword ? 'text' : 'password'" 
-              placeholder="Digite a senha novamente" 
-              required 
-            />
-            <button type="button" @click="showPassword = !showPassword" class="eye-btn">
-              {{ showPassword ? '🙈' : '👁️' }}
+      <form v-if="!successMsg" class="form" @submit.prevent="handleSignUp">
+        <section v-if="step === 1">
+          <label>Tipo de perfil</label>
+          <div class="types">
+            <button
+              v-for="type in accountTypes"
+              :key="type.id"
+              type="button"
+              :class="{ selected: form.tipo_conta === type.id }"
+              @click="form.tipo_conta = type.id"
+            >
+              <strong>{{ type.title }}</strong>
+              <small>{{ type.description }}</small>
             </button>
           </div>
+          <label>Nome completo / Razao social</label>
+          <input v-model="form.nome" type="text" required placeholder="Como voce quer ser identificado?" />
+          <div class="row">
+            <div>
+              <label>{{ docLabel }}</label>
+              <input
+                :value="form.documento"
+                type="text"
+                required
+                :placeholder="isEmpresa ? '00.000.000/0001-00' : '000.000.000-00'"
+                @input="form.documento = applyDocMask(($event.target as HTMLInputElement).value)"
+              />
+            </div>
+            <div>
+              <label>WhatsApp / Celular</label>
+              <input
+                :value="form.telefone"
+                type="text"
+                required
+                placeholder="(94) 99999-9999"
+                @input="form.telefone = maskTelefone(($event.target as HTMLInputElement).value)"
+              />
+            </div>
+          </div>
+        </section>
+
+        <section v-else-if="step === 2">
+          <div class="row">
+            <div>
+              <label>Cidade</label>
+              <input
+                :value="form.cidade"
+                type="text"
+                required
+                placeholder="SUA CIDADE"
+                @input="form.cidade = ($event.target as HTMLInputElement).value.toUpperCase()"
+              />
+            </div>
+            <div>
+              <label>Estado</label>
+              <select v-model="form.estado" required>
+                <option value="" disabled>Selecione</option>
+                <option v-for="uf in ESTADOS_BR" :key="uf" :value="uf">{{ uf }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Bairro</label>
+              <input v-model="form.regiao" type="text" placeholder="Opcional" />
+            </div>
+            <div>
+              <label>Endereco de referencia</label>
+              <input v-model="form.endereco" type="text" placeholder="Opcional" />
+            </div>
+          </div>
+        </section>
+
+        <section v-else-if="step === 3">
+          <label>{{ professionLabel }}</label>
+          <input v-model="form.profissao" type="text" required placeholder="Informe sua area de atuacao" />
+          <template v-if="form.tipo_conta === 'talento'">
+            <label>Objetivo profissional</label>
+            <input v-model="form.objetivo_profissional" type="text" required placeholder="Qual oportunidade voce busca?" />
+            <label>Habilidades principais</label>
+            <input v-model="form.habilidades_input" type="text" required placeholder="Ex: manutencao, atendimento, Excel" />
+          </template>
+          <label>{{ form.tipo_conta === 'empresa' ? 'Descricao da empresa' : form.tipo_conta === 'prestador' ? 'Descricao dos servicos' : 'Resumo profissional' }}</label>
+          <textarea v-model="form.sobre_mim" rows="4" required placeholder="Escreva um breve resumo para o seu perfil."></textarea>
+          <label>Biografia detalhada <small>(opcional)</small></label>
+          <textarea v-model="form.biografia" rows="3" placeholder="Acrescente detalhes que ajudam a apresentar seu perfil."></textarea>
+        </section>
+
+        <section v-else-if="step === 4" class="review">
+          <div class="review-line"><span>Perfil</span><strong>{{ typeName }}</strong></div>
+          <div class="review-line"><span>Nome</span><strong>{{ form.nome }}</strong></div>
+          <div class="review-line"><span>{{ docLabel }}</span><strong>{{ form.documento }}</strong></div>
+          <div class="review-line"><span>Contato</span><strong>{{ form.telefone }}</strong></div>
+          <div class="review-line"><span>Localizacao</span><strong>{{ form.cidade }}, {{ form.estado }}</strong></div>
+          <div class="review-line"><span>{{ professionLabel }}</span><strong>{{ form.profissao }}</strong></div>
+          <p class="review-summary">{{ form.sobre_mim }}</p>
+          <p class="note">E-mail e senha serao informados somente no proximo passo.</p>
+        </section>
+
+        <section v-else class="access">
+          <p class="note">Seus dados estao prontos. Agora escolha como deseja acessar a plataforma.</p>
+          <label>E-mail</label>
+          <input v-model="form.email" type="email" autocomplete="email" placeholder="seu@email.com" />
+          <div class="row">
+            <div>
+              <label>Senha</label>
+              <input v-model="form.password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" placeholder="Minimo de 6 caracteres" />
+              <button class="toggle" type="button" @click="showPassword = !showPassword">{{ showPassword ? 'Ocultar' : 'Mostrar' }}</button>
+            </div>
+            <div>
+              <label>Confirmar senha</label>
+              <input v-model="form.confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" autocomplete="new-password" />
+              <button class="toggle" type="button" @click="showConfirmPassword = !showConfirmPassword">{{ showConfirmPassword ? 'Ocultar' : 'Mostrar' }}</button>
+            </div>
+          </div>
+          <label class="terms">
+            <input v-model="form.termsAccepted" type="checkbox" />
+            <span>Li e aceito os <NuxtLink to="/termos" target="_blank">Termos de Uso</NuxtLink> e a <NuxtLink to="/privacidade" target="_blank">Politica de Privacidade</NuxtLink>.</span>
+          </label>
+          <div class="divider"><span>ou</span></div>
+          <button type="button" class="google" :disabled="loading" @click="handleGoogleSignUp">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" />
+            Criar acesso com Google
+          </button>
+        </section>
+
+        <div class="actions">
+          <button v-if="step < 5" class="primary" type="button" @click="nextStep">Continuar</button>
+          <button v-else class="primary" type="submit" :disabled="loading">
+            {{ loading ? 'Criando conta...' : 'Criar minha conta' }}
+          </button>
         </div>
-
-        <button type="submit" class="submit-btn" :disabled="loading">
-          {{ loading ? 'Preparando tudo...' : 'Criar minha conta' }}
-        </button>
-
-        <div class="divider">
-          <span>ou continue com</span>
-        </div>
-
-        <button type="button" @click="loginWithGoogle" class="google-btn">
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
-          Google
-        </button>
       </form>
 
-      <div class="auth-footer">
-        Ao se cadastrar, você concorda com nossos termos.
-      </div>
+      <footer v-else>
+        <NuxtLink to="/login">Ir para login</NuxtLink>
+      </footer>
     </div>
   </div>
 </template>
 
 <style scoped>
-.auth-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f1f5f9;
-  padding: 60px 20px;
-  font-family: 'Inter', sans-serif;
-}
-
-.input-error {
-  border-color: #dc2626 !important;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-}
-
-.field-error {
-  font-size: 0.78rem;
-  color: #dc2626;
-  font-weight: 600;
-  margin-top: 2px;
-}
-
-.auth-card {
-  max-width: 560px;
-  width: 100%;
-  background: white;
-  padding: 32px 24px;
-  border-radius: 32px;
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-}
-
-@media (min-width: 768px) {
-  .auth-card {
-    padding: 56px;
-  }
-}
-
-.auth-header {
-  margin-bottom: 32px;
-}
-
-.back-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background-color: #f8fafc;
-  border: 1px solid #cbd5e1;
-  color: #475569;
-  padding: 10px 18px;
-  border-radius: 14px;
-  font-size: 0.875rem;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.3s;
-  width: fit-content;
-}
-
-.back-btn:hover {
-  background-color: white;
-  border-color: #268C52;
-  color: #268C52;
-  transform: translateX(-4px);
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-}
-
-.back-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.mb-6 {
-    margin-bottom: 24px;
-}
-
-.auth-header h1 {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin-bottom: 8px;
-}
-
-.auth-header p {
-  color: #64748b;
-}
-
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-@media (max-width: 768px) {
-  .form-row { grid-template-columns: 1fr; }
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-group label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.form-group input {
-  height: 52px;
-  padding: 0 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 1rem;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #268C52;
-}
-
-.select-field {
-  height: 52px;
-  padding: 0 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 1rem;
-  background: white;
-  color: #0f172a;
-  cursor: pointer;
-  appearance: auto;
-}
-
-.select-field:focus {
-  outline: none;
-  border-color: #268C52;
-}
-
-.password-input-wrapper {
-  position: relative;
-}
-
-.password-input-wrapper input {
-  width: 100%;
-}
-
-.eye-btn {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.2rem;
-}
-
-.error-banner {
-  background-color: #fef2f2;
-  color: #dc2626;
-  padding: 16px;
-  border-radius: 12px;
-  font-size: 0.875rem;
-}
-
-.success-banner {
-  background-color: #f0fdf4;
-  color: #166534;
-  padding: 16px;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.submit-btn {
-  height: 52px;
-  background: linear-gradient(to right, #268C52, #177486);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.auth-footer {
-  margin-top: 32px;
-  text-align: center;
-  font-size: 0.85rem;
-  color: #94a3b8;
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: #94a3b8;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  margin: 10px 0;
-}
-
-.divider::before, .divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.divider span {
-  padding: 0 12px;
-}
-
-.google-btn {
-  height: 52px;
-  background: white;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #334155;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.google-btn:hover {
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
-}
-
-.google-btn img {
-  width: 20px;
-  height: 20px;
+.registration-page { min-height: 100dvh; background: #f1f5f9; padding: 20px; display: flex; justify-content: center; align-items: flex-start; font-family: Inter, sans-serif; }
+.registration-card { margin-block: 12px; width: 100%; max-width: 720px; padding: 34px 24px; background: #fff; border-radius: 28px; box-shadow: 0 18px 40px rgba(15, 23, 42, .07); position: relative; overflow: hidden; }
+.progress { position: absolute; inset: 0 0 auto; height: 6px; background: #e2e8f0; }
+.progress span { height: 100%; display: block; background: linear-gradient(90deg, #268c52, #177486); transition: width .25s; }
+header { text-align: center; margin-bottom: 24px; position: relative; }
+header img { height: 58px; display: block; margin: 0 auto 18px; }
+.back { position: absolute; left: 0; top: 20px; background: none; border: 0; color: #268c52; font-weight: 700; cursor: pointer; }
+.step { color: #268c52; text-transform: uppercase; font-size: .75rem; font-weight: 800; letter-spacing: .12em; margin: 0 0 8px; }
+h1 { margin: 0 0 6px; color: #0f172a; font-size: 1.8rem; font-weight: 800; }
+.subtitle { margin: 0; color: #64748b; }
+.form section { display: flex; flex-direction: column; gap: 14px; }
+label { color: #334155; font-size: .92rem; font-weight: 700; }
+input:not([type=checkbox]), select, textarea { width: 100%; padding: 13px 15px; border: 1px solid #dbe3ec; border-radius: 12px; font: inherit; color: #0f172a; outline: none; background: #fff; }
+input:focus, select:focus, textarea:focus { border-color: #268c52; box-shadow: 0 0 0 3px rgba(38, 140, 82, .12); }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.row > div { display: flex; flex-direction: column; gap: 8px; position: relative; }
+.types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+.types button { border: 1px solid #dbe3ec; border-radius: 12px; background: #fff; padding: 12px 8px; cursor: pointer; text-align: center; }
+.types button.selected { border-color: #268c52; background: #f0fdf4; }
+.types strong, .types small { display: block; }
+.types small { margin-top: 3px; color: #64748b; font-size: .75rem; }
+.banner { margin: 0 0 18px; border-radius: 12px; padding: 12px 14px; font-weight: 600; font-size: .9rem; }
+.error { color: #b91c1c; background: #fef2f2; }
+.success { color: #166534; background: #f0fdf4; }
+.actions { display: flex; justify-content: flex-end; margin-top: 28px; }
+.primary { min-width: 185px; padding: 14px 20px; border: 0; border-radius: 12px; background: linear-gradient(90deg, #268c52, #177486); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
+.primary:disabled, .google:disabled { opacity: .65; cursor: wait; }
+.review { background: #f8fafc; border-radius: 16px; padding: 8px 18px 18px; }
+.review-line { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+.review-line span { color: #64748b; }
+.review-line strong { text-align: right; }
+.review-summary { color: #334155; line-height: 1.55; margin: 10px 0 0; }
+.note { color: #64748b; font-size: .9rem; background: #f8fafc; border-radius: 10px; padding: 12px; margin: 0; }
+.toggle { position: absolute; right: 10px; bottom: 12px; border: 0; background: #fff; color: #268c52; font-weight: 700; cursor: pointer; font-size: .8rem; }
+.terms { display: flex; gap: 10px; align-items: flex-start; margin-top: 6px; font-weight: 500; line-height: 1.4; }
+.terms input { margin-top: 3px; accent-color: #268c52; }
+.terms a, footer a { color: #268c52; font-weight: 700; }
+.divider { height: 1px; background: #e2e8f0; margin: 12px 0 4px; text-align: center; }
+.divider span { position: relative; top: -11px; background: #fff; padding: 0 12px; color: #94a3b8; }
+.google { display: flex; height: 52px; width: 100%; align-items: center; justify-content: center; gap: 10px; border: 1px solid #dbe3ec; border-radius: 12px; background: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.google img { width: 20px; height: 20px; }
+footer { text-align: center; margin-top: 20px; }
+@media (max-width: 620px) {
+  .registration-card { padding: 30px 18px; }
+  .row, .types { grid-template-columns: 1fr; }
+  .back { top: 4px; }
+  header img { margin-top: 22px; }
 }
 </style>

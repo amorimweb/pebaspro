@@ -17,18 +17,21 @@ export const useProfileStore = defineStore('profile', {
     },
 
     actions: {
-        async fetchProfile() {
+        async fetchProfile(accessToken?: string) {
             this.loading = true
             this.error = null
 
             try {
-                const data = await $fetch<Usuario>('/api/me')
+                const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
+                const data = await $fetch<Usuario>('/api/me', { headers })
                 this.profile = data
                 return { data, error: null }
             } catch (err: any) {
                 // 401 é esperado quando não há sessão; não tratar como "erro" barulhento.
                 if (err?.statusCode === 401) {
-                    this.profile = null
+                    if (accessToken || !this.profile) {
+                        this.profile = null
+                    }
                     this.error = null
                     return { data: null, error: err }
                 }
@@ -44,11 +47,14 @@ export const useProfileStore = defineStore('profile', {
         async createProfile(data: CreateUsuarioPayload) {
             this.loading = true
             try {
+                const supabase = useSupabaseClient()
+                const { data: { session } } = await supabase.auth.getSession()
                 await $fetch('/api/usuarios', {
                     method: 'POST',
-                    body: data
+                    body: data,
+                    headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined
                 })
-                await this.fetchProfile()
+                await this.fetchProfile(session?.access_token)
                 return { error: null }
             } catch (e: any) {
                 console.error('Erro ao criar perfil:', e)

@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { 
-  Search, 
-  Filter, 
-  ShieldAlert, 
-  AlertTriangle, 
-  Flag, 
-  UserX, 
-  MessageSquare, 
-  MoreVertical, 
-  Eye, 
-  Ban, 
-  Archive, 
-  RotateCcw, 
-  CheckCircle2, 
-  History 
+import {
+  Search,
+  Filter,
+  ShieldAlert,
+  AlertTriangle,
+  Flag,
+  UserX,
+  MessageSquare,
+  MoreVertical,
+  Eye,
+  Ban,
+  Archive,
+  RotateCcw,
+  CheckCircle2,
+  History
 } from 'lucide-vue-next'
 import { useAdminPermissions } from '~/composables/useAdminPermissions'
 import { useAdminAudit } from '~/composables/useAdminAudit'
@@ -159,18 +159,26 @@ const stats = computed(() => ([
         </div>
 
         <!-- Search and Filters -->
-        <div v-if="activeTab !== 'historico'" class="p-6 border-b border-slate-50 flex items-center justify-between gap-4">
-           <div class="relative flex-1 max-w-sm">
+        <div v-if="activeTab !== 'historico'" class="p-6 border-b border-slate-50 flex flex-wrap items-center justify-between gap-4">
+           <div class="relative flex-1 min-w-[200px] max-w-sm">
               <Search class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input 
+              <input
                 v-model="searchTerm"
                 class="w-full bg-slate-50/50 border-none rounded-xl pl-11 pr-4 py-2 text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-red-500 transition-all"
                 :placeholder="activeTab === 'denuncias' ? 'ID ou Usuário Reportado...' : 'Prestador ou Cliente...'"
               />
            </div>
-           <button class="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all">
-              <Filter class="h-4 w-4" />
-           </button>
+           <div class="flex items-center gap-3">
+              <select v-if="activeTab === 'denuncias'" class="bg-slate-50 border-none rounded-xl px-4 py-2 text-xs font-black text-slate-600 focus:ring-2 focus:ring-red-500 outline-none">
+                 <option>Todas as Prioridades</option>
+                 <option>Alta</option>
+                 <option>Média</option>
+                 <option>Baixa</option>
+              </select>
+              <button class="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all">
+                 <Filter class="h-4 w-4" />
+              </button>
+           </div>
         </div>
 
         <!-- Content Area -->
@@ -202,15 +210,18 @@ const stats = computed(() => ([
                <thead class="bg-slate-50/30">
                   <tr v-if="activeTab === 'denuncias'">
                     <th class="py-4 px-8 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Ocorrência</th>
-                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Alvo</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Reportado</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Autor</th>
                     <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                     <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Severidade</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Data</th>
                     <th class="px-6 py-4 text-right"></th>
                   </tr>
                   <tr v-else-if="activeTab === 'avaliacoes'">
                     <th class="py-4 px-8 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Feedback / Nota</th>
-                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Participantes</th>
-                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Sinalização</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Prestador</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Cliente</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                     <th class="px-6 py-4 text-right"></th>
                   </tr>
                </thead>
@@ -228,20 +239,18 @@ const stats = computed(() => ([
                               </div>
                               <div>
                                  <p class="text-sm font-black text-slate-900 leading-none mb-1 group-hover:underline decoration-red-500/30 underline-offset-4">{{ item.tipo }}</p>
-                                 <p class="text-[9px] font-bold text-slate-400 uppercase">TICKET ID #{{ item.id.toString().padStart(5, '0') }}</p>
+                                 <p class="text-[9px] font-bold text-slate-400 uppercase">TICKET #{{ item.id.toString().padStart(5, '0') }}</p>
                               </div>
                            </div>
                         </td>
                         <td class="px-6 py-5">
-                           <div class="flex flex-col">
-                              <span class="text-xs font-black text-slate-900 italic underline decoration-slate-100 decoration-4 underline-offset-[-4px]">{{ item.reportado }}</span>
-                              <span class="text-[9px] font-bold text-slate-400">VIA: {{ item.autor }}</span>
-                           </div>
+                           <span class="text-xs font-black text-slate-900 italic">{{ item.reportado }}</span>
                         </td>
+                        <td class="px-6 py-5 text-xs font-bold text-slate-500">{{ item.autor }}</td>
                         <td class="px-6 py-5">
                            <span :class="[
-                             item.status === 'resolvido' ? 'bg-green-50 text-green-600 border-green-100' : 
-                             item.status === 'pendente' ? 'bg-red-50 text-red-600 border-red-100' : 
+                             item.status === 'resolvido' ? 'bg-green-50 text-green-600 border-green-100' :
+                             item.status === 'pendente' ? 'bg-red-50 text-red-600 border-red-100' :
                              'bg-blue-50 text-blue-600 border-blue-100',
                              'px-3 py-1.5 rounded-full text-[8px] font-black uppercase border'
                            ]">
@@ -251,28 +260,27 @@ const stats = computed(() => ([
                         <td class="px-6 py-5">
                            <div class="flex items-center gap-1.5">
                               <div v-for="i in 3" :key="i" :class="[
-                                i <= (item.prioridade === 'alta' ? 3 : item.prioridade === 'media' ? 2 : 1) ? 
+                                i <= (item.prioridade === 'alta' ? 3 : item.prioridade === 'media' ? 2 : 1) ?
                                 (item.prioridade === 'alta' ? 'bg-red-500' : 'bg-amber-400') : 'bg-slate-100',
                                 'h-1.5 w-4 rounded-full'
                               ]" />
                            </div>
                         </td>
+                        <td class="px-6 py-5 text-[10px] font-bold text-slate-400">{{ item.data }}</td>
                      </template>
 
                      <!-- AVALIACOES ROW -->
                      <template v-else-if="activeTab === 'avaliacoes'">
                         <td class="py-5 px-8">
                            <div class="flex items-center gap-3">
-                              <div class="flex -space-x-1">
-                                 <div v-for="i in 5" :key="i" class="h-1.5 w-1.5 rounded-full" :class="i <= item.nota ? 'bg-amber-400' : 'bg-slate-100'" />
+                              <div class="flex gap-0.5">
+                                 <div v-for="i in 5" :key="i" class="h-2 w-2 rounded-full" :class="i <= item.nota ? 'bg-amber-400' : 'bg-slate-100'" />
                               </div>
-                              <p class="text-[11px] font-bold text-slate-500 max-w-[200px] truncate italic">"{{ item.comentario }}"</p>
+                              <p class="text-[11px] font-bold text-slate-500 max-w-[180px] truncate italic">"{{ item.comentario }}"</p>
                            </div>
                         </td>
-                        <td class="px-6 py-5">
-                           <p class="text-[10px] font-black text-slate-700">P: {{ item.prestador }}</p>
-                           <p class="text-[10px] font-black text-slate-400">C: {{ item.cliente }}</p>
-                        </td>
+                        <td class="px-6 py-5 text-xs font-black text-slate-700">{{ item.prestador }}</td>
+                        <td class="px-6 py-5 text-xs font-bold text-slate-500">{{ item.cliente }}</td>
                         <td class="px-6 py-5">
                            <span class="px-2 py-1 bg-amber-900 text-white rounded text-[8px] font-black uppercase tracking-tighter shadow-lg shadow-amber-900/10">Sinalizada</span>
                         </td>
@@ -283,9 +291,22 @@ const stats = computed(() => ([
                            <button @click="handleViewDetails(item)" class="p-2 text-slate-400 hover:text-slate-900 hover:bg-white shadow-sm border border-transparent hover:border-slate-100 rounded-xl transition-all">
                               <Eye class="h-4 w-4" />
                            </button>
-                           <button v-if="canPerformAction('edit', 'moderacao')" @click="handleAction('ban', item)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-white shadow-sm border border-transparent hover:border-slate-100 rounded-xl transition-all">
-                              <Ban class="h-4 w-4" />
-                           </button>
+                           <template v-if="canPerformAction('edit', 'moderacao')">
+                              <!-- Denuncias actions -->
+                              <button v-if="activeTab === 'denuncias'" @click="handleAction('suspender_usuario', item)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-white shadow-sm border border-transparent hover:border-slate-100 rounded-xl transition-all" title="Suspender Usuário">
+                                 <Ban class="h-4 w-4" />
+                              </button>
+                              <button v-if="activeTab === 'denuncias'" @click="handleAction('arquivar_denuncia', item)" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-white shadow-sm border border-transparent hover:border-slate-100 rounded-xl transition-all" title="Arquivar">
+                                 <Archive class="h-4 w-4" />
+                              </button>
+                              <!-- Avaliacoes actions -->
+                              <button v-if="activeTab === 'avaliacoes'" @click="handleAction('manter_avaliacao', item)" class="p-2 text-slate-400 hover:text-green-600 hover:bg-white shadow-sm border border-transparent hover:border-slate-100 rounded-xl transition-all" title="Manter Avaliação">
+                                 <CheckCircle2 class="h-4 w-4" />
+                              </button>
+                              <button v-if="activeTab === 'avaliacoes'" @click="handleAction('remover_avaliacao', item)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-white shadow-sm border border-transparent hover:border-slate-100 rounded-xl transition-all" title="Remover Avaliação">
+                                 <Ban class="h-4 w-4" />
+                              </button>
+                           </template>
                            <button class="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all">
                               <MoreVertical class="h-4 w-4" />
                            </button>

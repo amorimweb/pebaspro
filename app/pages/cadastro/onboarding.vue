@@ -10,6 +10,11 @@ const { coords, getLocation } = useLocation()
 const step = ref(1)
 const typeCookie = useCookie<string | null>('pebas_pending_type')
 
+const ESTADOS_BR = [
+  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG',
+  'PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
+]
+
 // Profissões A-Z
 const profissoesList = [
   'Administrador de Banco de Dados', 'Almoxarife', 'Analista Administrativo',
@@ -68,6 +73,7 @@ const profileTypes = [
   { id: 'empresa',   icon: '🏢', title: 'Empresa',   subtitle: 'Quero contratar talentos' },
 ]
 const loading = ref(false)
+const stepError = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 
 // Ref para o preview da imagem
@@ -79,6 +85,8 @@ const form = ref({
   nome: '',
   telefone: '',
   regiao: '',
+  cidade: '',
+  estado: '',
   endereco: '',
   profissao: '',
   sobre_mim: '',
@@ -156,6 +164,10 @@ onMounted(async () => {
     form.value.tipo_conta = (p.tipo_conta as any) || ''
     form.value.documento = p.documento || ''
     form.value.telefone = p.telefone || ''
+    form.value.regiao = p.regiao || ''
+    form.value.cidade = p.cidade || ''
+    form.value.estado = p.estado || ''
+    form.value.endereco = p.endereco || ''
   } else if (user.value?.user_metadata) {
     // Fallback para metadados da sessão em caso de primeiro acesso imediato
     const meta = user.value.user_metadata
@@ -163,6 +175,8 @@ onMounted(async () => {
     form.value.tipo_conta = meta.tipo_conta || ''
     form.value.documento = meta.documento || ''
     form.value.telefone = meta.telefone || ''
+    form.value.cidade = meta.cidade || ''
+    form.value.estado = meta.estado || ''
   }
   // Capturar localização silenciosamente
   getLocation()
@@ -186,12 +200,69 @@ const changeAccountType = () => {
   form.value.tipo_conta = '' as any
 }
 
-const nextStep = () => step.value++
-const prevStep = () => step.value--
+const nextStep = () => {
+  stepError.value = ''
+
+  if (step.value === 1) {
+    if (!form.value.tipo_conta) {
+      stepError.value = 'Selecione um tipo de perfil.'
+      return
+    }
+    if (!form.value.telefone.trim()) {
+      stepError.value = 'Informe seu WhatsApp / Celular.'
+      return
+    }
+    if (!form.value.cidade.trim()) {
+      stepError.value = 'Informe sua cidade.'
+      return
+    }
+    if (!form.value.estado) {
+      stepError.value = 'Selecione seu estado.'
+      return
+    }
+    const digits = form.value.documento.replace(/\D/g, '')
+    if (!digits) {
+      stepError.value = `Informe seu ${isEmpresa.value ? 'CNPJ' : 'CPF'}.`
+      return
+    }
+    if (docError.value) {
+      stepError.value = docError.value
+      return
+    }
+  }
+
+  if (step.value === 2) {
+    if (!form.value.profissao.trim()) {
+      stepError.value = 'Informe sua profissão ou especialidade.'
+      return
+    }
+    if (form.value.tipo_conta === 'talento') {
+      if (!form.value.objetivo_profissional.trim()) {
+        stepError.value = 'Informe seu objetivo profissional.'
+        return
+      }
+      if (!form.value.habilidades_input.trim()) {
+        stepError.value = 'Informe suas principais habilidades.'
+        return
+      }
+    }
+    if (!form.value.sobre_mim.trim()) {
+      stepError.value = 'Escreva um breve resumo sobre você.'
+      return
+    }
+  }
+
+  step.value++
+}
+const prevStep = () => {
+  stepError.value = ''
+  step.value--
+}
 
 const finishOnboarding = async () => {
+  stepError.value = ''
   loading.value = true
-  
+
   try {
     let fotoUrl = form.value.foto
     
@@ -207,6 +278,8 @@ const finishOnboarding = async () => {
       nome: form.value.nome,
       telefone: form.value.telefone,
       regiao: form.value.regiao,
+      cidade: form.value.cidade.toUpperCase(),
+      estado: form.value.estado,
       endereco: form.value.endereco,
       profissao: form.value.profissao,
       sobre_mim: form.value.sobre_mim,
@@ -354,8 +427,28 @@ definePageMeta({
           
           <div class="form-row">
             <div class="form-group">
-              <label>Bairro/Cidade</label>
+              <label>Bairro</label>
               <input v-model="form.regiao" type="text" placeholder="Ex: Cidade Nova" />
+            </div>
+            <div class="form-group">
+              <label>Cidade</label>
+              <input
+                :value="form.cidade"
+                @input="form.cidade = ($event.target as HTMLInputElement).value.toUpperCase()"
+                type="text"
+                placeholder="SUA CIDADE"
+                style="text-transform: uppercase;"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Estado</label>
+              <select v-model="form.estado" class="select-field">
+                <option value="" disabled>Selecione</option>
+                <option v-for="uf in ESTADOS_BR" :key="uf" :value="uf">{{ uf }}</option>
+              </select>
             </div>
             <div class="form-group">
               <label>Endereço Ref. (Opcional)</label>
@@ -364,8 +457,9 @@ definePageMeta({
           </div>
         </div>
 
+        <p v-if="stepError" class="step-error">{{ stepError }}</p>
         <div class="step-actions">
-          <button @click="nextStep" class="btn-primary" :disabled="!form.tipo_conta">Continuar</button>
+          <button @click="nextStep" class="btn-primary">Continuar</button>
         </div>
       </div>
 
@@ -423,6 +517,7 @@ definePageMeta({
           </div>
         </div>
 
+        <p v-if="stepError" class="step-error">{{ stepError }}</p>
         <div class="step-actions">
           <button @click="prevStep" class="btn-ghost">Voltar</button>
           <button @click="nextStep" class="btn-primary">Continuar</button>
@@ -444,6 +539,7 @@ definePageMeta({
           </div>
         </div>
 
+        <p v-if="stepError" class="step-error">{{ stepError }}</p>
         <div class="step-actions">
           <button @click="prevStep" class="btn-ghost">Voltar</button>
           <button @click="finishOnboarding" class="btn-primary" :disabled="loading">
@@ -747,15 +843,16 @@ definePageMeta({
   color: #374151;
 }
 
-.form-group input, .form-group textarea {
+.form-group input, .form-group textarea, .form-group select {
   padding: 14px 18px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   font-size: 1rem;
   outline: none;
+  background: white;
 }
 
-.form-group input:focus, .form-group textarea:focus {
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
   border-color: #268C52;
 }
 
@@ -819,8 +916,19 @@ definePageMeta({
   display: none;
 }
 
+.step-error {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #fef2f2;
+  color: #dc2626;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
 .step-actions {
-  margin-top: 48px;
+  margin-top: 24px;
   display: flex;
   gap: 16px;
   justify-content: flex-end;

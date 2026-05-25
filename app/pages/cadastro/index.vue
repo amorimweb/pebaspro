@@ -8,8 +8,8 @@ definePageMeta({
 
 // Mova o useCookie para o topo do setup (melhor prática Nuxt)
 const typeCookie = useCookie<AccountType | null>('pebas_pending_type', { maxAge: 3600 })
-
-const supabase = useSupabaseClient()
+const route = useRoute()
+const showCompleteMessage = computed(() => route.query.complete === 'required')
 
 const selectType = (type: AccountType) => {
   console.log('Selecionando tipo:', type)
@@ -23,16 +23,6 @@ onMounted(() => {
   // a escolha anterior seja resetada para uma nova escolha.
   typeCookie.value = null
 })
-
-const loginWithGoogle = async () => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${window.location.origin}/confirm`,
-    },
-  })
-  if (error) alert(error.message)
-}
 
 const profileTypes = [
   {
@@ -71,6 +61,7 @@ const profileTypes = [
         </NuxtLink>
         <h1>Como você quer usar o <span class="brand">PEBASPRO</span>?</h1>
         <p>Escolha o perfil que melhor descreve seu objetivo hoje.</p>
+        <p v-if="showCompleteMessage" class="complete-message">Antes de entrar com Google, preencha seu cadastro completo.</p>
       </div>
 
       <div class="types-grid">
@@ -98,13 +89,6 @@ const profileTypes = [
       </div>
 
       <div class="footer">
-        <div class="social-auth">
-          <p>Ou se preferir, entre rapidamente com:</p>
-          <button @click="loginWithGoogle" class="google-btn">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
-            Continuar com Google
-          </button>
-        </div>
         <p class="login-prompt">Já tem uma conta? <NuxtLink to="/login" class="login-link">Fazer Login</NuxtLink></p>
       </div>
     </div>
@@ -174,6 +158,16 @@ const profileTypes = [
  
 .brand {
   color: #268C52;
+}
+
+.complete-message {
+  max-width: 520px;
+  margin: 18px auto 0;
+  padding: 12px 16px !important;
+  border-radius: 12px;
+  background: #f0fdf4;
+  color: #166534 !important;
+  font-weight: 700;
 }
  
 .header p {
