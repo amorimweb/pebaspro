@@ -170,12 +170,12 @@ const sendMessage = async () => {
   <div class="fixed bottom-4 right-4 z-[120] print:hidden sm:bottom-6 sm:right-6">
     <button
       v-if="!isOpen"
-      class="group relative flex h-[60px] w-[60px] items-center justify-center rounded-[22px] bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-600 text-white shadow-2xl shadow-emerald-500/25 transition-all hover:-translate-y-1 hover:shadow-sky-600/30 active:translate-y-0"
+      class="group relative flex h-[60px] w-[60px] items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-600 text-white shadow-2xl shadow-emerald-500/25 transition-all hover:-translate-y-1 hover:shadow-sky-600/30 active:translate-y-0"
       title="Abrir assistente"
       @click="toggle"
     >
       <span class="absolute -right-1 -top-1 h-4 w-4 rounded-full border-2 border-white bg-emerald-300 shadow-sm" />
-      <img src="/patricia.jpeg" alt="Patricia" class="h-full w-full rounded-[22px] object-cover" />
+      <img src="/patricia.jpeg" alt="Patricia" class="h-full w-full rounded-full object-cover" />
     </button>
 
     <div
@@ -186,7 +186,7 @@ const sendMessage = async () => {
         <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-emerald-500/25 via-teal-400/10 to-sky-500/25" />
         <div class="relative flex items-center justify-between gap-3">
           <div class="flex min-w-0 items-center gap-3">
-            <div class="h-11 w-11 shrink-0 overflow-hidden rounded-2xl bg-white shadow-lg shadow-emerald-500/20 ring-1 ring-white/20">
+            <div class="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-white shadow-lg shadow-emerald-500/20 ring-1 ring-white/20">
               <img src="/patricia.jpeg" alt="Patricia" class="h-full w-full object-cover" />
             </div>
             <div class="min-w-0">
@@ -227,7 +227,7 @@ const sendMessage = async () => {
             class="flex items-end gap-2.5"
             :class="m.role === 'user' ? 'justify-end' : 'justify-start'"
           >
-            <div v-if="m.role === 'model'" class="mb-1 h-8 w-8 shrink-0 overflow-hidden rounded-2xl bg-white shadow-md shadow-emerald-500/20 ring-1 ring-emerald-100">
+            <div v-if="m.role === 'model'" class="mb-1 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-white shadow-md shadow-emerald-500/20 ring-1 ring-emerald-100">
               <img src="/patricia.jpeg" alt="Patricia" class="h-full w-full object-cover" />
             </div>
 
@@ -246,7 +246,7 @@ const sendMessage = async () => {
           </div>
 
           <div v-if="isLoading" class="flex items-center gap-2.5 pl-1 text-sm font-bold text-slate-500">
-            <span class="relative h-8 w-8 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+            <span class="relative h-8 w-8 overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-slate-200">
               <img src="/patricia.jpeg" alt="Patricia" class="h-full w-full object-cover opacity-65" />
               <Loader2 class="absolute inset-0 m-auto animate-spin text-emerald-700" :size="16" />
             </span>
