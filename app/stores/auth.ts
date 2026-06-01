@@ -32,7 +32,7 @@ export const useAuthStore = defineStore('auth', () => {
                 if (process.client) {
                     alert('Sua conta foi suspensa por violar os termos de uso. Entre em contato com o suporte.')
                     await signOut()
-                    navigateTo('/')
+                    await navigateTo('/')
                 } else {
                     await signOut()
                 }

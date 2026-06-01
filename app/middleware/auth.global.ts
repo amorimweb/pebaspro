@@ -47,7 +47,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     if (!isPublicRoute && !isOnboardingRoute) {
         if (!profile || !profile.cadastro_completo || !profile.tipo_conta) {
-            console.log('Middleware: Perfil incompleto. Redirecionando para onboarding...')
             return navigateTo('/cadastro/onboarding')
         }
     }

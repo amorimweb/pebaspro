@@ -25,7 +25,13 @@ const handleLogin = async () => {
     })
     
     if (error) {
-      errorMsg.value = error.message
+      const errorMap: Record<string, string> = {
+        'Invalid login credentials': 'E-mail ou senha incorretos.',
+        'Email not confirmed': 'Confirme seu e-mail antes de entrar.',
+        'Too many requests': 'Muitas tentativas. Aguarde alguns minutos.',
+        'User not found': 'Nenhuma conta encontrada com este e-mail.',
+      }
+      errorMsg.value = errorMap[error.message] || 'Ocorreu um erro ao entrar. Tente novamente.'
       return
     }
     

@@ -9,6 +9,13 @@ const user = useSupabaseUser()
 const supabase = useSupabaseClient<Database>()
 const PENDING_PROFILE_KEY = 'pebas_pending_complete_profile'
 
+// Fallback: se após 10 segundos o usuário ainda não chegou, redireciona para login
+onMounted(() => {
+  setTimeout(() => {
+    if (!user.value) navigateTo('/login?error=auth')
+  }, 10000)
+})
+
 // Observe o usuário para redirecionar assim que a sessão for confirmada
 watch(user, async (newUser) => {
   if (newUser) {
