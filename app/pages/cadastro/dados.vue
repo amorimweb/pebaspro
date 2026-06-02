@@ -232,7 +232,16 @@ const handleSignUp = async () => {
 
     successMsg.value = 'Cadastro concluido. Confirme seu e-mail para acessar sua conta.'
   } catch (error: any) {
-    errorMsg.value = error?.message || 'Nao foi possivel criar sua conta. Tente novamente.'
+    const msg: string = error?.message || ''
+    if (msg.includes('User already registered') || msg.includes('already registered')) {
+      errorMsg.value = 'Já existe uma conta com este e-mail. Faça login ou, se criou sua conta com o Google, entre por lá.'
+    } else if (msg.includes('invalid email') || msg.includes('Invalid email')) {
+      errorMsg.value = 'E-mail inválido. Verifique o endereço informado.'
+    } else if (msg.includes('Password should be')) {
+      errorMsg.value = 'A senha deve ter pelo menos 6 caracteres.'
+    } else {
+      errorMsg.value = msg || 'Não foi possível criar sua conta. Tente novamente.'
+    }
   } finally {
     loading.value = false
   }

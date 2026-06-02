@@ -8,6 +8,7 @@ const password = ref('')
 const showPassword = ref(false)
 const loading = ref(false)
 const errorMsg = ref('')
+const isGoogleAccount = ref(false)
 definePageMeta({
   layout: false,
   noPadding: true
@@ -16,6 +17,7 @@ definePageMeta({
 const handleLogin = async () => {
   loading.value = true
   errorMsg.value = ''
+  isGoogleAccount.value = false
   
   try {
     // Login direto com Supabase
@@ -26,12 +28,18 @@ const handleLogin = async () => {
     
     if (error) {
       const errorMap: Record<string, string> = {
-        'Invalid login credentials': 'E-mail ou senha incorretos.',
         'Email not confirmed': 'Confirme seu e-mail antes de entrar.',
         'Too many requests': 'Muitas tentativas. Aguarde alguns minutos.',
         'User not found': 'Nenhuma conta encontrada com este e-mail.',
       }
-      errorMsg.value = errorMap[error.message] || 'Ocorreu um erro ao entrar. Tente novamente.'
+      if (error.message === 'Invalid login credentials') {
+        // Exibe sugestão de Google pois a conta pode ter sido criada por lá
+        isGoogleAccount.value = true
+        errorMsg.value = 'E-mail ou senha incorretos. Se você se cadastrou com o Google, use o botão abaixo.'
+      } else {
+        isGoogleAccount.value = false
+        errorMsg.value = errorMap[error.message] || 'Ocorreu um erro ao entrar. Tente novamente.'
+      }
       return
     }
     
@@ -132,7 +140,7 @@ const loginWithGoogle = async () => {
           <span>ou</span>
         </div>
 
-        <button type="button" @click="loginWithGoogle" class="google-btn" :disabled="loading">
+        <button type="button" @click="loginWithGoogle" class="google-btn" :class="{ 'google-btn--highlight': isGoogleAccount }" :disabled="loading">
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
           Continuar com Google
         </button>
@@ -345,6 +353,17 @@ const loginWithGoogle = async () => {
   opacity: 0.65;
   cursor: not-allowed;
   transform: none;
+}
+
+.google-btn--highlight {
+  border-color: #4285f4;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+  animation: pulse-blue 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-blue {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2); }
+  50%       { box-shadow: 0 0 0 6px rgba(66, 133, 244, 0.08); }
 }
 
 .google-btn img {
