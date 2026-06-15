@@ -1,6 +1,8 @@
 <script setup lang="ts">
-type AccountType = 'talento' | 'prestador' | 'empresa' | 'cliente'
+import { completeRegistrationRoute, profileHomeRoute } from '~/utils/authRedirect'
+
 const authStore = useAuthStore()
+const route = useRoute()
 
 const supabase = useSupabaseClient()
 const email = ref('')
@@ -8,6 +10,12 @@ const password = ref('')
 const showPassword = ref(false)
 const loading = ref(false)
 const errorMsg = ref('')
+const infoMsg = computed(() => {
+  if (route.query.registered === 'check-email') {
+    return 'Cadastro criado. Confirme seu e-mail para entrar na plataforma.'
+  }
+  return ''
+})
 const isGoogleAccount = ref(false)
 definePageMeta({
   layout: false,
@@ -20,46 +28,38 @@ const handleLogin = async () => {
   isGoogleAccount.value = false
   
   try {
-    // Login direto com Supabase
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.value,
-      password: password.value,
-    })
+    const result = await authStore.signInWithPassword(email.value, password.value)
     
-    if (error) {
+    if (result.error) {
+      const message = result.error?.message || ''
+      const statusCode = result.error?.statusCode || result.error?.status
       const errorMap: Record<string, string> = {
         'Email not confirmed': 'Confirme seu e-mail antes de entrar.',
         'Too many requests': 'Muitas tentativas. Aguarde alguns minutos.',
         'User not found': 'Nenhuma conta encontrada com este e-mail.',
       }
-      if (error.message === 'Invalid login credentials') {
+      if (statusCode === 404) {
+        await navigateTo(completeRegistrationRoute)
+        return
+      }
+
+      if (message === 'Invalid login credentials') {
         // Exibe sugestão de Google pois a conta pode ter sido criada por lá
         isGoogleAccount.value = true
         errorMsg.value = 'E-mail ou senha incorretos. Se você se cadastrou com o Google, use o botão abaixo.'
       } else {
         isGoogleAccount.value = false
-        errorMsg.value = errorMap[error.message] || 'Ocorreu um erro ao entrar. Tente novamente.'
+        errorMsg.value = errorMap[message] || 'Ocorreu um erro ao entrar. Tente novamente.'
       }
       return
     }
     
-    if (data.user) {
-      const result = await authStore.fetchProfile(data.session?.access_token)
-      const profile = result?.data
-
-      if (!profile || !profile.cadastro_completo || !profile.tipo_conta) {
-        await navigateTo('/cadastro/onboarding')
-        return
-      }
-
-      const redirectMap: Record<string, string> = {
-        talento: '/',
-        empresa: '/painel/empresa',
-        prestador: '/painel/prestador',
-        cliente: '/',
-      }
-      await navigateTo(redirectMap[profile.tipo_conta] || '/')
+    if (!result.data) {
+      await navigateTo(completeRegistrationRoute)
+      return
     }
+
+    await navigateTo(profileHomeRoute(result.data), { replace: true })
   } catch (error: any) {
     console.error('Erro no login:', error)
     errorMsg.value = 'Ocorreu um erro ao tentar entrar. Tente novamente.'
@@ -97,6 +97,10 @@ const loginWithGoogle = async () => {
       </div>
 
       <form @submit.prevent="handleLogin" class="auth-form">
+        <div v-if="infoMsg" class="info-banner">
+          {{ infoMsg }}
+        </div>
+
         <div v-if="errorMsg" class="error-banner">
           {{ errorMsg }}
         </div>
@@ -278,6 +282,16 @@ const loginWithGoogle = async () => {
   border-radius: 8px;
   font-size: 0.875rem;
   text-align: center;
+}
+
+.info-banner {
+  background-color: #f0fdf4;
+  color: #166534;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  text-align: center;
+  font-weight: 600;
 }
 
 .form-options {

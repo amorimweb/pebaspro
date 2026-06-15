@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
-import { useProfileStore } from '~/stores/profile'
+import { profileHomeRoute } from '~/utils/authRedirect'
+import { isProfileComplete } from '~/utils/profileCompletion'
 
 type AccountType = 'talento' | 'prestador' | 'empresa'
 
@@ -11,8 +12,9 @@ definePageMeta({
 
 const PENDING_PROFILE_KEY = 'pebas_pending_complete_profile'
 const supabase = useSupabaseClient()
+const user = useSupabaseUser()
 const authStore = useAuthStore()
-const profileStore = useProfileStore()
+const { uploadFile } = useFileUpload()
 const typeCookie = useCookie<AccountType | null>('pebas_pending_type', { maxAge: 3600 })
 
 const step = ref(1)
@@ -21,6 +23,10 @@ const errorMsg = ref('')
 const successMsg = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
+const selectedFile = ref<File | null>(null)
+const photoPreview = ref<string | null>(null)
+const isCompletingExistingAccount = computed(() => Boolean(user.value?.id))
 
 const form = reactive({
   tipo_conta: (typeCookie.value || '') as AccountType | '',
@@ -36,6 +42,7 @@ const form = reactive({
   habilidades_input: '',
   sobre_mim: '',
   biografia: '',
+  foto: '',
   email: '',
   password: '',
   confirmPassword: '',
@@ -47,6 +54,25 @@ const accountTypes = [
   { id: 'prestador' as AccountType, title: 'Prestador', description: 'Ofereco meus servicos' },
   { id: 'empresa' as AccountType, title: 'Empresa', description: 'Quero contratar talentos' }
 ]
+
+const fillFormFromProfile = (profile: any) => {
+  form.tipo_conta = profile.tipo_conta || form.tipo_conta
+  form.nome = profile.nome || form.nome
+  form.documento = profile.documento || form.documento
+  form.telefone = profile.telefone || form.telefone
+  form.cidade = profile.cidade || form.cidade
+  form.estado = profile.estado || form.estado
+  form.regiao = profile.regiao || form.regiao
+  form.endereco = profile.endereco || form.endereco
+  form.profissao = profile.profissao || form.profissao
+  form.objetivo_profissional = profile.objetivo_profissional || form.objetivo_profissional
+  form.habilidades_input = Array.isArray(profile.habilidades) ? profile.habilidades.join(', ') : form.habilidades_input
+  form.sobre_mim = profile.sobre_mim || form.sobre_mim
+  form.biografia = profile.biografia || form.biografia
+  form.foto = profile.foto || form.foto
+  form.email = profile.email || form.email
+  photoPreview.value = profile.foto || photoPreview.value
+}
 
 const ESTADOS_BR = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
@@ -71,6 +97,13 @@ const maskTelefone = (value: string) => {
   return digits
     .replace(/^(\d{2})(\d)/, '($1) $2')
     .replace(/(\d)(\d{4})$/, '$1-$2')
+}
+
+const handleTelefoneInput = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const masked = maskTelefone(input.value)
+  form.telefone = masked
+  input.value = masked
 }
 
 const maskCPF = (value: string) => value.replace(/\D/g, '').slice(0, 11)
@@ -154,6 +187,7 @@ const validateStep = (targetStep = step.value) => {
     }
   }
   if (targetStep === 5) {
+    if (isCompletingExistingAccount.value) return true
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return setError('Informe um e-mail valido.')
     if (form.password.length < 6) return setError('A senha deve ter pelo menos 6 caracteres.')
     if (form.password !== form.confirmPassword) return setError('As senhas nao coincidem.')
@@ -171,6 +205,24 @@ const prevStep = () => {
   step.value--
 }
 
+const onFileChange = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  selectedFile.value = file
+  if (photoPreview.value) URL.revokeObjectURL(photoPreview.value)
+  photoPreview.value = URL.createObjectURL(file)
+}
+
+const uploadSelectedPhoto = async (userId: string) => {
+  if (!selectedFile.value) return ''
+  const extension = selectedFile.value.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const fileName = `${userId}-${Date.now()}.${extension}`
+  const { publicUrl, error } = await uploadFile(selectedFile.value, fileName, 'avatars')
+  if (error) throw new Error(error)
+  return publicUrl || ''
+}
+
 const profilePayload = () => ({
   nome: form.nome.trim(),
   documento: form.documento,
@@ -186,31 +238,35 @@ const profilePayload = () => ({
     : [],
   sobre_mim: form.sobre_mim.trim(),
   biografia: form.biografia.trim() || form.sobre_mim.trim(),
+  foto: form.foto || null,
   tipo_conta: form.tipo_conta,
   cadastro_completo: true,
   status: 'ativo'
 })
 
-const redirectCompleteProfile = async (token?: string) => {
-  const result = await authStore.fetchProfile(token)
-  const profile = result?.data
-  if (!profile) return false
-  const routes: Record<string, string> = {
-    talento: '/',
-    prestador: '/painel/prestador',
-    empresa: '/painel/empresa'
-  }
-  await navigateTo(routes[profile.tipo_conta || ''] || '/')
-  return true
-}
-
 const handleSignUp = async () => {
   if (!validateStep(1) || !validateStep(2) || !validateStep(3) || !validateStep(5)) return
   loading.value = true
+  errorMsg.value = ''
   successMsg.value = ''
   const cadastro = profilePayload()
 
   try {
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (session?.user?.id) {
+      const fotoUrl = await uploadSelectedPhoto(session.user.id)
+      const { data: profile, error: profileError } = await authStore.saveCompleteProfile({
+        id: session.user.id,
+        email: session.user.email || form.email.trim() || null,
+        ...cadastro,
+        foto: fotoUrl || cadastro.foto
+      })
+      if (profileError) throw profileError
+      await navigateTo(profileHomeRoute(profile), { replace: true })
+      return
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email: form.email.trim(),
       password: form.password,
@@ -221,16 +277,27 @@ const handleSignUp = async () => {
     })
     if (error) throw error
 
+    if (data.user && !data.session && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      throw new Error('User already registered')
+    }
+
     if (data.session?.access_token && data.user) {
-      const loaded = await redirectCompleteProfile(data.session.access_token)
-      if (!loaded) {
-        await profileStore.createProfile({ id: data.user.id, email: form.email.trim(), ...cadastro })
-        await redirectCompleteProfile(data.session.access_token)
-      }
+      const fotoUrl = await uploadSelectedPhoto(data.user.id)
+      const { data: profile, error: profileError } = await authStore.saveCompleteProfile({
+        id: data.user.id,
+        email: form.email.trim(),
+        ...cadastro,
+        foto: fotoUrl || cadastro.foto
+      })
+      if (profileError) throw profileError
+      await navigateTo(profileHomeRoute(profile), { replace: true })
       return
     }
 
-    successMsg.value = 'Cadastro concluido. Confirme seu e-mail para acessar sua conta.'
+    if (import.meta.client) {
+      localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(cadastro))
+    }
+    await navigateTo('/login?registered=check-email', { replace: true })
   } catch (error: any) {
     const msg: string = error?.message || ''
     if (msg.includes('User already registered') || msg.includes('already registered')) {
@@ -268,6 +335,21 @@ const handleGoogleSignUp = async () => {
 }
 
 const goBack = () => navigateTo('/cadastro')
+
+onMounted(async () => {
+  if (!user.value?.id) return
+
+  const { data: { session } } = await supabase.auth.getSession()
+  const { data: profile } = await authStore.fetchProfile(session?.access_token, session?.user?.email)
+  if (!profile) return
+
+  if (isProfileComplete(profile)) {
+    await navigateTo(profileHomeRoute(profile), { replace: true })
+    return
+  }
+
+  fillFormFromProfile(profile)
+})
 </script>
 
 <template>
@@ -321,10 +403,13 @@ const goBack = () => navigateTo('/cadastro')
               <label>WhatsApp / Celular</label>
               <input
                 :value="form.telefone"
-                type="text"
+                type="tel"
                 required
+                maxlength="15"
+                inputmode="tel"
+                autocomplete="tel"
                 placeholder="(94) 99999-9999"
-                @input="form.telefone = maskTelefone(($event.target as HTMLInputElement).value)"
+                @input="handleTelefoneInput"
               />
             </div>
           </div>
@@ -363,15 +448,23 @@ const goBack = () => navigateTo('/cadastro')
         </section>
 
         <section v-else-if="step === 3">
-          <label>{{ professionLabel }}</label>
+          <div class="photo-upload">
+            <button class="photo-preview" type="button" @click="fileInput?.click()">
+              <img v-if="photoPreview" :src="photoPreview" alt="Foto selecionada" />
+              <span v-else>Adicionar foto</span>
+            </button>
+            <input ref="fileInput" class="hidden-file" type="file" accept="image/*" @change="onFileChange" />
+            <p>Foto ou logo opcional para o perfil.</p>
+          </div>
+          <label class="required">{{ professionLabel }}</label>
           <input v-model="form.profissao" type="text" required placeholder="Informe sua area de atuacao" />
           <template v-if="form.tipo_conta === 'talento'">
-            <label>Objetivo profissional</label>
+            <label class="required">Objetivo profissional</label>
             <input v-model="form.objetivo_profissional" type="text" required placeholder="Qual oportunidade voce busca?" />
-            <label>Habilidades principais</label>
+            <label class="required">Habilidades principais</label>
             <input v-model="form.habilidades_input" type="text" required placeholder="Ex: manutencao, atendimento, Excel" />
           </template>
-          <label>{{ form.tipo_conta === 'empresa' ? 'Descricao da empresa' : form.tipo_conta === 'prestador' ? 'Descricao dos servicos' : 'Resumo profissional' }}</label>
+          <label class="required">{{ form.tipo_conta === 'empresa' ? 'Descricao da empresa' : form.tipo_conta === 'prestador' ? 'Descricao dos servicos' : 'Resumo profissional' }}</label>
           <textarea v-model="form.sobre_mim" rows="4" required placeholder="Escreva um breve resumo para o seu perfil."></textarea>
           <label>Biografia detalhada <small>(opcional)</small></label>
           <textarea v-model="form.biografia" rows="3" placeholder="Acrescente detalhes que ajudam a apresentar seu perfil."></textarea>
@@ -389,36 +482,41 @@ const goBack = () => navigateTo('/cadastro')
         </section>
 
         <section v-else class="access">
-          <p class="note">Seus dados estao prontos. Agora escolha como deseja acessar a plataforma.</p>
-          <label>E-mail</label>
-          <input v-model="form.email" type="email" autocomplete="email" placeholder="seu@email.com" />
-          <div class="row">
-            <div>
-              <label>Senha</label>
-              <input v-model="form.password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" placeholder="Minimo de 6 caracteres" />
-              <button class="toggle" type="button" @click="showPassword = !showPassword">{{ showPassword ? 'Ocultar' : 'Mostrar' }}</button>
+          <template v-if="isCompletingExistingAccount">
+            <p class="note">Sua conta ja esta conectada. Ao finalizar, vamos salvar seus dados e liberar seu acesso.</p>
+          </template>
+          <template v-else>
+            <p class="note">Seus dados estao prontos. Agora escolha como deseja acessar a plataforma.</p>
+            <label>E-mail</label>
+            <input v-model="form.email" type="email" autocomplete="email" placeholder="seu@email.com" />
+            <div class="row">
+              <div>
+                <label>Senha</label>
+                <input v-model="form.password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" placeholder="Minimo de 6 caracteres" />
+                <button class="toggle" type="button" @click="showPassword = !showPassword">{{ showPassword ? 'Ocultar' : 'Mostrar' }}</button>
+              </div>
+              <div>
+                <label>Confirmar senha</label>
+                <input v-model="form.confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" autocomplete="new-password" />
+                <button class="toggle" type="button" @click="showConfirmPassword = !showConfirmPassword">{{ showConfirmPassword ? 'Ocultar' : 'Mostrar' }}</button>
+              </div>
             </div>
-            <div>
-              <label>Confirmar senha</label>
-              <input v-model="form.confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" autocomplete="new-password" />
-              <button class="toggle" type="button" @click="showConfirmPassword = !showConfirmPassword">{{ showConfirmPassword ? 'Ocultar' : 'Mostrar' }}</button>
-            </div>
-          </div>
-          <label class="terms">
-            <input v-model="form.termsAccepted" type="checkbox" />
-            <span>Li e aceito os <NuxtLink to="/termos" target="_blank">Termos de Uso</NuxtLink> e a <NuxtLink to="/privacidade" target="_blank">Politica de Privacidade</NuxtLink>.</span>
-          </label>
-          <div class="divider"><span>ou</span></div>
-          <button type="button" class="google" :disabled="loading" @click="handleGoogleSignUp">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" />
-            Criar acesso com Google
-          </button>
+            <label class="terms">
+              <input v-model="form.termsAccepted" type="checkbox" />
+              <span>Li e aceito os <NuxtLink to="/termos" target="_blank">Termos de Uso</NuxtLink> e a <NuxtLink to="/privacidade" target="_blank">Politica de Privacidade</NuxtLink>.</span>
+            </label>
+            <div class="divider"><span>ou</span></div>
+            <button type="button" class="google" :disabled="loading" @click="handleGoogleSignUp">
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" />
+              Criar acesso com Google
+            </button>
+          </template>
         </section>
 
         <div class="actions">
           <button v-if="step < 5" class="primary" type="button" @click="nextStep">Continuar</button>
           <button v-else class="primary" type="submit" :disabled="loading">
-            {{ loading ? 'Criando conta...' : 'Criar minha conta' }}
+            {{ loading ? 'Salvando...' : isCompletingExistingAccount ? 'Salvar cadastro' : 'Criar minha conta' }}
           </button>
         </div>
       </form>
@@ -443,6 +541,7 @@ h1 { margin: 0 0 6px; color: #0f172a; font-size: 1.8rem; font-weight: 800; }
 .subtitle { margin: 0; color: #64748b; }
 .form section { display: flex; flex-direction: column; gap: 14px; }
 label { color: #334155; font-size: .92rem; font-weight: 700; }
+label.required::after { content: " *"; color: #dc2626; }
 input:not([type=checkbox]), select, textarea { width: 100%; padding: 13px 15px; border: 1px solid #dbe3ec; border-radius: 12px; font: inherit; color: #0f172a; outline: none; background: #fff; }
 input:focus, select:focus, textarea:focus { border-color: #268c52; box-shadow: 0 0 0 3px rgba(38, 140, 82, .12); }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -464,6 +563,11 @@ input:focus, select:focus, textarea:focus { border-color: #268c52; box-shadow: 0
 .review-line strong { text-align: right; }
 .review-summary { color: #334155; line-height: 1.55; margin: 10px 0 0; }
 .note { color: #64748b; font-size: .9rem; background: #f8fafc; border-radius: 10px; padding: 12px; margin: 0; }
+.photo-upload { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 4px 0 10px; text-align: center; }
+.photo-preview { width: 118px; height: 118px; border-radius: 999px; border: 2px dashed #cbd5e1; background: #f8fafc; color: #268c52; font: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+.photo-upload p { margin: 0; color: #64748b; font-size: .82rem; }
+.hidden-file { display: none; }
 .toggle { position: absolute; right: 10px; bottom: 12px; border: 0; background: #fff; color: #268c52; font-weight: 700; cursor: pointer; font-size: .8rem; }
 .terms { display: flex; gap: 10px; align-items: flex-start; margin-top: 6px; font-weight: 500; line-height: 1.4; }
 .terms input { margin-top: 3px; accent-color: #268c52; }

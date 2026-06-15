@@ -1,57 +1,91 @@
-import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
+import { serverSupabaseServiceRole } from '#supabase/server'
 import type { Database } from '~/types/database.types'
+import { requireAuthenticatedUser } from '../utils/authenticatedUser'
+
+const hasText = (value?: string | null) => Boolean(value?.trim())
+
+const isComplete = (profile: any) => Boolean(
+    hasText(profile?.tipo_conta) &&
+    hasText(profile?.nome) &&
+    hasText(profile?.documento) &&
+    hasText(profile?.telefone) &&
+    hasText(profile?.cidade) &&
+    hasText(profile?.estado) &&
+    hasText(profile?.profissao) &&
+    hasText(profile?.sobre_mim)
+)
 
 export default defineEventHandler(async (event) => {
-    // 1. Obter o usuário autenticado
-    let user = await serverSupabaseUser(event)
-    const client = serverSupabaseServiceRole<Database>(event)
+    const authUser = await requireAuthenticatedUser(event)
+    const supabase = serverSupabaseServiceRole<Database>(event)
 
-    if (!user) {
-        const authorization = getHeader(event, 'authorization')
-        const token = authorization?.startsWith('Bearer ') ? authorization.slice('Bearer '.length) : ''
-
-        if (token) {
-            const { data, error } = await client.auth.getUser(token)
-            if (!error && data.user) {
-                user = data.user
-            }
-        }
-    }
-
-    // Sem sessão/cookie válido, responde 401 de forma limpa
-    if (!user || typeof (user as any).id !== 'string' || !(user as any).id) {
-        throw createError({
-            statusCode: 401,
-            message: 'Não autorizado',
-        })
-    }
-
-    const userId = (user as any).id as string
-
-    // 3. Consultar a tabela usuarios utilizando Service Role (bypass RLS)
-    const { data: profile, error: profileError } = await client
+    let { data: profile, error } = await supabase
         .from('usuarios')
         .select('*')
-        .eq('id', userId)
-        .single()
+        .eq('id', authUser.id)
+        .maybeSingle()
 
-    if (profileError) {
-        console.error(`Erro ao buscar perfil para o usuário ${userId}:`, profileError.message)
-        if (profileError.code === 'PGRST116') {
-            throw createError({ statusCode: 404, message: 'Perfil não encontrado' })
-        }
-        throw createError({ statusCode: 500, message: 'Erro interno ao buscar perfil' })
+    if (error) {
+        throw createError({ statusCode: 500, message: 'Erro ao buscar perfil do usuario' })
     }
 
-    // 4. Buscar currículo separadamente (Left Join manual e seguro)
-    const { data: curriculo } = await client
+    if (!profile && authUser.email) {
+        const byEmail = await supabase
+            .from('usuarios')
+            .select('*')
+            .ilike('email', authUser.email)
+            .order('updated_at', { ascending: false })
+            .limit(1)
+
+        if (byEmail.error) {
+            throw createError({ statusCode: 500, message: 'Erro ao buscar perfil por email' })
+        }
+
+        profile = byEmail.data?.[0] || null
+
+        if (profile && profile.id !== authUser.id) {
+            const { data: linkedProfile, error: linkError } = await supabase
+                .from('usuarios')
+                .update({
+                    id: authUser.id,
+                    email: authUser.email,
+                    updated_at: new Date().toISOString(),
+                } as any)
+                .eq('id', profile.id)
+                .select('*')
+                .single()
+
+            if (!linkError && linkedProfile) profile = linkedProfile
+        }
+    }
+
+    if (!profile) {
+        throw createError({ statusCode: 404, message: 'Perfil nao encontrado' })
+    }
+
+    if (profile.cadastro_completo !== true && isComplete(profile)) {
+        const { data: updatedProfile, error: updateError } = await supabase
+            .from('usuarios')
+            .update({
+                cadastro_completo: true,
+                status: profile.status || 'ativo',
+                updated_at: new Date().toISOString(),
+            } as any)
+            .eq('id', profile.id)
+            .select('*')
+            .single()
+
+        if (!updateError && updatedProfile) profile = updatedProfile
+    }
+
+    const { data: curriculo } = await supabase
         .from('curriculos')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', profile.id)
         .maybeSingle()
 
     return {
         ...profile,
-        curriculo: curriculo || null
+        curriculo: curriculo || null,
     }
 })

@@ -1,93 +1,181 @@
 import { defineStore } from 'pinia'
-import { useProfileStore } from '~/stores/profile'
-import type { UpdateUsuarioPayload } from '~/types/usuarios'
+import type { Session } from '@supabase/supabase-js'
+import type { Usuario } from '~/types/database.types'
+import type { CreateUsuarioPayload, UpdateUsuarioPayload } from '~/types/usuarios'
+
+type AuthResult<T = Usuario | null> = {
+    data: T
+    error: any | null
+}
 
 export const useAuthStore = defineStore('auth', () => {
-    const user = useSupabaseUser()
-    const profileStore = useProfileStore()
+    const supabaseUser = useSupabaseUser()
 
-    const profile = computed(() => profileStore.profile)
-    const profileLoading = computed(() => profileStore.loading)
-    const error = computed(() => profileStore.error)
+    const profile = ref<Usuario | null>(null)
+    const loading = ref(false)
+    const initialized = ref(false)
+    const error = ref<string | null>(null)
 
-    const initialized = useState('auth_initialized', () => false)
+    const user = computed(() => supabaseUser.value || (profile.value ? {
+        id: profile.value.id,
+        email: profile.value.email,
+    } : null))
+    const profileLoading = computed(() => loading.value)
+    const isAuthenticated = computed(() => Boolean(user.value?.id))
 
-    // Sincroniza o estado inicial se já houver perfil (SSR ou Persistência)
-    if (profileStore.profile) {
-        initialized.value = true
+    const authHeader = (session?: Session | null) => (
+        session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined
+    )
+
+    const getSession = async () => {
+        const { data } = await useSupabaseClient().auth.getSession()
+        return data.session
     }
 
-    // Watcher para garantir que initialized mude para true assim que o perfil carregar
-    watch(() => profileStore.profile, (val) => {
-        if (val && !initialized.value) {
-            initialized.value = true
-        }
-    })
+    const setProfile = (value: Usuario | null) => {
+        profile.value = value
+        error.value = null
+    }
 
-    async function fetchProfile(accessToken?: string) {
-        let result
+    const clearProfile = () => {
+        profile.value = null
+        error.value = null
+    }
+
+    const loadProfile = async (session?: Session | null): Promise<AuthResult> => {
+        loading.value = true
+        error.value = null
+
         try {
-            result = await profileStore.fetchProfile(accessToken)
-            if (profile.value?.status === 'suspenso') {
-                if (process.client) {
-                    alert('Sua conta foi suspensa por violar os termos de uso. Entre em contato com o suporte.')
-                    await signOut()
-                    await navigateTo('/')
-                } else {
-                    await signOut()
-                }
+            const activeSession = session || await getSession()
+            if (!activeSession?.user?.id) {
+                return { data: null, error: null }
             }
-        } finally {
-            initialized.value = true
-        }
-        return result
-    }
 
-    async function updateProfile(data: UpdateUsuarioPayload) {
-        let userId = user.value?.id || profile.value?.id
-        if (!userId) {
-            // Fallback: read session directly from Supabase (handles SSR hydration race)
-            const supabase = useSupabaseClient()
-            const { data: { session } } = await supabase.auth.getSession()
-            userId = session?.user?.id
-        }
-        if (!userId) return { error: { message: 'Usuário não autenticado' } }
-
-        profileStore.loading = true
-        try {
-            const supabase = useSupabaseClient()
-            const { data: { session } } = await supabase.auth.getSession()
-            await $fetch(`/api/usuarios/${userId}`, {
-                method: 'PUT',
-                body: data,
-                headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined
+            const data = await $fetch<Usuario>('/api/me', {
+                headers: authHeader(activeSession),
             })
 
-            // Forçar a re-busca do perfil para atualizar todos os componentes
-            await profileStore.fetchProfile(session?.access_token)
-            return { data: profileStore.profile, error: null }
-        } catch (e: any) {
-            console.error('Erro ao atualizar perfil no store:', e)
-            return { data: null, error: e }
+            setProfile(data)
+            return { data, error: null }
+        } catch (err: any) {
+            clearProfile()
+            const statusCode = err?.statusCode || err?.status
+            if (statusCode !== 401 && statusCode !== 404) {
+                error.value = err?.data?.message || err?.message || 'Erro ao carregar perfil'
+                console.error('Erro ao carregar perfil:', err)
+            }
+            return { data: null, error: err }
         } finally {
-            profileStore.loading = false
+            initialized.value = true
+            loading.value = false
         }
     }
 
-    async function signOut() {
-        const supabase = useSupabaseClient()
-        profileStore.clearProfile()
-        return await supabase.auth.signOut()
+    const fetchProfile = async (_accessToken?: string, _email?: string | null) => loadProfile()
+
+    const signInWithPassword = async (email: string, password: string) => {
+        loading.value = true
+        error.value = null
+
+        try {
+            const { data, error: signInError } = await useSupabaseClient().auth.signInWithPassword({
+                email: email.trim(),
+                password,
+            })
+
+            if (signInError) return { data: null, error: signInError }
+
+            const profileResult = await loadProfile(data.session)
+            return { data: profileResult.data, error: profileResult.error }
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const saveCompleteProfile = async (payload: CreateUsuarioPayload): Promise<AuthResult<Usuario>> => {
+        loading.value = true
+        error.value = null
+
+        try {
+            const session = await getSession()
+            if (!session?.user?.id) {
+                throw new Error('Usuario nao autenticado')
+            }
+
+            const data = await $fetch<Usuario>('/api/usuarios', {
+                method: 'POST',
+                body: payload,
+                headers: authHeader(session),
+            })
+
+            setProfile(data)
+            return { data, error: null }
+        } catch (err: any) {
+            error.value = err?.data?.message || err?.message || 'Erro ao salvar perfil'
+            console.error('Erro ao salvar perfil:', err)
+            return { data: null as any, error: err }
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const updateProfile = async (payload: UpdateUsuarioPayload): Promise<AuthResult<Usuario>> => {
+        loading.value = true
+        error.value = null
+
+        try {
+            const session = await getSession()
+            const userId = session?.user?.id
+            if (!userId) throw new Error('Usuario nao autenticado')
+
+            const data = await $fetch<Usuario>(`/api/usuarios/${userId}`, {
+                method: 'PUT',
+                body: payload,
+                headers: authHeader(session),
+            })
+
+            setProfile(data)
+            return { data, error: null }
+        } catch (err: any) {
+            error.value = err?.data?.message || err?.message || 'Erro ao atualizar perfil'
+            console.error('Erro ao atualizar perfil:', err)
+            return { data: null as any, error: err }
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const signOut = async () => {
+        loading.value = true
+        try {
+            clearProfile()
+            initialized.value = true
+            return await useSupabaseClient().auth.signOut()
+        } finally {
+            loading.value = false
+        }
     }
 
     return {
         user,
         profile,
         profileLoading,
+        loading,
         error,
         initialized,
+        isAuthenticated,
+        setProfile,
+        clearProfile,
         fetchProfile,
+        loadProfile,
+        signInWithPassword,
+        saveCompleteProfile,
         updateProfile,
-        signOut
+        signOut,
     }
+}, {
+    persist: {
+        pick: ['profile'],
+    },
 })

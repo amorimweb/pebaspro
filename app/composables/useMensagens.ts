@@ -90,9 +90,13 @@ if (!participantId) return
   const sendMessage = async (conversationId: string, content: string) => {
     if (!content.trim()) return
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       await $fetch('/api/mensagens', {
         method: 'POST',
         body: { conversa_id: conversationId, conteudo: content.trim() },
+        headers: session?.access_token
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : undefined,
       })
     } catch (e: any) {
       console.error('Erro ao enviar:', e.message)

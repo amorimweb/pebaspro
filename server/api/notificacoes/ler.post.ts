@@ -1,34 +1,22 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseServiceRole } from '#supabase/server'
 import type { Database } from '~/types/database.types'
+import { requireAuthenticatedUser } from '../../utils/authenticatedUser'
 
 export default defineEventHandler(async (event) => {
-    const supabase = await serverSupabaseClient<Database>(event)
-    const user = await serverSupabaseUser(event)
-    const body = await readBody(event)
+    const user = await requireAuthenticatedUser(event)
+    const supabase = serverSupabaseServiceRole<Database>(event)
+    const body = await readBody<{ id?: string }>(event)
 
-    if (!user) {
-        throw createError({ statusCode: 401, message: 'Não autorizado' })
-    }
-
-    if (!body.id) {
-        // Se não passar ID, marca todas como lidas
-        const { error } = await supabase
-            .from('notificacoes')
-            .update({ lida: true })
-            .eq('user_id', user.id)
-
-        if (error) throw createError({ statusCode: 400, message: 'Erro ao marcar notificações como lidas' })
-        return { success: true }
-    }
-
-    const { error } = await supabase
+    let query = supabase
         .from('notificacoes')
         .update({ lida: true })
-        .eq('id', body.id)
         .eq('user_id', user.id)
 
+    if (body.id) query = query.eq('id', body.id)
+
+    const { error } = await query
     if (error) {
-        throw createError({ statusCode: 400, message: 'Erro ao atualizar notificação' })
+        throw createError({ statusCode: 400, message: 'Erro ao atualizar notificacao' })
     }
 
     return { success: true }

@@ -1,9 +1,18 @@
-import webpush from 'web-push'
+import type webpush from 'web-push'
 
 let vapidConfigured = false
+let webpushModule: typeof webpush | null = null
 
-function ensureVapid() {
-  if (vapidConfigured) return
+async function getWebPush() {
+  if (webpushModule) return webpushModule
+  const mod = await import('web-push')
+  webpushModule = (mod.default || mod) as typeof webpush
+  return webpushModule
+}
+
+async function ensureVapid() {
+  const webpush = await getWebPush()
+  if (vapidConfigured) return webpush
   const cfg = useRuntimeConfig()
   webpush.setVapidDetails(
     cfg.vapidMailto,
@@ -11,6 +20,7 @@ function ensureVapid() {
     cfg.vapidPrivateKey,
   )
   vapidConfigured = true
+  return webpush
 }
 
 export interface PushPayload {
@@ -25,7 +35,7 @@ export async function sendPushToUser(
   userId: string,
   payload: PushPayload,
 ) {
-  ensureVapid()
+  const webpush = await ensureVapid()
 
   const { data: subs } = await supabase
     .from('push_subscriptions')

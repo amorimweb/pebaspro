@@ -1,4 +1,3 @@
-import { GoogleGenAI } from '@google/genai'
 import { getPatriciaKnowledgeFor } from '../../utils/patriciaKnowledge'
 
 type ChatMessage = { role: 'user' | 'model'; text: string }
@@ -13,7 +12,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: 'GEMINI_API_KEY não configurada' })
   }
 
-  const ai = new GoogleGenAI({ apiKey })
   const latestUserMessage = [...messages].reverse().find((m) => m.role === 'user')?.text || ''
   const relevantKnowledge = getPatriciaKnowledgeFor(latestUserMessage, userContext?.role || 'visitante')
 
@@ -35,11 +33,17 @@ export default defineEventHandler(async (event) => {
     parts: [{ text: m.text || ' ' }],
   }))
 
-  const resp = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents,
-    config: { temperature: 0.2, systemInstruction },
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
+
+  const result = await $fetch<any>(url, {
+    method: 'POST',
+    body: {
+      systemInstruction: { parts: [{ text: systemInstruction }] },
+      contents,
+      generationConfig: { temperature: 0.2 },
+    },
   })
 
-  return { text: resp.text || '' }
+  const text = result?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  return { text }
 })

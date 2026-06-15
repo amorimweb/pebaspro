@@ -9,11 +9,18 @@ export const useNotifications = () => {
 
     const unreadCount = computed(() => notifications.value.filter(n => !n.lida).length)
 
+    const authHeaders = async () => {
+        const { data: { session } } = await useSupabaseClient().auth.getSession()
+        return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined
+    }
+
     const fetchNotifications = async () => {
         if (!authStore.profile?.id) return
         loading.value = true
         try {
-            const data = await $fetch<Notificacao[]>('/api/notificacoes')
+            const data = await $fetch<Notificacao[]>('/api/notificacoes', {
+                headers: await authHeaders(),
+            })
             notifications.value = data || []
         } catch (e) {
             console.error('Erro ao buscar notificações:', e)
@@ -26,7 +33,8 @@ export const useNotifications = () => {
         try {
             await $fetch('/api/notificacoes/ler', {
                 method: 'POST',
-                body: { id }
+                body: { id },
+                headers: await authHeaders(),
             })
             if (id) {
                 const index = notifications.value.findIndex(n => n?.id === id)

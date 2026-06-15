@@ -14,8 +14,8 @@ export default defineNuxtPlugin(() => {
     watch(user, async (newUser, oldUser) => {
         // 1. Usuário logou ou mudou
         if (newUser && newUser.id) {
-            if (newUser.id !== oldUser?.id || !authStore.profile) {
-                await authStore.fetchProfile(await getAccessToken())
+            if (newUser.id !== oldUser?.id || !authStore.profile || authStore.profile.id !== newUser.id) {
+                await authStore.fetchProfile(await getAccessToken(), newUser.email)
             } else {
                 // Já temos perfil e o usuário é o mesmo (hidratação)
                 authStore.initialized = true
@@ -23,8 +23,13 @@ export default defineNuxtPlugin(() => {
         }
         // 2. Usuário deslogou (tinha um oldUser mas sumiu)
         else if (oldUser) {
-            await authStore.signOut()
-            authStore.initialized = true
+            const { data: { session } } = await supabase.auth.getSession()
+            if (session?.user?.id) {
+                await authStore.fetchProfile(session.access_token, session.user.email)
+            } else {
+                authStore.clearProfile()
+                authStore.initialized = true
+            }
         }
         // 3. Estado inicial: verifica se há sessão ativa antes de marcar como inicializado
         else if (!newUser) {
@@ -33,7 +38,7 @@ export default defineNuxtPlugin(() => {
             if (!session) {
                 authStore.initialized = true
             } else if (session.user?.id) {
-                await authStore.fetchProfile(session.access_token)
+                await authStore.fetchProfile(session.access_token, session.user.email)
             }
             // Se há sessão mas user ainda não chegou via useSupabaseUser,
             // aguarda o próximo disparo do watch quando o estado sincronizar

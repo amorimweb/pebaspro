@@ -56,11 +56,6 @@ export default defineNuxtConfig({
       type: 'module',
     },
   },
-  nitro: {
-    externals: {
-      inline: ['web-push'],
-    },
-  },
   runtimeConfig: {
     vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
     vapidMailto: process.env.VAPID_MAILTO || 'mailto:contato@pebaspro.com.br',

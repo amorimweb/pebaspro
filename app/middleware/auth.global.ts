@@ -1,7 +1,10 @@
 import { useAuthStore } from '~/stores/auth'
+import { completeRegistrationRoute } from '~/utils/authRedirect'
+import { isProfileComplete } from '~/utils/profileCompletion'
 
-export default defineNuxtRouteMiddleware(async (to, from) => {
-    const user = useSupabaseUser()
+export default defineNuxtRouteMiddleware(async (to) => {
+    const supabaseUser = useSupabaseUser()
+    const supabase = useSupabaseClient()
     const authStore = useAuthStore()
 
     const publicPrefixes = [
@@ -11,7 +14,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         '/confirm',
         '/esqueci-senha',
         '/redefinir-senha',
-        // Rotas públicas (permitir compartilhar link sem forçar onboarding)
         '/vagas',
         '/servicos',
         '/empresas',
@@ -19,39 +21,54 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         '/contato',
         '/manutencao',
     ]
+
+    const isCadastroRoute = to.path.startsWith('/cadastro/')
     const isPublicRoute =
         publicPrefixes.some((p) => to.path === p || to.path.startsWith(`${p}/`)) ||
-        to.path.startsWith('/cadastro/')
+        isCadastroRoute
 
-    if (!user.value) {
+    const currentSession = (await supabase.auth.getSession()).data.session
+    const storedProfile = authStore.profile
+    const persistedUser = storedProfile
+        ? { id: authStore.profile.id, email: authStore.profile.email }
+        : null
+    const activeUser = supabaseUser.value || currentSession?.user || persistedUser
+
+    if (!activeUser?.id) {
+        if (import.meta.client) {
+            return
+        }
+
         if (!isPublicRoute) {
             return navigateTo('/login')
         }
         return
     }
-    // Em alguns momentos a sessão pode hidratar sem id; não tratar como autenticado.
-    if (!user.value.id) return
 
-    // Ensure profile is loaded — always fetch if we have a user but no profile
-    // (the auth-sync plugin may have set initialized=true via the SSR "else" branch
-    //  before the session was available, leaving profile=null for an authenticated user)
-    if (!authStore.profile) {
-        const supabase = useSupabaseClient()
-        const { data: { session } } = await supabase.auth.getSession()
-        await authStore.fetchProfile(session?.access_token)
+    if (currentSession && (!authStore.profile || authStore.profile.id !== activeUser.id)) {
+        await authStore.loadProfile(currentSession)
     }
 
-    // 2. Enforce onboarding for incomplete profiles
-    const profile = authStore.profile
-    const isOnboardingRoute = to.path.startsWith('/cadastro/')
+    if (to.path.startsWith('/cadastro/onboarding')) {
+        return navigateTo(completeRegistrationRoute, { replace: true })
+    }
 
-    if (!isPublicRoute && !isOnboardingRoute) {
-        if (!profile || !profile.cadastro_completo || !profile.tipo_conta) {
-            return navigateTo('/cadastro/onboarding')
+    const profile = authStore.profile || storedProfile
+
+    if (!isPublicRoute) {
+        if (!profile && import.meta.client) {
+            return
+        }
+
+        if (!isProfileComplete(profile)) {
+            return navigateTo(completeRegistrationRoute)
+        }
+
+        if (profile && !profile.cadastro_completo) {
+            await authStore.updateProfile({ cadastro_completo: true, status: 'ativo' })
         }
     }
 
-    // 3. Enforce account suspension global block
     if (authStore.profile?.status === 'suspenso') {
         if (process.client) {
             alert('Sua conta foi suspensa por violar os termos de uso. Entre em contato com o suporte.')

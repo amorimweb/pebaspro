@@ -1,24 +1,32 @@
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth'] })
-
 const authStore = useAuthStore()
-const tipo = computed(() => authStore.profile?.tipo_conta)
+const redirecting = ref(true)
 
-watch(
-  tipo,
-  async (t) => {
-    if (!t) return
-    if (t === 'empresa') return navigateTo('/painel/empresa/mensagens', { replace: true })
-    if (t === 'prestador') return navigateTo('/painel/prestador/mensagens', { replace: true })
-    return navigateTo('/painel/talento/mensagens', { replace: true })
-  },
-  { immediate: true }
-)
+const routeByAccountType = (type?: string | null) => {
+  if (type === 'empresa') return '/painel/empresa/mensagens'
+  if (type === 'prestador') return '/painel/prestador/mensagens'
+  return '/painel/talento/mensagens'
+}
+
+const resolveMessagesRoute = async () => {
+  try {
+    if (!authStore.profile?.id) {
+      await authStore.loadProfile()
+    }
+
+    await navigateTo(routeByAccountType(authStore.profile?.tipo_conta), { replace: true })
+  } finally {
+    redirecting.value = false
+  }
+}
+
+if (import.meta.client) {
+  onMounted(resolveMessagesRoute)
+}
 </script>
 
 <template>
-  <div class="min-h-[50vh] flex items-center justify-center text-slate-400">
-    Redirecionando…
+  <div v-if="redirecting" class="min-h-[50vh] flex items-center justify-center text-slate-400">
+    Redirecionando...
   </div>
 </template>
-

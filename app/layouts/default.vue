@@ -11,7 +11,7 @@ const showFooter = computed(() => !route.meta.hideFooter)
     
     <main 
       class="flex-grow flex flex-col"
-      :class="{ 'pt-24': showPadding }"
+      :class="{ 'pt-20 md:pt-24': showPadding }"
     >
       <slot />
     </main>

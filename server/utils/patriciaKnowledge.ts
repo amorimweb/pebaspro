@@ -56,7 +56,7 @@ export const patriciaKnowledgeBase = `
 - Login fica em \`/login\`.
 - Recuperação de senha fica em \`/esqueci-senha\` e redefinição em \`/redefinir-senha\`.
 - A confirmação de autenticação usa \`/confirm\`.
-- \`/cadastro/onboarding\` permanece apenas para regularizar contas antigas incompletas.
+- Perfis incompletos devem ser regularizados em \`/cadastro/dados\`.
 - Ao concluir: talento vai para a home, empresa para \`/painel/empresa\` e prestador para \`/painel/prestador\`.
 - Se a conta estiver suspensa, o app bloqueia o acesso, encerra a sessão e orienta contato com suporte.
 
@@ -235,7 +235,7 @@ export const patriciaKnowledgeBase = `
 
 ## Respostas rápidas por intenção
 - "Como me cadastro?"
-  - Explique \`/cadastro\`, escolha do perfil, preenchimento dos dados, confirmação/onboarding.
+  - Explique \`/cadastro\`, escolha do perfil, preenchimento dos dados e confirmação da conta.
 - "Quero procurar vaga"
   - Direcione para \`/vagas\`; explique busca, filtro e detalhe da vaga.
 - "Como me candidato?"
