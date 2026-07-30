@@ -28,6 +28,29 @@ export default defineNuxtConfig({
   supabase: {
     redirect: false
   },
+  routeRules: {
+    '/**': {
+      headers: {
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'SAMEORIGIN',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self)',
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+        'Content-Security-Policy': [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "font-src 'self' https://fonts.gstatic.com data:",
+          "img-src 'self' data: blob: https://www.gstatic.com https://api.dicebear.com https://pub-ab00f7fa65664628a45003a31266451a.r2.dev https://*.supabase.co",
+          "connect-src 'self' https://*.supabase.co https://n8n-n8n-start.6uchwp.easypanel.host wss://*.supabase.co",
+          "frame-src 'self' https://accounts.google.com",
+          "object-src 'none'",
+          "base-uri 'self'",
+          "form-action 'self'",
+        ].join('; '),
+      },
+    },
+  },
   pwa: {
     strategies: 'injectManifest',
     srcDir: 'service-worker',

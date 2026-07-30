@@ -2,6 +2,12 @@ import { useAuthStore } from '~/stores/auth'
 import { completeRegistrationRoute } from '~/utils/authRedirect'
 import { isProfileComplete } from '~/utils/profileCompletion'
 
+// supabase.auth.getSession() pode travar no servidor tentando renovar um
+// token perto de expirar (visto travar por minutos em teste manual). Nunca
+// deixamos isso bloquear a navegacao indefinidamente.
+const withTimeout = <T,>(promise: Promise<T>, ms: number, fallback: T): Promise<T> =>
+    Promise.race([promise, new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))])
+
 export default defineNuxtRouteMiddleware(async (to) => {
     const supabaseUser = useSupabaseUser()
     const supabase = useSupabaseClient()
@@ -27,18 +33,23 @@ export default defineNuxtRouteMiddleware(async (to) => {
         publicPrefixes.some((p) => to.path === p || to.path.startsWith(`${p}/`)) ||
         isCadastroRoute
 
-    const currentSession = (await supabase.auth.getSession()).data.session
-    const activeUser = supabaseUser.value || currentSession?.user
+    // No servidor, supabaseUser.value vem dos claims do JWT (getClaims()),
+    // cujo identificador e "sub", nao "id" como no objeto User do cliente.
+    const quickUserId = supabaseUser.value?.id || (supabaseUser.value as any)?.sub
+    const currentSession = quickUserId
+        ? null
+        : await withTimeout(supabase.auth.getSession().then((r) => r.data.session), 4000, null)
+    const activeUserId = quickUserId || currentSession?.user?.id
 
-    if (!activeUser?.id) {
+    if (!activeUserId) {
         if (!isPublicRoute) {
             return navigateTo('/login')
         }
         return
     }
 
-    if (currentSession && (!authStore.profile || authStore.profile.id !== activeUser.id)) {
-        await authStore.loadProfile(currentSession)
+    if (!authStore.profile || authStore.profile.id !== activeUserId) {
+        await authStore.loadProfile(currentSession, activeUserId)
     }
 
     if (to.path.startsWith('/cadastro/onboarding')) {

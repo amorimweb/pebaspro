@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MapPin, Mail, Phone, Instagram, MessageCircle } from 'lucide-vue-next'
+
 const ano = new Date().getFullYear()
 </script>
 
@@ -55,15 +57,15 @@ O PEBASPRO integra a economia local, facilitando o acesso a serviços, oportunid
           <h4 class="text-white font-bold mb-6 text-lg tracking-tight">Onde Estamos</h4>
           <ul class="space-y-4">
             <li class="flex items-start gap-3 text-slate-400">
-              <span class="text-green-500 mt-1">📍</span>
+              <MapPin :size="18" class="text-green-500 mt-0.5 shrink-0" />
               <p class="text-sm">Conectando talentos e empresas da região.</p>
             </li>
             <li class="flex items-center gap-3 text-slate-400">
-              <span class="text-green-500">📧</span>
+              <Mail :size="18" class="text-green-500 shrink-0" />
               <a href="mailto:contato.pebaspro@gmail.com" class="text-sm hover:text-white truncate">contato.pebaspro@gmail.com</a>
             </li>
             <li class="flex items-center gap-3 text-slate-400">
-              <span class="text-green-500">📞</span>
+              <Phone :size="18" class="text-green-500 shrink-0" />
               <a href="tel:+5594984025172" class="text-sm hover:text-white">(94) 98402-5172</a>
             </li>
           </ul>
@@ -81,9 +83,12 @@ O PEBASPRO integra a economia local, facilitando o acesso a serviços, oportunid
           </div>
         </div>
         <div class="flex gap-4">
-          <a href="#" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-green-600 hover:text-white transition-all transform hover:-translate-y-1">IG</a>
-          <a href="#" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-green-600 hover:text-white transition-all transform hover:-translate-y-1">LK</a>
-          <a href="#" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-green-600 hover:text-white transition-all transform hover:-translate-y-1">TW</a>
+          <a href="https://www.instagram.com/pebas_prooficial" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-green-600 hover:text-white transition-all transform hover:-translate-y-1">
+            <Instagram :size="18" />
+          </a>
+          <a href="https://www.threads.com/@pebas_prooficial" target="_blank" rel="noopener noreferrer" aria-label="Threads" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-green-600 hover:text-white transition-all transform hover:-translate-y-1">
+            <MessageCircle :size="18" />
+          </a>
         </div>
       </div>
     </div>

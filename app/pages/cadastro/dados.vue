@@ -244,7 +244,15 @@ const handleSignUp = async () => {
   const cadastro = profilePayload()
 
   try {
-    const { data: { session } } = await supabase.auth.getSession()
+    // So reaproveitamos a sessao atual se foi isso que a tela mostrou ao
+    // usuario (isCompletingExistingAccount escondendo os campos de
+    // e-mail/senha). Um getSession() fresco e independente aqui podia
+    // encontrar uma sessao "esquecida" no navegador e sobrescrever essa
+    // conta silenciosamente, ignorando o e-mail/senha que o usuario acabou
+    // de digitar para criar uma conta nova.
+    const session = isCompletingExistingAccount.value
+      ? (await supabase.auth.getSession()).data.session
+      : null
 
     if (session?.user?.id) {
       const fotoUrl = await uploadSelectedPhoto(session.user.id)

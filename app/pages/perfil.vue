@@ -145,6 +145,32 @@ const handleLogout = async () => {
     navigateTo('/')
 }
 
+const showDeleteModal = ref(false)
+const deleteConfirmText = ref('')
+const deleteConfirmChecked = ref(false)
+const deletingAccount = ref(false)
+
+const closeDeleteModal = () => {
+    showDeleteModal.value = false
+    deleteConfirmText.value = ''
+    deleteConfirmChecked.value = false
+}
+
+const handleDeleteAccount = async () => {
+    deletingAccount.value = true
+    try {
+        const { error } = await authStore.deleteAccount()
+        if (error) {
+            alert('Erro ao excluir conta: ' + (error?.data?.message || error?.message || 'Tente novamente.'))
+            return
+        }
+        alert('Sua conta foi excluída com sucesso.')
+        await navigateTo('/', { replace: true })
+    } finally {
+        deletingAccount.value = false
+    }
+}
+
 const handleUpdatePassword = async () => {
     if (!passwordForm.value.novaSenha || !passwordForm.value.confirmarSenha) {
         alert('Preencha os campos de senha.')
@@ -522,7 +548,72 @@ definePageMeta({
           </p>
         </div>
       </div>
+
+      <!-- ═══ ZONA DE RISCO ═══ -->
+      <div class="mt-8 bg-white rounded-[32px] shadow-sm border border-red-100 p-8 md:p-10">
+        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-red-500 mb-6 flex items-center gap-2">
+          <span class="w-6 h-px bg-red-100"></span> Zona de Risco
+        </h3>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-red-50/50 p-6 rounded-2xl border border-red-100">
+          <div>
+            <h4 class="font-black text-slate-900 text-sm mb-1">Excluir minha conta</h4>
+            <p class="text-xs text-slate-500 leading-relaxed max-w-md">
+              Remove permanentemente sua conta e todos os dados associados (serviços, vagas, candidaturas, mensagens, favoritos e avaliações). Essa ação não pode ser desfeita.
+            </p>
+          </div>
+          <button
+            @click="showDeleteModal = true"
+            class="shrink-0 px-6 py-3.5 bg-red-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-500/20 hover:bg-red-600 active:scale-95 transition-all"
+          >
+            Excluir Conta
+          </button>
+        </div>
+      </div>
     </div>
+
+    <!-- MODAL: EXCLUIR CONTA -->
+    <AdminModal :is-open="showDeleteModal" @close="closeDeleteModal" title="Excluir Conta">
+      <div class="space-y-6">
+        <div class="bg-red-50 border border-red-100 rounded-2xl p-5 space-y-2">
+          <p class="text-sm font-bold text-red-700">Esta ação é irreversível.</p>
+          <p class="text-xs text-red-600 leading-relaxed">
+            Ao confirmar, sua conta e todos os dados associados serão apagados permanentemente: serviços ou vagas publicados, candidaturas, mensagens, favoritos e avaliações.
+          </p>
+        </div>
+
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" v-model="deleteConfirmChecked" class="mt-1 w-4 h-4 accent-red-500" />
+          <span class="text-sm text-slate-700 font-medium">Entendo que essa ação é permanente e irreversível.</span>
+        </label>
+
+        <div>
+          <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">
+            Digite EXCLUIR para confirmar
+          </label>
+          <input
+            v-model="deleteConfirmText"
+            class="w-full bg-slate-50 border-none p-4 rounded-2xl font-bold text-slate-800 focus:ring-2 focus:ring-red-400 transition-all"
+            placeholder="EXCLUIR"
+          />
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <button
+            @click="closeDeleteModal"
+            class="flex-1 py-3.5 bg-slate-100 text-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            @click="handleDeleteAccount"
+            :disabled="!deleteConfirmChecked || deleteConfirmText !== 'EXCLUIR' || deletingAccount"
+            class="flex-1 py-3.5 bg-red-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {{ deletingAccount ? 'Excluindo...' : 'Confirmar Exclusão' }}
+          </button>
+        </div>
+      </div>
+    </AdminModal>
   </div>
 </template>
 

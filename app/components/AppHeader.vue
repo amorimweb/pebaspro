@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import { useNotifications } from '~/composables/useNotifications'
+import { Bell, Briefcase, MessageSquare } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
 const profile = computed(() => authStore.profile)
 const initialized = computed(() => authStore.initialized)
+// A primeira renderização do cliente (comparada pela hidratação) precisa
+// ficar idêntica ao SSR mesmo que `initialized` já tenha virado `true` nesse
+// meio-tempo — por isso o gate depende também de `mounted`, que só é setado
+// em onMounted (ou seja, estritamente depois da hidratação).
+const mounted = ref(false)
+onMounted(() => { mounted.value = true })
+const ready = computed(() => mounted.value && initialized.value)
 const router = useRouter()
 const avatarFailed = ref(false)
 const avatarUrl = computed(() => avatarFailed.value ? null : profile.value?.foto || null)
@@ -168,7 +176,7 @@ watch(isMobileMenuOpen, (isOpen) => {
       <nav class="hidden lg:flex items-center gap-1">
         <!-- Main Dynamic Menu -->
         <div class="flex items-center gap-1 min-h-[40px]">
-          <div v-if="!initialized" key="nav-loading" class="flex gap-2">
+          <div v-if="!ready" key="nav-loading" class="flex gap-2">
             <div v-for="i in 4" :key="i" class="h-8 w-24 bg-white/10 rounded-xl animate-pulse mx-1"></div>
           </div>
           <div v-else key="nav-ready" class="flex gap-1">
@@ -192,7 +200,7 @@ watch(isMobileMenuOpen, (isOpen) => {
 
       <!-- AUTH / USER DROPDOWN (DESKTOP) -->
       <div class="hidden lg:flex items-center gap-2 min-w-[230px] shrink-0 justify-end">
-          <div v-if="!initialized" key="auth-loading" class="h-10 w-28 bg-white/10 rounded-xl animate-pulse"></div>
+          <div v-if="!ready" key="auth-loading" class="h-10 w-28 bg-white/10 rounded-xl animate-pulse"></div>
           
           <template v-else-if="!user">
             <NuxtLink to="/login" class="shrink-0 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/10 transition-colors rounded-xl">Entrar</NuxtLink>
@@ -228,8 +236,9 @@ watch(isMobileMenuOpen, (isOpen) => {
                     @click="markAsRead(n.id); if(n.link) navigateTo(n.link); showNotifications = false"
                   >
                     <div class="flex gap-4">
-                      <div class="w-10 h-10 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center shrink-0 group-hover/item:border-green-200 transition-colors">
-                        <span class="text-lg">{{ n.tipo === 'vaga' ? '💼' : '💬' }}</span>
+                      <div class="w-10 h-10 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center shrink-0 group-hover/item:border-green-200 transition-colors text-green-600">
+                        <Briefcase v-if="n.tipo === 'vaga'" :size="18" />
+                        <MessageSquare v-else :size="18" />
                       </div>
                       <div class="min-w-0">
                         <p class="text-sm font-bold text-slate-900 mb-1 leading-tight text-left">{{ n.titulo }}</p>
@@ -310,9 +319,9 @@ watch(isMobileMenuOpen, (isOpen) => {
       <!-- MOBILE CONTROLS -->
       <div class="flex lg:hidden items-center gap-3">
         <!-- Notificações Mobile -->
-        <div v-if="initialized && user" class="relative" ref="notificationRef">
+        <div v-if="ready && user" class="relative" ref="notificationRef">
           <button @click="showNotifications = !showNotifications" class="p-2 text-white/70 hover:bg-white/10 rounded-xl relative">
-            <span class="text-xl">🔔</span>
+            <Bell :size="22" />
             <span v-if="unreadCount > 0" class="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-green-950">
               {{ unreadCount }}
             </span>
@@ -329,8 +338,9 @@ watch(isMobileMenuOpen, (isOpen) => {
               <div v-else-if="notifications.length === 0" class="p-8 text-center text-slate-400 text-xs italic">Nenhuma notificação por aqui.</div>
               <div v-for="n in notifications" :key="n.id" :class="{'bg-green-50/30': !n.lida}" class="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer" @click="markAsRead(n.id); n.link && navigateTo(n.link); showNotifications = false">
                 <div class="flex gap-3 text-left">
-                  <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                    {{ n.tipo === 'vaga' ? '💼' : '💬' }}
+                  <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-600">
+                    <Briefcase v-if="n.tipo === 'vaga'" :size="16" />
+                    <MessageSquare v-else :size="16" />
                   </div>
                   <div class="min-w-0">
                     <p class="text-xs font-bold text-slate-800 mb-0.5 truncate text-left">{{ n.titulo }}</p>
@@ -344,7 +354,7 @@ watch(isMobileMenuOpen, (isOpen) => {
         </div>
 
         <!-- Profile Avatar (Mobile) -->
-        <NuxtLink v-if="initialized && user" to="/perfil" class="w-10 h-10 rounded-full flex items-center justify-center text-white font-black overflow-hidden transition-colors">
+        <NuxtLink v-if="ready && user" to="/perfil" class="w-10 h-10 rounded-full flex items-center justify-center text-white font-black overflow-hidden transition-colors">
            <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar do usuário" class="w-full h-full object-cover" @error="avatarFailed = true" />
            <span v-else class="w-full h-full flex items-center justify-center">{{ profile?.nome?.charAt(0) || 'U' }}</span>
         </NuxtLink>
@@ -405,7 +415,7 @@ watch(isMobileMenuOpen, (isOpen) => {
             </div>
 
             <!-- Dynamic Mobile Links -->
-            <template v-if="!initialized">
+            <template v-if="!ready">
                <div v-for="i in 6" :key="i" class="h-14 bg-slate-50 rounded-2xl animate-pulse"></div>
             </template>
             <template v-else>

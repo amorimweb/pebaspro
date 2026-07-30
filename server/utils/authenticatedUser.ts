@@ -2,8 +2,11 @@ import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/database.types'
 
 export async function requireAuthenticatedUser(event: any) {
+    // serverSupabaseUser() retorna os claims do JWT (via getClaims()), cujo
+    // identificador do usuario vem no campo padrao "sub", nao "id".
     const cookieUser = await serverSupabaseUser(event)
-    if (cookieUser?.id) return cookieUser
+    const cookieUserId = cookieUser?.id || (cookieUser as any)?.sub
+    if (cookieUserId) return { ...cookieUser, id: cookieUserId }
 
     const authorization = getHeader(event, 'authorization')
     const token = authorization?.startsWith('Bearer ') ? authorization.slice('Bearer '.length) : ''

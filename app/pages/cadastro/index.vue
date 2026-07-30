@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Target, Wrench, Building2 } from 'lucide-vue-next'
+
 type AccountType = 'talento' | 'prestador' | 'empresa'
 
 definePageMeta({
@@ -30,7 +32,7 @@ const profileTypes = [
     title: 'Talento',
     subtitle: 'Busco vagas de emprego',
     description: 'Encontre as melhores oportunidades nas maiores empresas da região.',
-    icon: '🎯',
+    icon: Target,
     color: '#3b82f6'
   },
   {
@@ -38,7 +40,7 @@ const profileTypes = [
     title: 'Prestador',
     subtitle: 'Ofereço meus serviços',
     description: 'Divulgue seu trabalho e receba contatos diretos de clientes da região.',
-    icon: '🛠️',
+    icon: Wrench,
     color: '#10b981'
   },
   {
@@ -46,7 +48,7 @@ const profileTypes = [
     title: 'Empresa',
     subtitle: 'Quero contratar talentos',
     description: 'Publique vagas e gerencie candidatos de forma simples e eficiente.',
-    icon: '🏢',
+    icon: Building2,
     color: '#8b5cf6'
   }
 ]
@@ -73,7 +75,7 @@ const profileTypes = [
           type="button"
         >
           <div class="card-icon" :style="{ backgroundColor: profile.color + '20', color: profile.color }">
-            {{ profile.icon }}
+            <component :is="profile.icon" :size="28" :stroke-width="2" />
           </div>
           <div class="card-content">
             <span class="type-badge" :style="{ color: profile.color }">{{ profile.subtitle }}</span>

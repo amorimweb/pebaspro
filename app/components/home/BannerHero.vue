@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { SearchX } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
@@ -162,7 +163,7 @@ onUnmounted(() => {
 
           <!-- Dica Padrão quando nenhum resultado exato -->
           <div v-else class="p-10 text-center text-slate-500">
-            <span class="text-5xl mb-4 block opacity-50">🔍</span>
+            <SearchX :size="48" class="mx-auto mb-4 opacity-50" />
             <p class="font-black text-slate-800 text-xl">Nenhum resultado direto</p>
             <p class="font-medium text-slate-500 text-sm mt-2 mb-6">Tente outras palavras ou busque no diretório completo.</p>
             

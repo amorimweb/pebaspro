@@ -46,26 +46,35 @@ export const useAuthStore = defineStore('auth', () => {
         error.value = null
     }
 
-    const loadProfile = async (session?: Session | null): Promise<AuthResult> => {
+    const loadProfile = async (session?: Session | null, userId?: string): Promise<AuthResult> => {
         if (profilePromise) return profilePromise
 
         loading.value = true
         error.value = null
 
         profilePromise = (async () => {
-            const activeSession = session || await getSession()
-            if (!activeSession?.user?.id) {
+            // Se ja sabemos o id (ex.: via claims do JWT no SSR), evitamos
+            // chamar getSession() aqui: ela pode travar tentando renovar um
+            // token perto de expirar. A autenticacao da chamada a /api/me
+            // cai para o cookie de sessao (repassado explicitamente no
+            // servidor) quando nao ha um access_token de sobra.
+            const activeSession = session !== undefined ? session : (userId ? null : await getSession())
+            const activeUserId = activeSession?.user?.id || userId
+            if (!activeUserId) {
                 clearProfile()
                 return { data: null, error: null }
             }
 
-            if (profile.value && profile.value.id !== activeSession.user.id) {
+            if (profile.value && profile.value.id !== activeUserId) {
                 clearProfile()
             }
 
             try {
                 const data = await $fetch<Usuario>('/api/me', {
-                    headers: authHeader(activeSession),
+                    headers: {
+                        ...authHeader(activeSession),
+                        ...(import.meta.server ? useRequestHeaders(['cookie']) : {}),
+                    },
                 })
                 setProfile(data)
                 return { data, error: null }
