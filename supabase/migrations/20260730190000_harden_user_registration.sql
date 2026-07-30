@@ -35,8 +35,21 @@ ALTER TABLE public.usuarios
 ADD CONSTRAINT usuarios_documento_length_check
 CHECK (
   documento IS NULL OR
+  NULLIF(regexp_replace(documento, '\D', '', 'g'), '') IS NULL OR
   length(regexp_replace(documento, '\D', '', 'g')) IN (11, 14)
-);
+) NOT VALID;
+
+-- A constraint NOT VALID já protege INSERTs e UPDATEs novos, mas não bloqueia
+-- a implantação por documentos legados incompletos. Depois de corrigir os
+-- registros retornados pela consulta abaixo, valide-a manualmente:
+--
+-- SELECT id, nome, documento
+-- FROM public.usuarios
+-- WHERE NULLIF(regexp_replace(COALESCE(documento, ''), '\D', '', 'g'), '') IS NOT NULL
+--   AND length(regexp_replace(documento, '\D', '', 'g')) NOT IN (11, 14);
+--
+-- ALTER TABLE public.usuarios
+-- VALIDATE CONSTRAINT usuarios_documento_length_check;
 
 CREATE OR REPLACE FUNCTION public.handle_complete_profile_signup()
 RETURNS trigger
