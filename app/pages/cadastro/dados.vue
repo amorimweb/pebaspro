@@ -2,6 +2,11 @@
 import { useAuthStore } from '~/stores/auth'
 import { profileHomeRoute } from '~/utils/authRedirect'
 import { isProfileComplete } from '~/utils/profileCompletion'
+import {
+  documentMaxLength,
+  isValidDocumentForType,
+  maskDocument,
+} from '~/utils/brDocuments'
 
 type AccountType = 'talento' | 'prestador' | 'empresa'
 
@@ -11,6 +16,7 @@ definePageMeta({
 })
 
 const PENDING_PROFILE_KEY = 'pebas_pending_complete_profile'
+const PENDING_PROFILE_TTL = 30 * 60 * 1000
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 const authStore = useAuthStore()
@@ -106,59 +112,33 @@ const handleTelefoneInput = (event: Event) => {
   input.value = masked
 }
 
-const maskCPF = (value: string) => value.replace(/\D/g, '').slice(0, 11)
-  .replace(/(\d{3})(\d)/, '$1.$2')
-  .replace(/(\d{3})(\d)/, '$1.$2')
-  .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-
-const maskCNPJ = (value: string) => value.replace(/\D/g, '').slice(0, 14)
-  .replace(/(\d{2})(\d)/, '$1.$2')
-  .replace(/(\d{3})(\d)/, '$1.$2')
-  .replace(/(\d{3})(\d)/, '$1/$2')
-  .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
-
-const applyDocMask = (value: string) => {
-  const digits = value.replace(/\D/g, '')
-  return isEmpresa.value || (isPrestador.value && digits.length > 11) ? maskCNPJ(value) : maskCPF(value)
-}
-
-const validarCPF = (cpf: string) => {
-  const n = cpf.replace(/\D/g, '')
-  if (n.length !== 11 || /^(\d)\1+$/.test(n)) return false
-  let sum = 0
-  for (let index = 0; index < 9; index++) sum += Number(n[index]) * (10 - index)
-  let digit = (sum * 10) % 11
-  if (digit === 10) digit = 0
-  if (digit !== Number(n[9])) return false
-  sum = 0
-  for (let index = 0; index < 10; index++) sum += Number(n[index]) * (11 - index)
-  digit = (sum * 10) % 11
-  if (digit === 10) digit = 0
-  return digit === Number(n[10])
-}
-
-const validarCNPJ = (cnpj: string) => {
-  const n = cnpj.replace(/\D/g, '')
-  if (n.length !== 14 || /^(\d)\1+$/.test(n)) return false
-  const calc = (length: number) => {
-    let sum = 0
-    let factor = length - 7
-    for (let index = length; index >= 1; index--) {
-      sum += Number(n[length - index]) * factor--
-      if (factor < 2) factor = 9
-    }
-    const remainder = sum % 11
-    return remainder < 2 ? 0 : 11 - remainder
-  }
-  return calc(12) === Number(n[12]) && calc(13) === Number(n[13])
-}
+const documentLength = computed(() =>
+  form.tipo_conta ? documentMaxLength(form.tipo_conta) : 18
+)
 
 const validateDocument = () => {
-  const digits = form.documento.replace(/\D/g, '')
-  if (isEmpresa.value) return validarCNPJ(form.documento)
-  if (isPrestador.value && digits.length > 11) return validarCNPJ(form.documento)
-  return validarCPF(form.documento)
+  if (!form.tipo_conta) return false
+  return isValidDocumentForType(form.documento, form.tipo_conta)
 }
+
+const handleDocumentInput = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (!form.tipo_conta) {
+    form.documento = ''
+    input.value = ''
+    return
+  }
+  const masked = maskDocument(input.value, form.tipo_conta)
+  form.documento = masked
+  // Atualiza o DOM mesmo quando o valor reativo já atingiu o limite.
+  input.value = masked
+}
+
+watch(() => form.tipo_conta, (accountType) => {
+  if (accountType && form.documento) {
+    form.documento = maskDocument(form.documento, accountType)
+  }
+})
 
 const setError = (message: string) => {
   errorMsg.value = message
@@ -209,6 +189,17 @@ const onFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    errorMsg.value = 'Envie uma imagem JPG, PNG ou WebP.'
+    input.value = ''
+    return
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    errorMsg.value = 'A imagem deve ter no maximo 5 MB.'
+    input.value = ''
+    return
+  }
+  errorMsg.value = ''
   selectedFile.value = file
   if (photoPreview.value) URL.revokeObjectURL(photoPreview.value)
   photoPreview.value = URL.createObjectURL(file)
@@ -225,7 +216,7 @@ const uploadSelectedPhoto = async (userId: string) => {
 
 const profilePayload = () => ({
   nome: form.nome.trim(),
-  documento: form.documento,
+  documento: maskDocument(form.documento, form.tipo_conta as AccountType),
   telefone: form.telefone,
   cidade: form.cidade.trim().toUpperCase(),
   estado: form.estado,
@@ -241,7 +232,8 @@ const profilePayload = () => ({
   foto: form.foto || null,
   tipo_conta: form.tipo_conta,
   cadastro_completo: true,
-  status: 'ativo'
+  status: 'ativo',
+  modo_prestador: form.tipo_conta === 'prestador'
 })
 
 const handleSignUp = async () => {
@@ -294,9 +286,6 @@ const handleSignUp = async () => {
       return
     }
 
-    if (import.meta.client) {
-      localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(cadastro))
-    }
     await navigateTo('/login?registered=check-email', { replace: true })
   } catch (error: any) {
     const msg: string = error?.message || ''
@@ -322,13 +311,18 @@ const handleGoogleSignUp = async () => {
   }
   loading.value = true
   errorMsg.value = ''
-  localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(profilePayload()))
+  sessionStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify({
+    flow: 'google_registration',
+    createdAt: Date.now(),
+    expiresAt: Date.now() + PENDING_PROFILE_TTL,
+    profile: profilePayload(),
+  }))
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: `${window.location.origin}/confirm` }
+    options: { redirectTo: `${window.location.origin}/confirm?registration=google` }
   })
   if (error) {
-    localStorage.removeItem(PENDING_PROFILE_KEY)
+    sessionStorage.removeItem(PENDING_PROFILE_KEY)
     errorMsg.value = error.message
     loading.value = false
   }
@@ -395,8 +389,11 @@ onMounted(async () => {
                 :value="form.documento"
                 type="text"
                 required
+                inputmode="numeric"
+                autocomplete="off"
+                :maxlength="documentLength"
                 :placeholder="isEmpresa ? '00.000.000/0001-00' : '000.000.000-00'"
-                @input="form.documento = applyDocMask(($event.target as HTMLInputElement).value)"
+                @input="handleDocumentInput"
               />
             </div>
             <div>
@@ -453,7 +450,7 @@ onMounted(async () => {
               <img v-if="photoPreview" :src="photoPreview" alt="Foto selecionada" />
               <span v-else>Adicionar foto</span>
             </button>
-            <input ref="fileInput" class="hidden-file" type="file" accept="image/*" @change="onFileChange" />
+            <input ref="fileInput" class="hidden-file" type="file" accept="image/jpeg,image/png,image/webp" @change="onFileChange" />
             <p>Foto ou logo opcional para o perfil.</p>
           </div>
           <label class="required">{{ professionLabel }}</label>

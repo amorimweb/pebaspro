@@ -28,17 +28,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
         isCadastroRoute
 
     const currentSession = (await supabase.auth.getSession()).data.session
-    const storedProfile = authStore.profile
-    const persistedUser = storedProfile
-        ? { id: authStore.profile.id, email: authStore.profile.email }
-        : null
-    const activeUser = supabaseUser.value || currentSession?.user || persistedUser
+    const activeUser = supabaseUser.value || currentSession?.user
 
     if (!activeUser?.id) {
-        if (import.meta.client) {
-            return
-        }
-
         if (!isPublicRoute) {
             return navigateTo('/login')
         }
@@ -53,7 +45,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
         return navigateTo(completeRegistrationRoute, { replace: true })
     }
 
-    const profile = authStore.profile || storedProfile
+    const profile = authStore.profile
 
     if (!isPublicRoute) {
         if (!profile && import.meta.client) {

@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import { useNotifications } from '~/composables/useNotifications'
-import { storeToRefs } from 'pinia'
-import { useCurriculum } from '~/composables/useCurriculum'
 
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
 const profile = computed(() => authStore.profile)
 const initialized = computed(() => authStore.initialized)
-const profileLoading = computed(() => authStore.profileLoading)
-const supabase = useSupabaseClient()
 const router = useRouter()
+const avatarFailed = ref(false)
+const avatarUrl = computed(() => avatarFailed.value ? null : profile.value?.foto || null)
+
+watch(() => profile.value?.foto, () => {
+  avatarFailed.value = false
+})
 
 // UI State
 const isMobileMenuOpen = ref(false)
@@ -164,48 +166,40 @@ watch(isMobileMenuOpen, (isOpen) => {
 
       <!-- DESKTOP NAV -->
       <nav class="hidden lg:flex items-center gap-1">
-        <!-- Loading Skeletons -->
-        <template v-if="!initialized">
-          <div v-for="i in 4" :key="i" class="h-8 w-24 bg-slate-100/50 rounded-xl animate-pulse mx-1"></div>
-        </template>
-
         <!-- Main Dynamic Menu -->
         <div class="flex items-center gap-1 min-h-[40px]">
-          <Transition name="fade" mode="out-in">
-            <div v-if="!initialized" class="flex gap-2">
-              <div v-for="i in 4" :key="i" class="h-8 w-24 bg-white/10 rounded-xl animate-pulse mx-1"></div>
-            </div>
-            <div v-else class="flex gap-1">
-              <template v-for="item in activeMenu" :key="item.label">
-                <NuxtLink 
-                  :to="item.to" 
-                  @click="item.onClick?.()"
-                  :class="[
-                    'px-4 py-2 text-sm font-bold transition-all rounded-xl tracking-wide uppercase',
-                    item.isCTA 
-                      ? 'is-cta ml-3 bg-white text-green-700 hover:bg-green-50 shadow-lg hover:shadow-green-400/20 active:scale-95' 
-                      : 'text-white/90 hover:text-white hover:bg-white/10'
-                  ]"
-                >
-                  {{ item.label }}
-                </NuxtLink>
-              </template>
-            </div>
-          </Transition>
+          <div v-if="!initialized" key="nav-loading" class="flex gap-2">
+            <div v-for="i in 4" :key="i" class="h-8 w-24 bg-white/10 rounded-xl animate-pulse mx-1"></div>
+          </div>
+          <div v-else key="nav-ready" class="flex gap-1">
+            <template v-for="item in activeMenu" :key="item.label">
+              <NuxtLink
+                :to="item.to"
+                @click="item.onClick?.()"
+                :class="[
+                  'px-4 py-2 text-sm font-bold transition-all rounded-xl tracking-wide uppercase',
+                  item.isCTA
+                    ? 'is-cta ml-3 bg-white text-green-700 hover:bg-green-50 shadow-lg hover:shadow-green-400/20 active:scale-95'
+                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                ]"
+              >
+                {{ item.label }}
+              </NuxtLink>
+            </template>
+          </div>
         </div>
       </nav>
 
       <!-- AUTH / USER DROPDOWN (DESKTOP) -->
-      <div class="hidden lg:flex items-center gap-3 min-w-[120px] justify-end">
-        <Transition name="fade" mode="out-in">
-          <div v-if="!initialized" class="h-10 w-28 bg-white/10 rounded-xl animate-pulse"></div>
+      <div class="hidden lg:flex items-center gap-2 min-w-[230px] shrink-0 justify-end">
+          <div v-if="!initialized" key="auth-loading" class="h-10 w-28 bg-white/10 rounded-xl animate-pulse"></div>
           
-          <div v-else-if="!user" class="flex items-center gap-2">
-            <NuxtLink to="/login" class="px-5 py-2.5 text-sm font-bold text-white hover:bg-white/10 transition-colors rounded-xl">Entrar</NuxtLink>
-            <NuxtLink to="/cadastro" class="ml-2 px-5 py-2.5 text-sm font-bold bg-white text-green-700 hover:bg-green-50 shadow-lg hover:shadow-green-400/20 active:scale-95 transition-all rounded-xl">Cadastrar</NuxtLink>
-          </div>
+          <template v-else-if="!user">
+            <NuxtLink to="/login" class="shrink-0 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/10 transition-colors rounded-xl">Entrar</NuxtLink>
+            <NuxtLink to="/cadastro" class="shrink-0 px-5 py-2.5 text-sm font-bold bg-white text-green-700 hover:bg-green-50 shadow-lg hover:shadow-green-400/20 active:scale-95 transition-all rounded-xl">Cadastrar</NuxtLink>
+          </template>
 
-          <div v-else class="flex items-center gap-4">
+          <div v-else key="auth-user" class="flex items-center gap-4 shrink-0">
             <!-- Notificações Desktop -->
             <div class="relative" ref="notificationRef">
               <button @click="showNotifications = !showNotifications" class="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-xl transition-all relative group">
@@ -260,16 +254,14 @@ watch(isMobileMenuOpen, (isOpen) => {
                 class="flex items-center gap-2 p-1 rounded-xl transition-all active:scale-95 group/btn"
               >
               <div class="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 text-white font-black text-sm uppercase overflow-hidden ring-2 ring-transparent group-hover/btn:ring-white/30 transition-all">
-                 <Transition name="fade" mode="out-in">
-                   <img 
-                     v-if="profile?.foto" 
-                     :key="profile.foto"
-                     :src="profile.foto" 
-                     class="w-full h-full object-cover" 
-                     @error="(e) => (e.target as HTMLImageElement).src = '/default-avatar.png'"
-                   />
-                   <span v-else :key="'letter'" class="w-full h-full flex items-center justify-center">{{ profile?.nome?.charAt(0) || user?.email?.charAt(0) || '?' }}</span>
-                 </Transition>
+                 <img
+                   v-if="avatarUrl"
+                   :src="avatarUrl"
+                   alt="Avatar do usuário"
+                   class="w-full h-full object-cover"
+                   @error="avatarFailed = true"
+                 />
+                 <span v-else class="w-full h-full flex items-center justify-center">{{ profile?.nome?.charAt(0) || user?.email?.charAt(0) || '?' }}</span>
               </div>
               <svg class="w-4 h-4 text-white/60 transition-transform" :class="{ 'rotate-180': isUserDropdownOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
@@ -313,7 +305,6 @@ watch(isMobileMenuOpen, (isOpen) => {
             </Transition>
             </div>
           </div>
-        </Transition>
       </div>
 
       <!-- MOBILE CONTROLS -->
@@ -354,7 +345,7 @@ watch(isMobileMenuOpen, (isOpen) => {
 
         <!-- Profile Avatar (Mobile) -->
         <NuxtLink v-if="initialized && user" to="/perfil" class="w-10 h-10 rounded-full flex items-center justify-center text-white font-black overflow-hidden transition-colors">
-           <img v-if="profile?.foto" :src="profile.foto" class="w-full h-full object-cover" />
+           <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar do usuário" class="w-full h-full object-cover" @error="avatarFailed = true" />
            <span v-else class="w-full h-full flex items-center justify-center">{{ profile?.nome?.charAt(0) || 'U' }}</span>
         </NuxtLink>
 
@@ -402,7 +393,7 @@ watch(isMobileMenuOpen, (isOpen) => {
             <div v-if="user" class="mb-8 p-6 bg-gradient-to-br from-green-600 to-green-700 rounded-[32px] text-white shadow-xl shadow-green-600/20">
               <div class="flex items-center gap-4 mb-4">
                 <div class="w-14 h-14 rounded-full flex items-center justify-center font-black text-2xl overflow-hidden shadow-sm">
-                   <img v-if="profile?.foto" :src="profile.foto" class="w-full h-full object-cover" />
+                   <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar do usuário" class="w-full h-full object-cover" @error="avatarFailed = true" />
                    <span v-else class="w-full h-full flex items-center justify-center text-slate-400">{{ profile?.nome?.charAt(0) || 'U' }}</span>
                 </div>
                 <div>
