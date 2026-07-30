@@ -8,20 +8,38 @@ const authStore = useAuthStore()
 const user = useSupabaseUser()
 const supabase = useSupabaseClient<Database>()
 const PENDING_PROFILE_KEY = 'pebas_pending_complete_profile'
+const route = useRoute()
 
 const errorMsg = ref('')
 
 const pendingProfile = () => {
-  if (!import.meta.client) return null
-  const raw = localStorage.getItem(PENDING_PROFILE_KEY)
+  if (!import.meta.client || route.query.registration !== 'google') return null
+  const raw = sessionStorage.getItem(PENDING_PROFILE_KEY)
   if (!raw) return null
 
   try {
-    return JSON.parse(raw)
+    const draft = JSON.parse(raw)
+    if (
+      draft?.flow !== 'google_registration' ||
+      !draft?.profile ||
+      typeof draft.expiresAt !== 'number' ||
+      draft.expiresAt < Date.now()
+    ) {
+      sessionStorage.removeItem(PENDING_PROFILE_KEY)
+      return null
+    }
+    return draft.profile
   } catch {
-    localStorage.removeItem(PENDING_PROFILE_KEY)
+    sessionStorage.removeItem(PENDING_PROFILE_KEY)
     return null
   }
+}
+
+const clearPendingProfile = () => {
+  if (!import.meta.client) return
+  sessionStorage.removeItem(PENDING_PROFILE_KEY)
+  // Remove também rascunhos legados criados pelas versões anteriores.
+  localStorage.removeItem(PENDING_PROFILE_KEY)
 }
 
 const finalizeSession = async () => {
@@ -34,7 +52,13 @@ const finalizeSession = async () => {
   let profile = result.data
 
   const cadastro = pendingProfile() || activeUser.user_metadata?.cadastro || null
-  if (!profile && cadastro) {
+  if (profile && isProfileComplete(profile)) {
+    clearPendingProfile()
+    await navigateTo(profileHomeRoute(profile), { replace: true })
+    return true
+  }
+
+  if (cadastro) {
     const saved = await authStore.saveCompleteProfile({
       id: activeUser.id,
       email: activeUser.email || null,
@@ -42,11 +66,12 @@ const finalizeSession = async () => {
     })
 
     if (saved.error) throw saved.error
-    if (import.meta.client) localStorage.removeItem(PENDING_PROFILE_KEY)
+    clearPendingProfile()
     profile = saved.data
   }
 
   if (!profile) {
+    clearPendingProfile()
     await navigateTo(completeRegistrationRoute, { replace: true })
     return true
   }

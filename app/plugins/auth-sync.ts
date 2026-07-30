@@ -5,43 +5,28 @@ export default defineNuxtPlugin(() => {
     const authStore = useAuthStore()
     const supabase = useSupabaseClient()
 
-    const getAccessToken = async () => {
-        const { data: { session } } = await supabase.auth.getSession()
-        return session?.access_token
-    }
+    // O cliente Supabase precisa terminar de montar antes de consultar a sessão.
+    // Não bloqueia a hidratação do Nuxt nem cria disputa pelo lock de autenticação.
+    onNuxtReady(() => {
+        authStore.initialize().catch((error) => {
+            console.error('Erro ao inicializar autenticação:', error)
+            authStore.initialized = true
+        })
+    })
 
-    // Sincroniza o perfil sempre que o estado do usuário mudar
-    watch(user, async (newUser, oldUser) => {
-        // 1. Usuário logou ou mudou
-        if (newUser && newUser.id) {
-            if (newUser.id !== oldUser?.id || !authStore.profile || authStore.profile.id !== newUser.id) {
-                await authStore.fetchProfile(await getAccessToken(), newUser.email)
-            } else {
-                // Já temos perfil e o usuário é o mesmo (hidratação)
-                authStore.initialized = true
-            }
+    // Depois da inicialização, reage apenas a mudanças reais de usuário.
+    watch(() => user.value?.id, async (newUserId, oldUserId) => {
+        if (newUserId === oldUserId) return
+
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (!newUserId) {
+            if (!session?.user?.id) authStore.clearProfile()
+            return
         }
-        // 2. Usuário deslogou (tinha um oldUser mas sumiu)
-        else if (oldUser) {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (session?.user?.id) {
-                await authStore.fetchProfile(session.access_token, session.user.email)
-            } else {
-                authStore.clearProfile()
-                authStore.initialized = true
-            }
+
+        if (session?.user?.id === newUserId) {
+            await authStore.loadProfile(session)
         }
-        // 3. Estado inicial: verifica se há sessão ativa antes de marcar como inicializado
-        else if (!newUser) {
-            // Só marca como inicializado se realmente não há sessão no Supabase
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session) {
-                authStore.initialized = true
-            } else if (session.user?.id) {
-                await authStore.fetchProfile(session.access_token, session.user.email)
-            }
-            // Se há sessão mas user ainda não chegou via useSupabaseUser,
-            // aguarda o próximo disparo do watch quando o estado sincronizar
-        }
-    }, { immediate: true })
+    })
 })

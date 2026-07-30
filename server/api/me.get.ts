@@ -12,7 +12,11 @@ const isComplete = (profile: any) => Boolean(
     hasText(profile?.cidade) &&
     hasText(profile?.estado) &&
     hasText(profile?.profissao) &&
-    hasText(profile?.sobre_mim)
+    hasText(profile?.sobre_mim) &&
+    (
+        profile?.tipo_conta !== 'talento' ||
+        (hasText(profile?.objetivo_profissional) && Array.isArray(profile?.habilidades) && profile.habilidades.length > 0)
+    )
 )
 
 export default defineEventHandler(async (event) => {
