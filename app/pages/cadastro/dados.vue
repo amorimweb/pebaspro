@@ -303,6 +303,8 @@ const handleSignUp = async () => {
       errorMsg.value = 'E-mail inválido. Verifique o endereço informado.'
     } else if (msg.includes('Password should be')) {
       errorMsg.value = 'A senha deve ter pelo menos 6 caracteres.'
+    } else if (msg.includes('Database error saving new user')) {
+      errorMsg.value = 'Não foi possível concluir o cadastro: o CPF/CNPJ informado já está em uso por outra conta.'
     } else {
       errorMsg.value = msg || 'Não foi possível criar sua conta. Tente novamente.'
     }
