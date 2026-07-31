@@ -4,7 +4,6 @@ import { completeRegistrationRoute, profileHomeRoute } from '~/utils/authRedirec
 const authStore = useAuthStore()
 const route = useRoute()
 
-const supabase = useSupabaseClient()
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
@@ -16,7 +15,6 @@ const infoMsg = computed(() => {
   }
   return ''
 })
-const isGoogleAccount = ref(false)
 definePageMeta({
   layout: false,
   noPadding: true
@@ -25,11 +23,10 @@ definePageMeta({
 const handleLogin = async () => {
   loading.value = true
   errorMsg.value = ''
-  isGoogleAccount.value = false
-  
+
   try {
     const result = await authStore.signInWithPassword(email.value, password.value)
-    
+
     if (result.error) {
       const message = result.error?.message || ''
       const statusCode = result.error?.statusCode || result.error?.status
@@ -37,23 +34,17 @@ const handleLogin = async () => {
         'Email not confirmed': 'Confirme seu e-mail antes de entrar.',
         'Too many requests': 'Muitas tentativas. Aguarde alguns minutos.',
         'User not found': 'Nenhuma conta encontrada com este e-mail.',
+        'Invalid login credentials': 'E-mail ou senha incorretos.',
       }
       if (statusCode === 404) {
         await navigateTo(completeRegistrationRoute)
         return
       }
 
-      if (message === 'Invalid login credentials') {
-        // Exibe sugestão de Google pois a conta pode ter sido criada por lá
-        isGoogleAccount.value = true
-        errorMsg.value = 'E-mail ou senha incorretos. Se você se cadastrou com o Google, use o botão abaixo.'
-      } else {
-        isGoogleAccount.value = false
-        errorMsg.value = errorMap[message] || 'Ocorreu um erro ao entrar. Tente novamente.'
-      }
+      errorMsg.value = errorMap[message] || 'Ocorreu um erro ao entrar. Tente novamente.'
       return
     }
-    
+
     if (!result.data) {
       await navigateTo(completeRegistrationRoute)
       return
@@ -64,22 +55,6 @@ const handleLogin = async () => {
     console.error('Erro no login:', error)
     errorMsg.value = 'Ocorreu um erro ao tentar entrar. Tente novamente.'
   } finally {
-    loading.value = false
-  }
-}
-
-const loginWithGoogle = async () => {
-  loading.value = true
-  
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${window.location.origin}/confirm`,
-    },
-  })
-  
-  if (error) {
-    errorMsg.value = error.message
     loading.value = false
   }
 }
@@ -138,15 +113,6 @@ const loginWithGoogle = async () => {
 
         <button type="submit" class="submit-btn" :disabled="loading">
           {{ loading ? 'Entrando...' : 'Entrar' }}
-        </button>
-
-        <div class="divider">
-          <span>ou</span>
-        </div>
-
-        <button type="button" @click="loginWithGoogle" class="google-btn" :class="{ 'google-btn--highlight': isGoogleAccount }" :disabled="loading">
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
-          Continuar com Google
         </button>
       </form>
 
@@ -323,68 +289,6 @@ const loginWithGoogle = async () => {
   cursor: not-allowed;
 }
 
-.divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: #9ca3af;
-  font-size: 0.875rem;
-}
-
-.divider::before, .divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.divider span {
-  padding: 0 12px;
-}
-
-.google-btn {
-  height: 52px;
-  background: white;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #334155;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.google-btn:hover {
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
-  transform: translateY(-1px);
-}
-
-.google-btn:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.google-btn--highlight {
-  border-color: #4285f4;
-  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
-  animation: pulse-blue 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-blue {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2); }
-  50%       { box-shadow: 0 0 0 6px rgba(66, 133, 244, 0.08); }
-}
-
-.google-btn img {
-  width: 20px;
-  height: 20px;
-}
-
 .auth-footer {
   margin-top: 24px;
   text-align: center;
@@ -422,10 +326,6 @@ const loginWithGoogle = async () => {
   .form-group input,
   .submit-btn {
     height: 44px;
-  }
-
-  .google-btn {
-    height: 48px;
   }
 
   .auth-footer {
